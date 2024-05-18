@@ -6,6 +6,7 @@ class AudioProcessor {
     this.bufferLength = this.analyser.frequencyBinCount;
     this.dataArray = new Uint8Array(this.bufferLength);
     this.source = null;
+    this.startTime = null; // To synchronize playback
   }
 
   async initMicrophone() {
@@ -33,6 +34,7 @@ class AudioProcessor {
     this.stopCurrentSource();
     this.source = this.audioCtx.createMediaStreamSource(stream);
     this.source.connect(this.analyser);
+    console.log("Microphone stream started");
   }
 
   processAudioBuffer(audioBuffer) {
@@ -40,18 +42,27 @@ class AudioProcessor {
     this.source = this.audioCtx.createBufferSource();
     this.source.buffer = audioBuffer;
     this.source.connect(this.analyser);
-    this.source.start();
+    this.analyser.connect(this.audioCtx.destination); // Connect analyser to the audio context's destination
+    this.source.start(0); // Start playback immediately
+    this.startTime = this.audioCtx.currentTime; // Record the start time for synchronization
+    console.log("Audio playback started");
   }
 
   stopCurrentSource() {
     if (this.source) {
       this.source.disconnect();
+      if (this.source.stop) {
+        this.source.stop(0);
+      }
+      console.log("Audio source stopped");
     }
   }
-// Checks to see if audio context is suspended -- on initial startup
+
   resumeAudioContext() {
     if (this.audioCtx.state === 'suspended') {
-      return this.audioCtx.resume();
+      return this.audioCtx.resume().then(() => {
+        console.log("Audio context resumed");
+      });
     }
     return Promise.resolve();
   }
