@@ -76,4 +76,14 @@ class AudioProcessor {
     this.analyser.getByteTimeDomainData(this.dataArray);
     return this.dataArray;
   }
+
+  getFrequencyDataForAPI() {
+    this.getFrequencyData();
+    return this.dataArray.slice();
+  }
+
+  getTimeDomainDataForAPI() {
+    this.getTimeDomainData();
+    return this.dataArray.slice();
+  }
 }
