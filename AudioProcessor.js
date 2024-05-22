@@ -6,7 +6,7 @@ class AudioProcessor {
     this.bufferLength = this.analyser.frequencyBinCount;
     this.dataArray = new Uint8Array(this.bufferLength);
     this.source = null;
-    this.startTime = null; // To synchronize playback
+    this.startTime = null;
   }
 
   async initMicrophone() {
@@ -42,9 +42,9 @@ class AudioProcessor {
     this.source = this.audioCtx.createBufferSource();
     this.source.buffer = audioBuffer;
     this.source.connect(this.analyser);
-    this.analyser.connect(this.audioCtx.destination); // Connect analyser to the audio context's destination
-    this.source.start(0); // Start playback immediately
-    this.startTime = this.audioCtx.currentTime; // Record the start time for synchronization
+    this.analyser.connect(this.audioCtx.destination);
+    this.source.start(0);
+    this.startTime = this.audioCtx.currentTime;
     console.log("Audio playback started");
   }
 

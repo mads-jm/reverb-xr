@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html>
+<!-- Debug AFrame Environment-->
+<head>
+    <script src="https://aframe.io/releases/1.3.0/aframe.min.js"></script>
+    <script src="aframe-script.js"></script>
+    <script src="AudioProcessor.js"></script>
+</head>
+
+<body>
+    <canvas id="visualizer-canvas" width="1024" height="512" style="display: none;"></canvas>
+    <a-scene id="scene" keyboard-shortcuts="enterVR: false" renderer="antialias: true;
+                   colorManagement: true;
+                   sortObjects: true;
+                   physicallyCorrectLights: true;
+                   maxCanvasWidth: 1920;
+                   maxCanvasHeight: 1920;">
+
+        <!-- Flat 3D Element for 2D Visualizer -->
+        <a-entity id="bar-visualizer" position="0 2 -4">
+            <a-plane id="visualizer-plane" align="center" width="5" height="3" material="shader: flat" live-canvas="src: #visualizer-canvas"></a-plane>
+        </a-entity> 
+
+        <!-- Camera -->
+        <a-camera>
+            <a-cursor id="cursor"
+                animation__click="property: scale; from: 0.1 0.1 0.1; to: 0.5 0.5 0.5; easing: easeInCubic; dur: 150; startEvents: click"
+                animation__clickreset="property: scale; to: 0.1 0.1 0.1; dur: 1; startEvents: animationcomplete__click"
+                animation__fusing="property: scale; from: 1 1 1; to: 0.5 0.5 0.5; easing: easeInCubic; dur: 150; startEvents: fusing">
+            </a-cursor>
+        </a-camera>
+    </a-scene>
+</body>
+
+</html>
