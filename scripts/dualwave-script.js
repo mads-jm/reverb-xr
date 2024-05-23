@@ -1,5 +1,6 @@
 document.addEventListener('DOMContentLoaded', () => {
   const visualizerPlane = document.getElementById('visualizer-plane');
+  const mirroredVisualizerPlane = document.getElementById('mirrored-plane');
   const visualizerCanvas = document.getElementById('visualizer-canvas');
   const visualizerCtx = visualizerCanvas.getContext('2d');
 
@@ -59,6 +60,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const texture = new THREE.CanvasTexture(visualizerCanvas);
     texture.needsUpdate = true;
     document.querySelector('#visualizer-plane').getObject3D('mesh').material.map = texture;
+    texture.center = new THREE.Vector2(0.5, 0.5);
+    texture.rotation = Math.PI;
+    texture.flipY = true;
+    document.querySelector('#mirrored-plane').getObject3D('mesh').material.map = texture;
     waitForComponentInitialization(() => {
       visualizerPlane.components['live-canvas'].updateTexture();
       mirroredVisualizerPlane.components['live-canvas'].updateTexture();
