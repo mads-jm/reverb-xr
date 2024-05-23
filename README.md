@@ -2,6 +2,10 @@
 
 Reverb VR is an audio visualizer prototype built using A-Frame and Web Audio API. This project demonstrates two different audio visualizations in separate scenes and lays the groundwork for more complex visualizations.
 
+[Main Release](https://reverb-xr.vercel.app/)
+[Indev](https://reverb-xr-indev.vercel.app/)
+[Prototype](https://reverb-proto.vercel.app/)
+
 ## Project Structure
 
 ### html
