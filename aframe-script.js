@@ -7,7 +7,6 @@ document.addEventListener('DOMContentLoaded', () => {
   console.log('Visualizer Canvas:', visualizerCanvas);
   console.log('Visualizer Context:', visualizerCtx);
 
-  // Ensure the canvas is available before setting the attribute
   visualizerPlane.setAttribute('live-canvas', 'src: #visualizer-canvas');
 
   function waitForComponentInitialization(callback) {
@@ -45,9 +44,13 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     console.log('Canvas updated with frequency data');
-    waitForComponentInitialization(() => {
-      visualizerPlane.components['live-canvas'].updateTexture();
-    });
+    const texture = new THREE.CanvasTexture(canvas);
+    texture.needsUpdate = true;
+    document.querySelector('#visualizer-plane').getObject3D('mesh').material.map = texture;
+    //     waitForComponentInitialization(() => {
+    //  visualizerPlane.components['live-canvas'].updateTexture();
+    //});
+
   }
 
   function hsvToRgb(h) {

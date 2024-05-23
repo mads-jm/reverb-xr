@@ -8,7 +8,10 @@
 </head>
 
 <body>
-    <canvas id="visualizer-canvas" width="1024" height="512" style="display: none;"></canvas>
+    <a-assets>
+        <!-- Live Canvas Initialization -->
+        <canvas id="visualizer-canvas" width="1024" height="512" style="display: none;"></canvas>
+    </a-assets>
     <a-scene id="scene" keyboard-shortcuts="enterVR: false" renderer="antialias: true;
                    colorManagement: true;
                    sortObjects: true;
@@ -16,7 +19,7 @@
                    maxCanvasWidth: 1920;
                    maxCanvasHeight: 1920;">
 
-        <!-- Flat 3D Element for 2D Visualizer -->
+        <!-- Flat 3D Element for 2D Visualizer :: References Live Canvas -->
         <a-entity id="bar-visualizer" position="0 2 -4">
             <a-plane id="visualizer-plane" align="center" width="5" height="3" material="shader: flat" live-canvas="src: #visualizer-canvas"></a-plane>
         </a-entity> 
