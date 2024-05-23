@@ -6,6 +6,7 @@
     <script src="https://cdn.rawgit.com/donmccurdy/aframe-extras/v6.1.0/dist/aframe-extras.min.js"></script>
     <script src="scripts/wave-script.js"></script>
     <script src="AudioProcessor.js"></script>
+    <script src="camera.js"></script>
 </head>
 
 <body>
@@ -19,22 +20,14 @@
                    physicallyCorrectLights: true;
                    maxCanvasWidth: 1920;
                    maxCanvasHeight: 1920;">
-
+        
+    <!-- Camera -->       
+    <a-entity custom-camera></a-entity>
     <!-- Flat 3D Element for 2D Visualizer :: References Live Canvas -->
     <a-entity id="wave-visualizer" position="0 2 -4">
-        <a-plane id="visualizer-plane" align="center" width="24" height="8" material="shader: flat" live-canvas="src: #visualizer-canvas"></a-plane>
+        <a-plane id="visualizer-plane" align="center" width="24" height="8" material="shader: flat; side: double" live-canvas="src: #visualizer-canvas"></a-plane>
     </a-entity>
 
-
-
-        <!-- Camera -->
-        <a-camera>
-            <a-cursor id="cursor"
-                animation__click="property: scale; from: 0.1 0.1 0.1; to: 0.5 0.5 0.5; easing: easeInCubic; dur: 150; startEvents: click"
-                animation__clickreset="property: scale; to: 0.1 0.1 0.1; dur: 1; startEvents: animationcomplete__click"
-                animation__fusing="property: scale; from: 1 1 1; to: 0.5 0.5 0.5; easing: easeInCubic; dur: 150; startEvents: fusing">
-            </a-cursor>
-        </a-camera>
     </a-scene>
 </body>
 

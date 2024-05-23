@@ -34,13 +34,16 @@ document.addEventListener('DOMContentLoaded', () => {
                             window.location.href = 'settings.html';
                             break;
                         case 'startButton':
-                            window.location.href = 'stage-bars.html';
+                            window.location.href = 'stage-wave.html';
                             break;
                         case 'barsButton':
                             window.location.href = 'stage-bars.html';
                             break;
                         case 'waveButton':
                             window.location.href = 'stage-wave.html';
+                            break;
+                        case 'dualwaveButton':
+                            window.location.href = 'stage-dualwave.html';
                             break;
                         default:
                             break;
@@ -55,4 +58,5 @@ document.addEventListener('DOMContentLoaded', () => {
         document.querySelector('#startButton').setAttribute('button-interaction', '');
         document.querySelector('#barsButton').setAttribute('button-interaction', '');
         document.querySelector('#waveButton').setAttribute('button-interaction', '');
+        document.querySelector('#dualwaveButton').setAttribute('button-interaction', '');
 });
