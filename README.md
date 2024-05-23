@@ -14,6 +14,8 @@ Reverb VR is an audio visualizer prototype built using A-Frame and Web Audio API
 - `aframe.html`: A-Frame scene containing the initial setup for a white room with interactive buttons to switch between visualizations.
 - `stage-bars.html`: A-Frame scene for the bar visualizer.
 - `stage-wave.html`: A-Frame scene for the waveform visualizer.
+- `stage-dualwave.html`: A-Frame scene for the dual waveform visualizer.
+  
 
 ### JavaScript
 
@@ -21,6 +23,7 @@ Reverb VR is an audio visualizer prototype built using A-Frame and Web Audio API
 - `aframe-script.js`: Custom A-Frame components for main menu
 - `bars-script.js` : Handles logic and Data flow for bar visualization
 - `wave-script.js` : Handles logic and Data flow for wave visualization
+- `dualwave-script.js` : Handles logic and Data flow for dual wave visualization
 
 ## File Descriptions
 
