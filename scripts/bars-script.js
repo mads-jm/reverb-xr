@@ -3,13 +3,14 @@ document.addEventListener('DOMContentLoaded', () => {
   const visualizerCanvas = document.getElementById('visualizer-canvas');
   const visualizerCtx = visualizerCanvas.getContext('2d');
 
+  //const aspectRatio = visualizerCanvas.width / visualizerCanvas.height;
+
   console.log('Canvas and context initialized');
   console.log('Visualizer Canvas:', visualizerCanvas);
   console.log('Visualizer Context:', visualizerCtx);
 
   visualizerPlane.setAttribute('live-canvas', 'src: #visualizer-canvas');
-
-
+  //visualizerPlane.setAttribute('geometry', {width: aspectRatio * 4, height: 2});
 
   function waitForComponentInitialization(callback) {
     if (visualizerPlane.components['live-canvas']) {
@@ -35,9 +36,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const barWidth = (visualizerCanvas.width / frequencyData.length) * 2;
     let barHeight;
     let x = 0;
+    const buffer = 0.95; // Leave a 5% buffer above the bars
 
     for (let i = 0; i < frequencyData.length; i++) {
-      barHeight = frequencyData[i] / 255.0 * visualizerCanvas.height;
+      barHeight = (frequencyData[i] / 255.0) * visualizerCanvas.height * buffer;
       const hue = (i / frequencyData.length) * 360;
       const [r, g, b] = hsvToRgb(hue / 360);
       visualizerCtx.fillStyle = `rgb(${r}, ${g}, ${b})`;

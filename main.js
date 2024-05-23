@@ -7,7 +7,6 @@ document.addEventListener('DOMContentLoaded', () => {
   const fileInput = document.getElementById('file-input');
   const dataOutput = document.getElementById('data-output');
   const aframeIframe = document.getElementById('aframe-iframe');
-  const debugCanvas = document.getElementById('debug-canvas');
 
   micOption.addEventListener('change', () => {
     if (micOption.checked) {
@@ -40,7 +39,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
   function sendAudioDataToAFrame() {
     const frequencyData = audioProcessor.getFrequencyDataForAPI();
+    const timeDomainData = audioProcessor.getTimeDomainDataForAPI();
     aframeIframe.contentWindow.postMessage({ type: 'frequencyData', data: frequencyData }, '*');
+    aframeIframe.contentWindow.postMessage({ type: 'timeDomainData', data: timeDomainData }, '*');
     requestAnimationFrame(sendAudioDataToAFrame);
   }
 
