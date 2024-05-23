@@ -2,11 +2,11 @@ class AudioProcessor {
   constructor() {
     this.audioCtx = new (window.AudioContext || window.webkitAudioContext)();
     this.analyser = this.audioCtx.createAnalyser();
-    this.analyser.fftSize = 4096;
+    this.analyser.fftSize = 2048;
     this.bufferLength = this.analyser.frequencyBinCount;
     this.dataArray = new Uint8Array(this.bufferLength);
     this.source = null;
-    this.startTime = null; // To synchronize playback
+    this.startTime = null;
   }
 
   async initMicrophone() {
@@ -42,9 +42,9 @@ class AudioProcessor {
     this.source = this.audioCtx.createBufferSource();
     this.source.buffer = audioBuffer;
     this.source.connect(this.analyser);
-    this.analyser.connect(this.audioCtx.destination); // Connect analyser to the audio context's destination
-    this.source.start(0); // Start playback immediately
-    this.startTime = this.audioCtx.currentTime; // Record the start time for synchronization
+    this.analyser.connect(this.audioCtx.destination);
+    this.source.start(0);
+    this.startTime = this.audioCtx.currentTime;
     console.log("Audio playback started");
   }
 
@@ -75,5 +75,15 @@ class AudioProcessor {
   getTimeDomainData() {
     this.analyser.getByteTimeDomainData(this.dataArray);
     return this.dataArray;
+  }
+
+  getFrequencyDataForAPI() {
+    this.getFrequencyData();
+    return this.dataArray.slice();
+  }
+
+  getTimeDomainDataForAPI() {
+    this.getTimeDomainData();
+    return this.dataArray.slice();
   }
 }
