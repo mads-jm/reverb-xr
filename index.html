@@ -5,8 +5,7 @@
 		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
 		<title>Reverb VR Audio Visualizer</title>
 		<link rel="stylesheet" href="style.css" />
-		<script src="AudioProcessor.js"></script>
-		<script src="main.js"></script>
+		<script type="module" src="main.js" defer></script>
 	</head>
 	<body>
 		<h1>Reverb VR: Audio Visualizer Prototype</h1>
@@ -23,6 +22,7 @@
 			<label for="file-option">Use Audio File</label>
 			<input type="file" id="file-input" accept="audio/*" disabled />
 		</div>
+		<div></audio></div>
 
 		<!-- Aframe iframe container -->
 		<iframe

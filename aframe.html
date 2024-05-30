@@ -4,7 +4,7 @@
 		<script src="https://aframe.io/releases/1.3.0/aframe.min.js"></script>
 		<script src="https://cdn.jsdelivr.net/gh/c-frame/aframe-extras@7.4.0/dist/aframe-extras.min.js"></script>
 		<script src="scripts/aframe-script.js"></script>
-		<script src="camera.js"></script>
+		<script src="components.js"></script>
 	</head>
 
 	<body>
@@ -22,34 +22,18 @@
 			<a-entity custom-camera></a-entity>
 
 			<!-- Point lights -->
-			<a-light
-				type="point"
-				intensity="2"
-				color="white"
+			<a-entity point-light
 				position="0 3 -2"
-				castShadow="true"
-			></a-light>
-			<a-light
-				type="point"
-				intensity="2"
-				color="white"
+			></a-entity>
+			<a-entity point-light
 				position="0 3 2"
-				castShadow="true"
-			></a-light>
-			<a-light
-				type="point"
-				intensity="1"
-				color="white"
+			></a-entity>
+			<a-entity point-light
 				position="2 3 0"
-				castShadow="true"
-			></a-light>
-			<a-light
-				type="point"
-				intensity="1"
-				color="white"
+			></a-entity>
+			<a-entity point-light
 				position="-2 3 0"
-				castShadow="true"
-			></a-light>
+			></a-entity>
 
 			<!-- Walls -->
 			<a-box

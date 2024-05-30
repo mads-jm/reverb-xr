@@ -1,3 +1,15 @@
+AFRAME.registerComponent('point-light', {
+	init: function () {
+		const light = document.createElement('a-light');
+		light.setAttribute('type', 'point');
+		light.setAttribute('intensity', '2');
+		light.setAttribute('color', 'white');
+		light.setAttribute('castShadow', 'true');
+		this.el.appendChild(light);
+	},
+});
+
+
 AFRAME.registerComponent('custom-camera', {
 	init: function () {
 		// Create camera entity
