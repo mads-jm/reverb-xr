@@ -30,10 +30,32 @@ export class InitializedState {
 		}
 	}
 
+	initMockData() {
+		this.source = this.audioContext.createBufferSource();
+		const buffer = this.audioContext.createBuffer(
+			1,
+			this.audioContext.sampleRate * 3,
+			this.audioContext.sampleRate
+		);
+		const data = buffer.getChannelData(0);
+
+		// Generate mock data (e.g., sine wave or random data)
+		for (let i = 0; i < data.length; i++) {
+			data[i] = Math.random() * 2 - 1; // Random data between -1 and 1
+		}
+
+		this.source.buffer = buffer;
+		this.source.loop = true;
+		this.source.connect(this.analyser);
+		this.source.start();
+		console.log('Mock data initialized');
+		return this;
+	}
+
 	stop() {
-		if(this.source){
+		if (this.source) {
 			this.source.disconnect();
-			if(this.source.stop){
+			if (this.source.stop) {
 				this.source.stop(0);
 			}
 			console.log('Audio source stopped');
@@ -41,10 +63,10 @@ export class InitializedState {
 	}
 
 	getFrequencyData(dataArray) {
-		console.log('No Audio source initialized');
+		this.analyser.getByteFrequencyData(dataArray);
 	}
 
 	getTimeDomainData(dataArray) {
-		console.log('No Audio source initialized');
+		this.analyser.getByteTimeDomainData(dataArray);
 	}
 }
