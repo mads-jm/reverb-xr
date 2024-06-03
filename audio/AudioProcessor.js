@@ -49,6 +49,17 @@ export class AudioProcessor {
 		}
 	}
 
+	initMockData() {
+		if (!this.isActive) {
+			this.state = this.state.initMockData();
+			this.isActive = true;
+			this.audioContext.resume();
+			console.log('initMockData');
+		} else {
+			console.log('already active');
+		}
+	}
+
 	stop() {
 		if (this.isActive) {
 			this.state = this.state.stop();
@@ -58,6 +69,7 @@ export class AudioProcessor {
 		}
 	}
 
+	// TODO: Check if active for below functions
 	getFrequencyData() {
 		this.state.getFrequencyData(this.dataArray);
 		return this.dataArray;
