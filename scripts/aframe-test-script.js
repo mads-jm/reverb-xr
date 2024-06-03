@@ -1,4 +1,4 @@
-import { AudioProcessor } from './audio/AudioProcessor.js';
+import { AudioProcessor } from '../audio/AudioProcessor.js';
 
 document.addEventListener('DOMContentLoaded', () => {
 	const audioProcessor = AudioProcessor.getInstance();
