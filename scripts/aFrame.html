@@ -1,0 +1,199 @@
+<html>
+  <head>
+    <!-- <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script> -->
+    <script src="https://rawgit.com/rdub80/aframe-gui/master/dist/aframe-gui.min.js"></script>
+    <script>
+      function slideActionFunction(event) {
+
+        var value = event.detail.value;
+      
+        var menu5Text = document.querySelector('#menu5Text');
+      
+        menu5Text.setAttribute('value', 'Menu 5: ' + value);
+      }
+    </script>
+    <script>
+      function handleMouseDown(element) {
+        element.setAttribute('material', 'color', 'black');
+      }
+    
+      function handleMouseUp(element) {
+        element.setAttribute('material', 'color', 'grey');
+      }
+    </script>
+    <script>
+      var isUp = false;
+      function handleClick(element) {
+        console.log('Clicked on ' + element.id);
+        if (element.id === 'playPause') {
+          var playPause = document.getElementById('playPause');
+          var text = playPause.querySelector('a-text');
+          if (text.getAttribute('value') === 'Play') {
+            text.setAttribute('value', 'Pause');
+            text.setAttribute('color', 'red');
+          } else {
+            text.setAttribute('value', 'Play');
+            text.setAttribute('color', 'green');
+          }
+        }
+        
+        if (element.id === 'settingsButton') {
+          var b1 = document.getElementById('subMenuBackground1');
+          var b2 = document.getElementById('subMenuBackground2');
+          var b3 = document.getElementById('subMenuBackground3');
+          var b4 = document.getElementById('subMenuBackground4');
+          var targetPosition1;
+          var targetPosition2;
+          var targetPosition3;
+          var targetPosition4;
+          var submenu = document.getElementById('subMenu');
+
+          if (isUp) {
+            // If the menu is up, move it down
+            submenu.setAttribute('visible', 'false');
+            targetPosition1 = "0 -1.5 -1";
+            targetPosition2 = "0 -1.5 -1";
+            targetPosition3 = "0 -1.5 -1";
+            targetPosition4 = "0 -1.5 -1";
+            isUp = false;
+          } else {
+            // If the menu is down, move it up
+            setTimeout(function() {
+              submenu.setAttribute('visible', 'true');
+            }, 500);
+            targetPosition1 = "0 -0.5 -1";
+            targetPosition2 = "0 0.25 -1";
+            targetPosition3 = "0 1 -1";
+            targetPosition4 = "0 1.75 -1";
+            isUp = true;
+          }
+
+          b1.setAttribute('animation', 'property: position; to: '+ targetPosition1 + '; dur: 500');
+          b2.setAttribute('animation', 'property: position; to: '+ targetPosition2 + '; dur: 500');
+          b3.setAttribute('animation', 'property: position; to: '+ targetPosition3 + '; dur: 500');
+          b4.setAttribute('animation', 'property: position; to: '+ targetPosition4 + '; dur: 500');
+        }
+      }
+//       AFRAME.registerComponent('transparent-on-overlap', {
+//   init: function () {
+//     this.el.sceneEl.addEventListener('loaded', () => {
+//       this.camera = this.el.sceneEl.camera.el;
+//     });
+//   },
+
+//   tick: function () {
+//     if (!this.camera) return;
+
+//     // Get the position of the camera and the object
+// var cameraPosition = this.camera.getAttribute('position');
+// var objectPosition = this.el.getAttribute('position');
+
+// // Create a new THREE.Vector3 for the ray direction
+// var rayDirection = new THREE.Vector3().copy(objectPosition).sub(cameraPosition).normalize();
+
+// // Create a new THREE.Raycaster
+// var raycaster = new THREE.Raycaster(cameraPosition, rayDirection);
+
+//     // Get all objects in the scene
+//     var objects = this.el.sceneEl.object3D.children;
+
+//     // Check if the ray intersects any object
+//     var intersections = raycaster.intersectObjects(objects, true);
+
+//     // If there are any intersections
+//     if (intersections.length > 0) {
+//       // Set the material transparency of the intersected object to 0.5
+//       intersections[0].object.material.transparent = true;
+//       intersections[0].object.material.opacity = 0.5;
+//     }
+//   }
+
+// });
+    </script>
+  </head>
+  <body>
+    <a-scene>
+      <a-entity camera look-controls cursor="rayOrigin: mouse"></a-entity>
+      <a-entity camera></a-entity>
+      <a-entity id="cameraRig" position="0 1.6 0">
+        <a-camera>
+          <!-- Menu items -->
+          <a-entity position="-1 -1.5 -4" rotation="0 16.4 0">
+            <a-box position="0 0 0" depth="0.1" height="0.5" width="0.95" color="grey" shadow="cast: false; receive: false;" material="flatShading: false;" onclick="handleClick('Menu 1')" onmousedown="handleMouseDown(this)" onmouseup="handleMouseUp(this)">
+              <a-text value="Menu 1" align="center" color="blue" position="0 0 0.05"></a-text>
+            </a-box>
+          </a-entity>
+          <a-entity position="0 -1.5 -4.15" rotation="0 0 0">
+            <a-box id="playPause" position="0 0 0" depth="0.1" height="0.5" width="1" color="grey" shadow="cast: false; receive: false;" material="flatShading: false;" onclick="handleClick(this)" onmousedown="handleMouseDown(this)" onmouseup="handleMouseUp(this)">
+              <a-text value="Play" align="center" color="green" position="0 0 0.05"></a-text>
+            </a-box>
+          </a-entity>
+          <a-entity position="1 -1.5 -4" rotation="0 -16.4 0">
+            <a-box position="0 0 0" depth="0.1" height="0.5" width="0.95" color="grey" shadow="cast: false; receive: false;" material="flatShading: false;" onclick="handleClick('Menu 3')" onmousedown="handleMouseDown(this)" onmouseup="handleMouseUp(this)">
+              <a-text value="Menu 3" align="center" color="blue" position="0 0 0.05"></a-text>
+            </a-box>
+          </a-entity>
+          <a-entity position="1.84 -1.5 -3.62" rotation="0 -34 0">
+            <a-box id="settingsButton" position="0 0 0" depth="0.1" height="0.5" width="0.85" color="grey" shadow="cast: false; receive: false;" material="flatShading: false;" onclick="handleClick(this)" onmousedown="handleMouseDown(this)" onmouseup="handleMouseUp(this)">
+              <a-text value="Settings" align="center" color="blue" position="0 0 0.05"></a-text>
+            </a-box>
+          </a-entity>
+          <a-entity position="-1.84 -1.5 -3.62" rotation="0 34 0">
+            <a-box position="0 0 0" depth="0.1" height="0.5" width="0.85" color="grey" shadow="cast: false; receive: false;" material="flatShading: false;" onclick="handleClick('Menu 5')" onmousedown="handleMouseDown(this)" onmouseup="handleMouseUp(this)">
+              <a-text id="menu5Text" value="Menu 5" align="center" color="blue" position="0 0 0.05"></a-text>
+            </a-box>
+          </a-entity>
+          <!-- Submenu of settingsButton -->
+          <a-entity id="subMenu" visible="false">
+            <a-entity position="-1 -0.5 -4" rotation="0 16.4 0">
+              <a-box id="sub1" position="0 0 0" depth="0.1" height="0.5" width="0.95" color="grey" shadow="cast: false; receive: false;" material="flatShading: false;" onclick="handleClick('subMenu 1')" onmousedown="handleMouseDown(this)" onmouseup="handleMouseUp(this)">
+                <a-text value="sub1" align="center" color="blue" position="0 0 0.05"></a-text>
+              </a-box>
+            </a-entity>
+            <a-entity position="0 -0.5 -4.15" rotation="0 0 0">
+              <a-box id="sub2" position="0 0 0" depth="0.1" height="0.5" width="1" color="grey" shadow="cast: false; receive: false;" material="flatShading: false;" onclick="handleClick('subMenu 2')" onmousedown="handleMouseDown(this)" onmouseup="handleMouseUp(this)">
+                <a-text value="sub2" align="center" color="blue" position="0 0 0.05"></a-text>
+              </a-box>
+            </a-entity>
+            <a-entity position="1 -0.5 -4" rotation="0 -16.4 0">
+              <a-box id="sub3" position="0 0 0" depth="0.1" height="0.5" width="0.95" color="grey" shadow="cast: false; receive: false;" material="flatShading: false;" onclick="handleClick('subMenu 3')" onmousedown="handleMouseDown(this)" onmouseup="handleMouseUp(this)">
+                <a-text value="sub3" align="center" color="blue" position="0 0 0.05"></a-text>
+              </a-box>
+            </a-entity>
+            <a-entity position="1.84 -0.5 -3.62" rotation="0 -34 0">
+              
+              <a-box id="sub4" position="0 0 0" depth="0.1" height="0.5" width="0.85" color="grey" shadow="cast: false; receive: false;" material="flatShading: false;" onclick="handleClick('subMenu 4')" onmousedown="handleMouseDown(this)" onmouseup="handleMouseUp(this)">
+                <a-text value="sub4" align="center" color="blue" position="0 0 0.05"></a-text>
+              </a-box>
+            </a-entity>
+            <a-entity position="-1.84 -0.5 -3.62" rotation="0 34 0">
+              <a-box id="sub5" position="0 0 0" depth="0.1" height="0.5" width="0.85" color="grey" shadow="cast: false; receive: false;" material="flatShading: false;" onclick="handleClick('subMenu 5')" onmousedown="handleMouseDown(this)" onmouseup="handleMouseUp(this)">
+                <a-text value="sub5" align="center" color="blue" position="0 0 0.05"></a-text>
+              </a-box>
+            </a-entity>
+          </a-entity>
+          <!-- Curved background -->
+          
+          <a-curvedimage src="grey.png" radius="3.25" theta-length="100" height="0.75" position="0 -1.5 -1" rotation="0 130 0"></a-curvedimage>        
+          <a-curvedimage id="subMenuBackground1" src="grey.png" radius="3.25" theta-length="100" height="0.75" position="0 -1.5 -1" rotation="0 130 0"></a-curvedimage>
+          <a-curvedimage id="subMenuBackground2" src="grey.png" radius="3.25" theta-length="100" height="0.75" position="0 -1.5 -1" rotation="0 130 0"></a-curvedimage>
+          <a-curvedimage id="subMenuBackground3" src="grey.png" radius="3.25" theta-length="100" height="0.75" position="0 -1.5 -1" rotation="0 130 0"></a-curvedimage>
+          <a-curvedimage id="subMenuBackground4" src="grey.png" radius="3.25" theta-length="100" height="0.75" position="0 -1.5 -1" rotation="0 130 0"></a-curvedimage>
+        </a-camera>
+      </a-entity>
+      <a-entity position="0 0 0" rotation="0 0 0" visible="true">
+        <a-gui-slider 	
+	        width="2.5" height="0.75"
+	        onclick="slideActionFunction(event)"
+	        percent="0.29"
+	        margin="0 0 0.05 0"
+        >
+        </a-gui-slider>
+      </a-entity>
+      <a-plane position="0 0 -4" rotation="-90 0 0" width="4" height="4" color="#7BC8A4"></a-plane>
+      <a-box position="0 -1 -4" width="1" height="1" color="#7BC8A4"></a-box>
+      <a-box position="0 1 -20" width="1" height="1" color="#7BC8A4"></a-box>
+      <a-sky color="#ECECEC"></a-sky>
+    </a-scene>
+  </body>
+</html>
