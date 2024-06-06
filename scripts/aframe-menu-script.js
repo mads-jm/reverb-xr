@@ -10,7 +10,7 @@ function handleMouseDown(element) {
   var isMoving = false;
   window.handleClick = function(id) {
     console.log('Box clicked:', id);
-        if (id === 'playPause') {
+        if (id === 'playPause' && !isHidden) {
           var playPause = document.getElementById('playPause');
           var text = playPause.querySelector('a-text');
           if (text.getAttribute('value') === 'Play') {
@@ -73,7 +73,7 @@ function handleMouseDown(element) {
         }
         
         
-        if (id === 'settings') {
+        if (id === 'settings' && !isHidden) {
           var b1 = document.getElementById('subMenuBackground1');
           var b2 = document.getElementById('subMenuBackground2');
           var b3 = document.getElementById('subMenuBackground3');
@@ -124,25 +124,25 @@ function handleMouseDown(element) {
           b4.setAttribute('animation', 'property: position; to: '+ targetPosition4 + '; dur: 500');
         }
 
-        if (id === 'menu3') { // about
+        if (id === 'menu3' && !isHidden) { // about
           window.location.href = 'about.html';
         }
-        if (id === 'menu5') { // settings
+        if (id === 'menu5' && !isHidden) { // settings
           window.location.href = 'settings.html';
         }
-        if (id === 'sub1') { // DualWave
+        if (id === 'sub1' && isUp) { // DualWave
           window.location.href = 'stage-dualwave.html';
         }
-        if (id === 'sub2') { // Start
+        if (id === 'sub2' && isUp) { // Start
           window.location.href = 'stage-wave.html';
         }
         if (id === 'sub3') {
           // window.location.href = 'stage-wave.html';
         }
-        if (id === 'sub4') { // Bars
+        if (id === 'sub4' && isUp) { // Bars
           window.location.href = 'stage-bars.html';
         }
-        if (id === 'sub5') { // Wave
+        if (id === 'sub5' && isUp) { // Wave
           window.location.href = 'stage-wave.html';
         }
         
