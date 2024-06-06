@@ -95,7 +95,7 @@ AFRAME.registerComponent('custom-camera', {
 	init: function () {
 		// Create camera entity
 		const camera = document.createElement('a-camera');
-		camera.setAttribute('wasd-controls', 'fly: true');
+		camera.setAttribute('wasd-controls', 'fly: false');
 		camera.setAttribute('look-controls', 'enabled: true');
 		camera.setAttribute('cursor', 'rayOrigin: mouse');
 
