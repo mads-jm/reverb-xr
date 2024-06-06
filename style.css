@@ -48,3 +48,16 @@ pre {
   font-weight: 400;
   font-style: normal;
 }
+
+button{
+	padding: 5px 10px;
+	font-size: 14px;
+	line-height: 10px;
+	
+	text-align: center;
+	cursor: pointer;
+	background: linear-gradient(#ffffff, #aba9a9 );
+	border-radius: 10px;
+
+}
+

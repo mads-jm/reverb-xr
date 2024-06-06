@@ -7,8 +7,27 @@ document.addEventListener('DOMContentLoaded', () => {
 	const fileOption = document.getElementById('file-option');
 	const startMicButton = document.getElementById('start-mic');
 	const selectFileButton = document.getElementById('select-file');
+
 	const fileInput = document.getElementById('file-input');
 	const aframeIframe = document.getElementById('aframe-iframe');
+
+	function playPause(){
+		if(count%2===0){
+			count++;
+			audioProcessor.play();
+		}
+		else
+			audioProcessor.pause();
+	}
+
+	PlayPauseBTN.addEventListener('click', () => {
+		if(count%2===0){
+			count++;
+			audioProcessor.play();
+		}
+		else
+			audioProcessor.pause();
+	});
 
 	micOption.addEventListener('change', () => {
 		if (micOption.checked) {
