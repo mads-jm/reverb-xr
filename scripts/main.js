@@ -11,28 +11,25 @@ document.addEventListener('DOMContentLoaded', () => {
 	const fileInput = document.getElementById('file-input');
 	const aframeIframe = document.getElementById('aframe-iframe');
 
-	function playPause(){
-		if(count%2===0){
+	function playPause() {
+		if (count % 2 === 0) {
 			count++;
 			audioProcessor.play();
-		}
-		else
-			audioProcessor.pause();
+		} else audioProcessor.pause();
 	}
 
-	PlayPauseBTN.addEventListener('click', () => {
-		if(count%2===0){
-			count++;
-			audioProcessor.play();
-		}
-		else
-			audioProcessor.pause();
-	});
+	// PlayPauseBTN.addEventListener('click', () => {
+	// 	if (count % 2 === 0) {
+	// 		count++;
+	// 		audioProcessor.play();
+	// 	} else audioProcessor.pause();
+	// });
 
 	micOption.addEventListener('change', () => {
 		if (micOption.checked) {
 			startMicButton.disabled = false;
 			selectFileButton.disabled = true;
+			console.log('startMicButton.disabled startMicButton.disabled');
 			audioProcessor.stop();
 		}
 	});
@@ -49,18 +46,18 @@ document.addEventListener('DOMContentLoaded', () => {
 		audioProcessor.initMicrophone();
 	});
 
-    selectFileButton.addEventListener('click', () => {
-			fileInput.click();
-		});
+	selectFileButton.addEventListener('click', () => {
+		fileInput.click();
+	});
 
-		fileInput.addEventListener('change', (event) => {
-			const file = event.target.files[0];
-			if (file) {
-				audioProcessor.initFile(file);
-			}
-		});
+	fileInput.addEventListener('change', (event) => {
+		const file = event.target.files[0];
+		if (file) {
+			audioProcessor.initFile(file);
+		}
+	});
 
-  function sendAudioDataToAFrame() {
+	function sendAudioDataToAFrame() {
 		if (audioProcessor.isActive) {
 			const frequencyData = audioProcessor.getFrequencyDataForAPI();
 			const timeDomainData = audioProcessor.getTimeDomainDataForAPI();
@@ -75,6 +72,6 @@ document.addEventListener('DOMContentLoaded', () => {
 		}
 		requestAnimationFrame(sendAudioDataToAFrame);
 	}
-	
+
 	sendAudioDataToAFrame();
 });
