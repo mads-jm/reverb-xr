@@ -6,20 +6,21 @@ document.addEventListener('DOMContentLoaded', () => {
 	const micOption = document.getElementById('mic-option');
 	const fileOption = document.getElementById('file-option');
 	const startMicButton = document.getElementById('start-mic');
+	const selectFileButton = document.getElementById('select-file');
 	const fileInput = document.getElementById('file-input');
 	const aframeIframe = document.getElementById('aframe-iframe');
 
 	micOption.addEventListener('change', () => {
 		if (micOption.checked) {
 			startMicButton.disabled = false;
-			fileInput.disabled = true;
+			selectFileButton.disabled = true;
 			audioProcessor.stop();
 		}
 	});
 
 	fileOption.addEventListener('change', () => {
 		if (fileOption.checked) {
-			fileInput.disabled = false;
+			selectFileButton.disabled = false;
 			startMicButton.disabled = true;
 			audioProcessor.stop();
 		}
@@ -29,12 +30,16 @@ document.addEventListener('DOMContentLoaded', () => {
 		audioProcessor.initMicrophone();
 	});
 
-	fileInput.addEventListener('change', (event) => {
-		const file = event.target.files[0];
-		if (file) {
-			audioProcessor.initFile(file);
-		}
-	});
+    selectFileButton.addEventListener('click', () => {
+			fileInput.click();
+		});
+
+		fileInput.addEventListener('change', (event) => {
+			const file = event.target.files[0];
+			if (file) {
+				audioProcessor.initFile(file);
+			}
+		});
 
   function sendAudioDataToAFrame() {
 		if (audioProcessor.isActive) {

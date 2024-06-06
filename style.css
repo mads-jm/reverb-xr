@@ -41,3 +41,10 @@ pre {
 	margin-top: 20px;
 	border: 1px solid #666;
 }
+
+.jetbrains-mono-1 {
+  font-family: "JetBrains Mono", monospace;
+  font-optical-sizing: auto;
+  font-weight: 400;
+  font-style: normal;
+}
