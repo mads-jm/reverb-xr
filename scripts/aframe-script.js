@@ -46,7 +46,7 @@ document.addEventListener('DOMContentLoaded', () => {
             window.location.href = "stage-dualwave.html";
             break;
           case "particleButton":
-            window.location.href = "particle.html";
+            window.location.href = "stage-particle.html";
             break;
           default:
             break;
