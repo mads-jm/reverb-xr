@@ -100,31 +100,33 @@ AFRAME.registerComponent('custom-camera', {
 		camera.setAttribute('cursor', 'rayOrigin: mouse');
 
 		// Create cursor entity
-		const cursor = document.createElement('a-cursor');
-		cursor.setAttribute('id', 'cursor');
-		cursor.setAttribute(
-			'animation__click',
-			'property: scale; from: 0.1 0.1 0.1; to: 0.5 0.5 0.5; easing: easeInCubic; dur: 150; startEvents: click'
-		);
-		cursor.setAttribute(
-			'animation__clickreset',
-			'property: scale; to: 0.1 0.1 0.1; dur: 1; startEvents: animationcomplete__click'
-		);
-		cursor.setAttribute(
-			'animation__fusing',
-			'property: scale; from: 1 1 1; to: 0.5 0.5 0.5; easing: easeInCubic; dur: 150; startEvents: fusing'
-		);
+		// const cursor = document.createElement('a-cursor');
+		// cursor.setAttribute('id', 'cursor');
+		// cursor.setAttribute(
+		// 	'animation__click',
+		// 	'property: scale; from: 0.1 0.1 0.1; to: 0.5 0.5 0.5; easing: easeInCubic; dur: 150; startEvents: click'
+		// );
+		// cursor.setAttribute(
+		// 	'animation__clickreset',
+		// 	'property: scale; to: 0.1 0.1 0.1; dur: 1; startEvents: animationcomplete__click'
+		// );
+		// cursor.setAttribute(
+		// 	'animation__fusing',
+		// 	'property: scale; from: 1 1 1; to: 0.5 0.5 0.5; easing: easeInCubic; dur: 150; startEvents: fusing'
+		// );
 
-		// Append cursor to camera
-		camera.appendChild(cursor);
+		// // Append cursor to camera
+		// camera.appendChild(cursor);
+
+		
 
 		const menuItems = [
             { position: '-1 -1.5 -4', rotation: '0 16.4 0', id: 'hideShow', text: 'Hide', width: '0.95' },
             { position: '0 -1.5 -4.15', rotation: '0 0 0', id: 'playPause', text: 'Play', width: '1' },
-            { position: '1 -1.5 -4', rotation: '0 -16.4 0', id: 'menu3', text: 'Menu 3', width: '0.95' },
-			{ position: '1.84 -1.5 -3.62', rotation: '0 -34 0', id: 'settings', text: 'Settings', width: '0.85' },
-			{ position: '-1.84 -1.5 -3.62', rotation: '0 34 0', id: 'menu5', text: 'Menu 5', width: '0.85'},
-            // Add more menu items here...
+            { position: '1 -1.5 -4', rotation: '0 -16.4 0', id: 'menu3', text: 'About', width: '0.95' },
+			{ position: '1.84 -1.5 -3.62', rotation: '0 -34 0', id: 'settings', text: 'Rooms', width: '0.85' },
+			{ position: '-1.84 -1.5 -3.62', rotation: '0 34 0', id: 'menu5', text: 'Settings', width: '0.85'},
+			{ position: "0 -0.4 -0.4", rotation: "-45 0 0", id: "show", text: "/\\", width: "0.045", height: "0.15", visible: "false", color: "white"},
         ];
 
 
@@ -139,7 +141,7 @@ AFRAME.registerComponent('custom-camera', {
 			box.setAttribute('id', item.id);
             box.setAttribute('position', '0 0 0');
             box.setAttribute('depth', '0.1');
-            box.setAttribute('height', '0.5');
+            box.setAttribute('height', item.height || '0.5');
             box.setAttribute('width', item.width);
             box.setAttribute('color', 'grey');
             box.setAttribute('shadow', 'cast: false; receive: false;');
@@ -147,11 +149,12 @@ AFRAME.registerComponent('custom-camera', {
 			box.setAttribute('onClick', 'handleClick(this.id)');
             box.setAttribute('onmousedown', 'handleMouseDown(this)');
             box.setAttribute('onmouseup', 'handleMouseUp(this)');
+			box.setAttribute('visible', item.visible || 'true');
 
             const text = document.createElement('a-text');
             text.setAttribute('value', item.text);
             text.setAttribute('align', 'center');
-            text.setAttribute('color', this.color || 'blue');
+            text.setAttribute('color', item.color || 'blue');
             text.setAttribute('position', '0 0 0.05');
 
             box.appendChild(text);
@@ -160,11 +163,11 @@ AFRAME.registerComponent('custom-camera', {
         });
 
 		const subMenu = [
-			{ position: "-1 -0.5 -4", rotation: "0 16.4 0", id: "sub1", text: "subM1", width: "0.95"},
-			{ position: "0 -0.5 -4.15", rotation: "0 0 0", id: "sub2", text: "subM2", width: "1"},
+			{ position: "-1 -0.5 -4", rotation: "0 16.4 0", id: "sub1", text: "Dual", width: "0.95"},
+			{ position: "0 -0.5 -4.15", rotation: "0 0 0", id: "sub2", text: "Start", width: "1"},
 			{ position: "1 -0.5 -4", rotation: "0 -16.4 0", id: "sub3", text: "subM3", width: "0.95"},
-			{ position: "1.84 -0.5 -3.62", rotation: "0 -34 0", id: "sub4", text: "subM4", width: "0.85"},
-			{ position: "-1.84 -0.5 -3.62", rotation: "0 34 0", id: "sub5", text: "subM5", width: "0.85"},
+			{ position: "1.84 -0.5 -3.62", rotation: "0 -34 0", id: "sub4", text: "Bars", width: "0.85"},
+			{ position: "-1.84 -0.5 -3.62", rotation: "0 34 0", id: "sub5", text: "Wave", width: "0.85"},
 		];
 
 		subMenu.forEach(item => {
@@ -177,7 +180,7 @@ AFRAME.registerComponent('custom-camera', {
 			box.setAttribute('id', item.id);
 			box.setAttribute('position', '0 0 0');
 			box.setAttribute('depth', '0.1');
-			box.setAttribute('height', '0.5');
+			box.setAttribute('height', item.height || '0.5');
 			box.setAttribute('width', item.width);
 			box.setAttribute('color', 'grey');
 			box.setAttribute('shadow', 'cast: false; receive: false;');
