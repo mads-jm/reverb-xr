@@ -1,71 +1,51 @@
 document.addEventListener('DOMContentLoaded', () => {
-	const visualizerPlane = document.getElementById('visualizer-plane');
-	const visualizerCanvas = document.getElementById('visualizer-canvas');
-	const visualizerCtx = visualizerCanvas.getContext('2d');
-
-	//const aspectRatio = visualizerCanvas.width / visualizerCanvas.height;
-
-	console.log('Canvas and context initialized');
-	console.log('Visualizer Canvas:', visualizerCanvas);
-	console.log('Visualizer Context:', visualizerCtx);
-
-	visualizerPlane.setAttribute('live-canvas', 'src: #visualizer-canvas');
-	//visualizerPlane.setAttribute('geometry', {width: aspectRatio * 4, height: 2});
-
-	function waitForComponentInitialization(callback) {
-		if (visualizerPlane.components['live-canvas']) {
-			callback();
-		} else {
-			setTimeout(() => waitForComponentInitialization(callback), 100);
-		}
-	}
+	const visualizer = document.querySelector('#audio-visualizer');
+	const active = false;
+	console.log('Bars script loaded');
 
 	window.addEventListener('message', (event) => {
 		if (event.data.type === 'frequencyData') {
 			console.log('Frequency data received:', event.data.data);
-			updateFrequencyData(event.data.data);
+			updateBars(event.data.data);
 		}
 	});
 
-	function updateFrequencyData(frequencyData) {
-		console.log('Updating frequency data');
-		visualizerCtx.clearRect(
-			0,
-			0,
-			visualizerCanvas.width,
-			visualizerCanvas.height
-		);
-		//visualizerCtx.fillStyle = 'rgb(40, 44, 52)';
-		//visualizerCtx.fillRect(0, 0, visualizerCanvas.width, visualizerCanvas.height);
+	function createBars() {
+		for (let i = -128; i < 129; i++) {
+			const bar = document.createElement('a-box');
+			bar.setAttribute('width', 0.1);
+			bar.setAttribute('depth', 0.5);
+			bar.setAttribute('height', 2);
+			bar.setAttribute('position', {
+				x: (i - 16) * 0.15,
+				y: 0.5,
+				z: -15,
+			});
+			bar.setAttribute('metalness', 0.2);
+			visualizer.appendChild(bar);
+		}
+	}
 
-		const barWidth = (visualizerCanvas.width / frequencyData.length) * 2;
-		let barHeight;
-		let x = 0;
-		const buffer = 0.95; // Leave a 5% buffer above the bars
+	function updateBars(frequencyData) {
+		frequencyData = smoothData(frequencyData);
+		//frequencyData = compressData(frequencyData);
 
-		for (let i = 0; i < frequencyData.length; i++) {
-			barHeight = (frequencyData[i] / 255.0) * visualizerCanvas.height * buffer;
+		const bars = visualizer.children;
+		const buffer = 0.95;
+
+		for (let i = 0; i < bars.length; i++) {
+			const bar = bars[i];
+			const scaleY = (frequencyData[i] / 255.0) * 6 * buffer;
 			const hue = (i / frequencyData.length) * 360;
 			const [r, g, b] = hsvToRgb(hue / 360);
-			visualizerCtx.fillStyle = `rgb(${r}, ${g}, ${b})`;
-			visualizerCtx.fillRect(
-				x,
-				visualizerCanvas.height - barHeight,
-				barWidth,
-				barHeight
-			);
-			x += barWidth + 1;
+			const hexColor = rgbToHex(r, g, b);
+			bar.setAttribute('scale', {
+				x: 1,
+				y: scaleY,
+				z: 1,
+			});
+			bar.setAttribute('color', hexColor);
 		}
-
-		console.log('Canvas updated with frequency data');
-		const texture = new THREE.CanvasTexture(visualizerCanvas);
-		texture.needsUpdate = true;
-		document
-			.querySelector('#visualizer-plane')
-			.getObject3D('mesh').material.map = texture;
-		waitForComponentInitialization(() => {
-			visualizerPlane.components['live-canvas'].updateTexture();
-		});
 	}
 
 	function hsvToRgb(h) {
@@ -98,4 +78,42 @@ document.addEventListener('DOMContentLoaded', () => {
 
 		return [Math.floor(r * 255), Math.floor(g * 255), Math.floor(b * 255)];
 	}
+
+	function rgbToHex(r, g, b) {
+		return (
+			'#' +
+			((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1).toUpperCase()
+		);
+	}
+
+	function smoothData(data, windowSize = 1) {
+		const smoothedData = [];
+		for (let i = 0; i < data.length; i++) {
+			let sum = 0;
+			let count = 0;
+			for (
+				let j = Math.max(0, i - windowSize);
+				j <= Math.min(data.length - 1, i + windowSize);
+				j++
+			) {
+				sum += data[j];
+				count++;
+			}
+			smoothedData.push(sum / count);
+		}
+		return smoothedData;
+	}
+
+	function compressData(data, threshold = 100, ratio = 2) {
+		const compressedData = data.map((value) => {
+			if (value > threshold) {
+				return threshold + (value - threshold) / ratio;
+			}
+			return value;
+		});
+		return compressedData;
+	}
+
+	createBars();
+	setInterval(updateBars, 100);
 });
