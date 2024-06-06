@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<title>Reverb VR Audio Visualizer</title>
+		<script src="https://aframe.io/releases/1.3.0/aframe.min.js"></script>
+		<script src="https://cdn.rawgit.com/donmccurdy/aframe-extras/v6.1.0/dist/aframe-extras.min.js"></script>
+		<script type="module" src="scripts/bars-script.js"></script>
+	</head>
+	<body>
+		<a-scene
+			id="scene"
+			keyboard-shortcuts="enterVR: false"
+			renderer="antialias: true; colorManagement: true; sortObjects: true; physicallyCorrectLights: true; maxCanvasWidth: 1920; maxCanvasHeight: 1920;"
+		>
+			<a-assets>
+				<canvas
+					id="visualizer-canvas"
+					width="2048"
+					height="512"
+					style="display: none"
+				></canvas>
+			</a-assets>
+			<a-entity custom-camera></a-entity>
+			<a-entity id="bar-visualizer" position="0 3 -4">
+				<a-plane
+					id="visualizer-plane"
+					align="center"
+					width="16"
+					height="8"
+					material="shader: flat; side: double"
+					live-canvas="src: #visualizer-canvas"
+				></a-plane>
+			</a-entity>
+			<a-plane
+				position="0 0 2.5"
+				rotation="-90 0 0"
+				width="1"
+				height="1"
+				color="white"
+				material="shader: phong"
+				shadow="receive: true"
+			></a-plane>
+		</a-scene>
+	</body>
+</html>

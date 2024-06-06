@@ -1,25 +1,46 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Reverb VR Audio Visualizer</title>
-  <link rel="stylesheet" href="style.css">
-  <script src="AudioProcessor.js"></script>
-  <script src="main.js"></script>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<title>Reverb VR Audio Visualizer</title>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400&display=swap">
+  <style>
+    .jetbrains-mono {
+      font-family: "JetBrains Mono", monospace;
+      font-optical-sizing: auto;
+      font-weight: 400;
+      font-style: normal;
+    }
+  </style>
+    <link rel="stylesheet" href="style.css">
+    <script type="module" src="scripts/main.js" defer></script>
 </head>
 <body>
-  <h1>Reverb VR: Audio Visualizer Prototype</h1>
-  <div>
-    <input type="radio" id="mic-option" name="audio-source" value="microphone">
-    <label for="mic-option">Use Microphone</label>
-    <button id="start-mic" disabled>Start Microphone</button>
-    <input type="radio" id="file-option" name="audio-source" value="file">   
-    <label for="file-option">Use Audio File</label>
-    <input type="file" id="file-input" accept="audio/*" disabled>
+		<h1 class="jetbrains-mono" >Reverb VR: Audio Visualizer Prototype</h1>
+		<div>
+			<input
+				type="radio"
+				id="mic-option"
+				name="audio-source"
+				value="microphone"
+			/>
+    <label for="mic-option" class="jetbrains-mono">Use Microphone</label>
+    <button id="start-mic" disabled class="jetbrains-mono">Start Microphone</button>
+    <input type="radio" id="file-option" name="audio-source" value="file"  />
+    <label for="file-option" class="jetbrains-mono">Use Audio File</label>
+		<button style="cursor:pointer" id="select-file" class="jetbrains-mono" disabled>Select Audio File</button>
+    <input type="file" id="file-input" accept="audio/*" style="display:none" />
+		<label for="file-input" class="jetbrains-mono"></label>
   </div>
-  
-  <!-- Aframe iframe container -->
-  <iframe id="aframe-iframe" src="aframe.html" style="width: 100%; height: 1080px;"></iframe>
+    <div>
+        <button id="play-button" class="jetbrains-mono" disabled>Play</button>
+        <button id="pause-button" class="jetbrains-mono" disabled>Pause</button>
+        <label for="volume-slider" class="jetbrains-mono">Volume:</label>
+        <input type="range" id="volume-slider" min="0" max="1" step="0.01">
+    </div>
+    <div></audio></div>
+    <!-- Aframe iframe container -->
+    <iframe id="aframe-iframe" src="aframe.html" style="width: 99%; height: 1080px"></iframe>
 </body>
 </html>
