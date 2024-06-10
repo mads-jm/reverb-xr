@@ -18,7 +18,7 @@ function handleMouseDown(element) {
             text.setAttribute('color', 'red');
           } else {
             text.setAttribute('value', 'Play');
-            text.setAttribute('color', 'green');
+            text.setAttribute('color', 'blue');
           }
         }
         if ((id === 'hideShow' | id === 'show') && !isUp && !isMoving) {
@@ -35,12 +35,12 @@ function handleMouseDown(element) {
           var tp1;
           var show = document.getElementById('show');
           if (!isHidden) {
-            tp1 = '0 -3.5 1';
+            tp1 = '0 -2 0';
             show.setAttribute('visible', 'true');
             isHidden = true;
             // Hide all menu items
           } else {
-            tp1 = '0 -1.5 -1';
+            tp1 = '0 -0.67 1.1';
             show.setAttribute('visible', 'false');
             isHidden = false;
             // Show all menu items
@@ -95,10 +95,10 @@ function handleMouseDown(element) {
             s3.setAttribute('visible', 'false');
             s4.setAttribute('visible', 'false');
             s5.setAttribute('visible', 'false');
-            targetPosition1 = "0 -1.5 -1";
-            targetPosition2 = "0 -1.5 -1";
-            targetPosition3 = "0 -1.5 -1";
-            targetPosition4 = "0 -1.5 -1";
+            targetPosition1 = "0 -0.67 1.1";
+            targetPosition2 = "0 -0.67 1.1";
+            targetPosition3 = "0 -0.67 1.1";
+            targetPosition4 = "0 -0.67 1.1";
             isUp = false;
           } else {
             // If the menu is down, move it up
@@ -111,10 +111,10 @@ function handleMouseDown(element) {
                     s5.setAttribute('visible', 'true');
                 }
             }, 500);
-            targetPosition1 = "0 -0.5 -1";
-            targetPosition2 = "0 0.25 -1";
-            targetPosition3 = "0 1 -1";
-            targetPosition4 = "0 1.75 -1";
+            targetPosition1 = "0 -0.40 1.1";
+            targetPosition2 = "0 -0.25 1.1";
+            targetPosition3 = "0 -0.1 1.1";
+            targetPosition4 = "0 0.05 1.1";
             isUp = true;
           }
 
@@ -125,25 +125,49 @@ function handleMouseDown(element) {
         }
 
         if (id === 'menu3' && !isHidden) { // about
-          window.location.href = 'about.html';
+          if (window.location.href.indexOf('about') === -1) {
+            window.location.href = 'about.html';
+          } else {
+            window.location.href = 'aframe.html';
+          }
         }
         if (id === 'menu5' && !isHidden) { // settings
-          window.location.href = 'settings.html';
+          if (window.location.href.indexOf('settings') === -1) {
+            window.location.href = 'settings.html';
+          } else {
+            window.location.href = 'aframe.html';
+          }
         }
         if (id === 'sub1' && isUp) { // DualWave
-          window.location.href = 'stage-dualwave.html';
+          if (window.location.href.indexOf('stage-dualwave') === -1) {
+            window.location.href = 'stage-dualwave.html';
+          } else {
+            window.location.href = 'aframe.html';
+          }
         }
         if (id === 'sub2' && isUp) { // Start
-          window.location.href = 'stage-wave.html';
+          if (window.location.href.indexOf('stage-start') === -1) {
+            window.location.href = 'stage-start.html';
+          } else {
+            window.location.href = 'aframe.html';
+          }
         }
         if (id === 'sub3') {
           // window.location.href = 'stage-wave.html';
         }
         if (id === 'sub4' && isUp) { // Bars
-          window.location.href = 'stage-bars.html';
+          if (window.location.href.indexOf('stage-bars') === -1) {
+            window.location.href = 'stage-bars.html';
+          } else {
+            window.location.href = 'aframe.html';
+          }
         }
         if (id === 'sub5' && isUp) { // Wave
-          window.location.href = 'stage-wave.html';
+          if (window.location.href.indexOf('stage-wave') === -1) {
+            window.location.href = 'stage-wave.html';
+          } else {
+            window.location.href = 'aframe.html';
+          }
         }
         
       };
