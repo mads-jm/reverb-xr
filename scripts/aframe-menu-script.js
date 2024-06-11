@@ -1,6 +1,6 @@
 function handleMouseDown(element) {
-    element.setAttribute('material', 'color', 'black');
-  }
+  element.setAttribute("material", "color", "black");
+}
 
   function handleMouseUp(element) {
     element.setAttribute('material', 'color', 'grey');
@@ -171,3 +171,4 @@ function handleMouseDown(element) {
         }
         
       };
+    }

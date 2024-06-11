@@ -1,120 +1,94 @@
-// import { subMenu, menuItems, curvedImages } from './main.js';
-// Add to main.js:
-// export const subMenu = [
-// 	{ position: "-0.33 -0.4 -1.13", rotation: "0 8.5 0", id: "sub1", text: "Dual", width: '0.31'},
-// 	{ position: "0 -0.4 -1.155", rotation: "0 0 0", id: "sub2", text: "Start", width: '0.33'},
-// 	{ position: "0.33 -0.4 -1.13", rotation: "0 -8.5 0", id: "sub3", text: "subM3", width: '0.31'},
-// 	{ position: "0.64 -0.4 -1.063", rotation: "0 -16.2 0", id: "sub4", text: "Bars", width: '0.3'},
-// 	{ position: "-0.64 -0.4 -1.063", rotation: "0 16 0", id: "sub5", text: "Wave", width: '0.3'},
-// ];
-// export const menuItems = [
-// 	{ position: '-0.33 -0.67 -1.13', rotation: '0 8.5 0', id: 'hideShow', text: 'Hide', width: '0.31' },
-// 	{ position: '0 -0.67 -1.155', rotation: '0 0 0', id: 'playPause', text: 'Play', width: '0.33' },
-// 	{ position: '0.33 -0.67 -1.13', rotation: '0 -8.5 0', id: 'menu3', text: 'About', width: '0.31' },
-// 	{ position: '0.64 -0.67 -1.063', rotation: '0 -16.2 0', id: 'settings', text: 'Rooms', width: '0.3' },
-// 	{ position: '-0.64 -0.67 -1.063', rotation: '0 16.2 0', id: 'menu5', text: 'Settings', width: '0.3'},
-// 	{ position: "0 -0.35 -0.4", rotation: "-45 0 0", id: "show", text: "/\\", width: "0.2", height: "0.06", depth: '0.1', visible: "false", color: "white", transparency: 'true'},
-// ];
-// export const curvedImages = [
-// 	{ id: 'menuBackground', src: 'grey.png', radius: '2.25', thetaLength: '42', height: '0.2', position: '0 -0.67 1.1', rotation: '0 159 0'},
-// 	{ id: 'subMenuBackground1', src: 'grey.png', radius: '2.25', thetaLength: '42', height: '0.2', position: '0 -0.67 1.1', rotation: '0 159 0'},
-// 	{ id: 'subMenuBackground2', src: 'grey.png', radius: '2.25', thetaLength: '42', height: '0.2', position: '0 -0.67 1.1', rotation: '0 159 0'},
-// 	{ id: 'subMenuBackground3', src: 'grey.png', radius: '2.25', thetaLength: '42', height: '0.2', position: '0 -0.67 1.1', rotation: '0 159 0'},
-// 	{ id: 'subMenuBackground4', src: 'grey.png', radius: '2.25', thetaLength: '42', height: '0.2', position: '0 -0.67 1.1', rotation: '0 159 0'},
-// ];
-// End of additions to main.js
+AFRAME.registerComponent("button", {
+  schema: {
+    position: { type: "vec3", default: { x: 0, y: 0, z: 0 } },
+    text: { type: "string", default: "Click Me" },
+    clickAction: { type: "string", default: "" },
+  },
 
-AFRAME.registerComponent('button', {
-	schema: {
-		position: { type: 'vec3', default: { x: 0, y: 0, z: 0 } },
-		text: { type: 'string', default: 'Click Me' },
-		clickAction: { type: 'string', default: '' },
-	},
+  init: function () {
+    console.log("Initializing button component...");
 
-	init: function () {
-		console.log('Initializing button component...');
+    const button = document.createElement("a-entity");
 
-		const button = document.createElement('a-entity');
+    // Create the box
+    const box = document.createElement("a-box");
+    box.setAttribute("width", this.width || "1");
+    box.setAttribute("height", this.height || "1");
+    box.setAttribute("depth", this.depth || "0.2");
+    box.setAttribute("color", "#7D7B7B");
 
-		// Create the box
-		const box = document.createElement('a-box');
-		box.setAttribute('width', this.width || '1');
-		box.setAttribute('height', this.height || '1');
-		box.setAttribute('depth', this.depth || '0.2');
-		box.setAttribute('color', '#7D7B7B');
+    // Create the text
+    const buttonText = document.createElement("a-text");
+    buttonText.setAttribute("value", this.data.text);
+    buttonText.setAttribute("align", "center");
+    buttonText.setAttribute("position", "0 0 0.1"); // Adjust position as needed
+    buttonText.setAttribute("scale", "0.7 0.7 1");
+    buttonText.setAttribute("color", "white");
+    buttonText.setAttribute("align", "center");
+    // Append box and text to the button entity
+    button.appendChild(box);
+    button.appendChild(buttonText);
 
-		// Create the text
-		const buttonText = document.createElement('a-text');
-		buttonText.setAttribute('value', this.data.text);
-		buttonText.setAttribute('align', 'center');
-		buttonText.setAttribute('position', '0 0 0.1'); // Adjust position as needed
-		buttonText.setAttribute('scale', '0.7 0.7 1');
-		buttonText.setAttribute('color', 'white');
-		buttonText.setAttribute('align', 'center');
-		// Append box and text to the button entity
-		button.appendChild(box);
-		button.appendChild(buttonText);
+    // Set the position of the button
+    button.setAttribute("position", this.data.position);
 
-		// Set the position of the button
-		button.setAttribute('position', this.data.position);
+    // Append the button entity to the component's element
+    this.el.appendChild(button);
 
-		// Append the button entity to the component's element
-		this.el.appendChild(button);
+    // Add interaction listeners
+    this.addInteractionListeners(button, box);
 
-		// Add interaction listeners
-		this.addInteractionListeners(button, box);
+    console.log("Button appended to:", this.el);
+  },
 
-		console.log('Button appended to:', this.el);
-	},
+  addInteractionListeners: function (button, box) {
+    const el = this.el;
 
-	addInteractionListeners: function (button, box) {
-		const el = this.el;
+    el.addEventListener("mouseenter", function () {
+      box.setAttribute("color", "white");
+    });
 
-		el.addEventListener('mouseenter', function () {
-			box.setAttribute('color', 'white');
-		});
+    el.addEventListener("mouseleave", function () {
+      box.setAttribute("color", "#7D7B7B");
+    });
 
-		el.addEventListener('mouseleave', function () {
-			box.setAttribute('color', '#7D7B7B');
-		});
+    el.addEventListener("click", function () {
+      button.setAttribute("animation", {
+        property: "scale",
+        to: "1.1 1.1 1.1",
+        dur: 300,
+        easing: "easeInCubic",
+      });
 
-		el.addEventListener('click', function () {
-			button.setAttribute('animation', {
-				property: 'scale',
-				to: '1.1 1.1 1.1',
-				dur: 300,
-				easing: 'easeInCubic',
-			});
+      button.addEventListener("animationcomplete", function () {
+        button.setAttribute("animation", {
+          property: "scale",
+          to: "1 1 1",
+          dur: 200,
+          easing: "easeOutCubic",
+        });
+      });
 
-			button.addEventListener('animationcomplete', function () {
-				button.setAttribute('animation', {
-					property: 'scale',
-					to: '1 1 1',
-					dur: 200,
-					easing: 'easeOutCubic',
-				});
-			});
+      if (el.dataset.clickAction) {
+        el.emit(el.dataset.clickAction);
+      }
+    });
+  },
 
-			if (el.dataset.clickAction) {
-				el.emit(el.dataset.clickAction);
-			}
-		});
-	},
-
-	update: function () {
-		// Do something when component's data is updated.
-	},
+  update: function () {
+    // Do something when component's data is updated.
+  },
 });
 
-AFRAME.registerComponent('point-light', {
-	init: function () {
-		const light = document.createElement('a-light');
-		light.setAttribute('type', 'point');
-		light.setAttribute('intensity', '2');
-		light.setAttribute('color', 'white');
-		light.setAttribute('castShadow', 'true');
-		this.el.appendChild(light);
-	},
+AFRAME.registerComponent("point-light", {
+  init: function () {
+    const light = document.createElement("a-light");
+    light.setAttribute("type", "point");
+    light.setAttribute("intensity", "2");
+    light.setAttribute("color", "white");
+    light.setAttribute("castShadow", "true");
+    this.el.appendChild(light);
+  },
 });
 
 AFRAME.registerComponent('custom-camera', {
@@ -173,11 +147,11 @@ AFRAME.registerComponent('custom-camera', {
 				{ position: "-0.64 -0.4 -1.063", rotation: "0 16 0", id: "sub5", text: "Wave", width: '0.3'},
 			];
 
-		subMenu.forEach(item => {
-			const subMenu = document.createElement('a-entity');
-			subMenu.setAttribute('position', item.position);
-			subMenu.setAttribute('rotation', item.rotation);
-			subMenu.setAttribute('class', 'subMenu');
+    subMenu.forEach((item) => {
+      const subMenu = document.createElement("a-entity");
+      subMenu.setAttribute("position", item.position);
+      subMenu.setAttribute("rotation", item.rotation);
+      subMenu.setAttribute("class", "subMenu");
 
 			const box = document.createElement('a-box');
 			box.setAttribute('id', item.id);
@@ -214,20 +188,20 @@ AFRAME.registerComponent('custom-camera', {
 				{ id: 'subMenuBackground4', src: 'grey.png', radius: '2.25', thetaLength: '42', height: '0.2', position: '0 -0.67 1.1', rotation: '0 159 0'},
 			];
 
-        curvedImages.forEach(image => {
-            const curvedImage = document.createElement('a-curvedimage');
-            curvedImage.setAttribute('id', image.id);
-            curvedImage.setAttribute('src', image.src);
-            curvedImage.setAttribute('radius', image.radius);
-            curvedImage.setAttribute('theta-length', image.thetaLength);
-            curvedImage.setAttribute('height', image.height);
-            curvedImage.setAttribute('position', image.position);
-            curvedImage.setAttribute('rotation', image.rotation);
+    curvedImages.forEach((image) => {
+      const curvedImage = document.createElement("a-curvedimage");
+      curvedImage.setAttribute("id", image.id);
+      curvedImage.setAttribute("src", image.src);
+      curvedImage.setAttribute("radius", image.radius);
+      curvedImage.setAttribute("theta-length", image.thetaLength);
+      curvedImage.setAttribute("height", image.height);
+      curvedImage.setAttribute("position", image.position);
+      curvedImage.setAttribute("rotation", image.rotation);
 
-            camera.appendChild(curvedImage);
-        });
+      camera.appendChild(curvedImage);
+    });
 
-		// Append camera to the current entity
-		this.el.appendChild(camera);
-	},
+    // Append camera to the current entity
+    this.el.appendChild(camera);
+  },
 });
