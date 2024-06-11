@@ -1,0 +1,23 @@
+{
+  "name": "software-engineering-project-team-simm",
+  "version": "1.0.0",
+  "description": "Reverb VR is an audio visualizer prototype built using A-Frame and Web Audio API. This project demonstrates two different audio visualizations in separate scenes and lays the groundwork for more complex visualizations.",
+  "main": "index.js",
+  "scripts": {
+    "test": "jasmine"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@babel/core": "^7.24.7",
+    "@babel/preset-env": "^7.24.7",
+    "@babel/register": "^7.24.6",
+    "chai": "^5.1.1",
+    "jasmine": "^5.1.0",
+    "jsdom": "^24.1.0",
+    "jsdom-global": "^3.0.2",
+    "mocha": "^10.4.0",
+    "sinon": "^18.0.0"
+  }
+}
