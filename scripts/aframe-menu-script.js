@@ -171,4 +171,4 @@ function handleMouseDown(element) {
         }
         
       };
-    }
+    
