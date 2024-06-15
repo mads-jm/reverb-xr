@@ -34,7 +34,7 @@ document.addEventListener("DOMContentLoaded", () => {
             window.location.href = "settings.html";
             break;
           case "startButton":
-            window.location.href = "stage-wave.html";
+            window.location.href = "stage-boxwave.html";
             break;
           case "barsButton":
             window.location.href = "stage-bars.html";

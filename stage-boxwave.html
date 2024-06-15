@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html>
+  <!-- Visual Showcase AFrame Environment-->
+  <head>
+    <script src="https://aframe.io/releases/1.3.0/aframe.min.js"></script>
+    <script src="https://cdn.rawgit.com/donmccurdy/aframe-extras/v6.1.0/dist/aframe-extras.min.js"></script>
+    <script src="audio/AudioProcessor.js"></script>
+    <script src="scripts/boxwave-script.js"></script>
+    <script src="scripts/components.js"></script>
+    <script src="scripts/aframe-menu-script.js"></script>
+  </head>
+
+  <body>
+    <a-assets>
+      <!-- Live Canvas Initialization -->
+      <canvas
+        id="visualizer-canvas"
+        width="2048"
+        height="512"
+        style="display: none"
+      ></canvas>
+      <canvas
+        id="mirrored-canvas"
+        width="2048"
+        height="512"
+        style="display: none"
+      ></canvas>
+      <!-- Textures -->
+      <img
+        id="skyTexture"
+        src="https://cdn.aframe.io/a-painter/images/sky.jpg"
+      />
+    </a-assets>
+
+    <a-scene
+      id="scene"
+      keyboard-shortcuts="enterVR: false"
+      renderer="antialias: true;
+                   colorManagement: true;
+                   sortObjects: true;
+                   physicallyCorrectLights: true;
+                   maxCanvasWidth: 1920;
+                   maxCanvasHeight: 1920;"
+    >
+      <!-- Camera -->
+      <a-entity custom-camera></a-entity>
+      <!-- Flat 3D Element for 2D Visualizer :: References Live Canvas -->
+      <!-- For a 30 degree tilt in both: 10.39 pos offset -->
+      <a-entity id="wave-visualizer" position="0 2 -4">
+        <a-plane
+          id="visualizer-plane"
+          position="0 64 0"
+          rotation="90 0 90"
+          align="center"
+          width="128"
+          height="64"
+          material="shader: flat; side: double"
+          live-canvas="src: #visualizer-canvas"
+        ></a-plane>
+        <a-plane
+          id="mirrored-plane-bottom"
+          position="0 -64 0"
+          rotation="90 0 90"
+          align="center"
+          width="128"
+          height="64"
+          material="shader: flat; side: double"
+          live-canvas="src: #mirrored-canvas"
+        ></a-plane>
+        <a-plane
+          id="mirrored-plane-front"
+          position="0 0 64"
+          rotation="0 0 90"
+          align="center"
+          width="128"
+          height="64"
+          material="shader: flat; side: double"
+          live-canvas="src: #mirrored-canvas"
+        ></a-plane>
+        <a-plane
+          id="mirrored-plane-back"
+          position="0 0 -64"
+          rotation="0 0 90"
+          align="center"
+          width="128"
+          height="64"
+          material="shader: flat; side: double"
+          live-canvas="src: #mirrored-canvas"
+        ></a-plane>
+      </a-entity>
+    </a-scene>
+  </body>
+</html>
