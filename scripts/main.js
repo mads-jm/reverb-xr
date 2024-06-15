@@ -72,6 +72,9 @@ document.addEventListener("DOMContentLoaded", () => {
 		}
 		requestAnimationFrame(sendAudioDataToAFrame);
 	}
-
+	aframeIframe.contentWindow.postMessage(
+		{ type: 'binCount', data: audioProcessor.getFrequencyBinCount() },
+		'*'
+	);
 	sendAudioDataToAFrame();
 });

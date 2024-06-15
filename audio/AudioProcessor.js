@@ -89,4 +89,8 @@ export class AudioProcessor {
     this.getTimeDomainData();
     return this.dataArray.slice();
   }
+
+  getFrequencyBinCount(){
+    return this.analyser.frequencyBinCount;
+  }
 }
