@@ -181,11 +181,11 @@ AFRAME.registerComponent('custom-camera', {
 
 		// Create curved backgrounds
 			const curvedImages = [
-				{ id: 'menuBackground', src: 'grey.png', radius: '2.25', thetaLength: '42', height: '0.2', position: '0 -0.67 1.1', rotation: '0 159 0'},
-				{ id: 'subMenuBackground1', src: 'grey.png', radius: '2.25', thetaLength: '42', height: '0.2', position: '0 -0.67 1.1', rotation: '0 159 0'},
-				{ id: 'subMenuBackground2', src: 'grey.png', radius: '2.25', thetaLength: '42', height: '0.2', position: '0 -0.67 1.1', rotation: '0 159 0'},
-				{ id: 'subMenuBackground3', src: 'grey.png', radius: '2.25', thetaLength: '42', height: '0.2', position: '0 -0.67 1.1', rotation: '0 159 0'},
-				{ id: 'subMenuBackground4', src: 'grey.png', radius: '2.25', thetaLength: '42', height: '0.2', position: '0 -0.67 1.1', rotation: '0 159 0'},
+				{ id: 'menuBackground', src: '../assets/grey.png', radius: '2.25', thetaLength: '42', height: '0.2', position: '0 -0.67 1.1', rotation: '0 159 0'},
+				{ id: 'subMenuBackground1', src: '../assets/grey.png', radius: '2.25', thetaLength: '42', height: '0.2', position: '0 -0.67 1.1', rotation: '0 159 0'},
+				{ id: 'subMenuBackground2', src: '../assets/grey.png', radius: '2.25', thetaLength: '42', height: '0.2', position: '0 -0.67 1.1', rotation: '0 159 0'},
+				{ id: 'subMenuBackground3', src: '../assets/grey.png', radius: '2.25', thetaLength: '42', height: '0.2', position: '0 -0.67 1.1', rotation: '0 159 0'},
+				{ id: 'subMenuBackground4', src: '../assets/grey.png', radius: '2.25', thetaLength: '42', height: '0.2', position: '0 -0.67 1.1', rotation: '0 159 0'},
 			];
 
     curvedImages.forEach((image) => {
