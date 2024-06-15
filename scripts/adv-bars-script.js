@@ -1,19 +1,30 @@
 document.addEventListener("DOMContentLoaded", () => {
   const visualizer = document.querySelector("#audio-visualizer");
-  const active = false;
+  let active = false;
+  let binCount = 256;
   console.log("Bars script loaded");
 
   window.addEventListener("message", (event) => {
     if (event.data.type === "frequencyData") {
+      if (!active) {
+        active = true;
+        createCircularBars(event.data.data, binCount);
+      }
       console.log("Frequency data received:", event.data.data);
       updateBars(event.data.data);
     }
   });
+  // window.addEventListener("message", (event) => {
+  //   if (event.data.type === "binCount") {
+  //     console.log("binCount data received:", event.data.data);
+  //     binCount = event.data.data;
+  //   }
+  // });
 
 function createCircularBars() {
-	const visualizer = document.getElementById('audio-visualizer'); // Assuming you have an element with id 'visualizer'
-	const numberOfBars = 256; // Adjust the number of bars to create a gap
-	const radius = 64; // Adjust the radius as needed
+	const visualizer = document.getElementById('audio-visualizer');
+	const numberOfBars = binCount; // Adjust the number of bars to create a gap
+	const radius = binCount / Math.PI; // Adjust the radius as needed
 	const gap = 0.05;
 
 	for (let i = 0; i < numberOfBars; i++) {
@@ -21,7 +32,7 @@ function createCircularBars() {
 		const angle = (i / numberOfBars) * Math.PI * 2; // Calculate the angle for each bar
 
 		bar.setAttribute('width', 2);
-		bar.setAttribute('depth', 0.5);
+		bar.setAttribute('depth', 0.5 + (radius / numberOfBars));
 		bar.setAttribute('height', 2);
 		bar.setAttribute('position', {
 			x: radius * Math.cos(angle),
@@ -36,6 +47,7 @@ function createCircularBars() {
 		bar.setAttribute('metalness', 0.2);
 		visualizer.appendChild(bar);
 	}
+  console.log('Bars initialized');
 }
   function updateBars(frequencyData) {
     frequencyData = smoothData(frequencyData);
@@ -43,12 +55,13 @@ function createCircularBars() {
 
     const bars = visualizer.children;
     const buffer = 0.95;
+    const hueRange = 180;
 
     for (let i = 0; i < bars.length; i++) {
       const bar = bars[i];
-      const scaleY = (frequencyData[i] / 255.0) * 6 * buffer;
-      const hue = (i / frequencyData.length) * 360;
-      const [r, g, b] = hsvToRgb(hue / 360);
+      const scaleY = (frequencyData[i] / 255.0) * 10 * buffer;
+      const hue = (i / frequencyData.length) * hueRange;
+      const [r, g, b] = hsvToRgb(hue / hueRange);
       const hexColor = rgbToHex(r, g, b);
       bar.setAttribute("scale", {
         x: 1,
@@ -59,36 +72,35 @@ function createCircularBars() {
     }
   }
 
-  function hsvToRgb(h) {
-    let r, g, b;
-    const i = Math.floor(h * 6);
-    const f = h * 6 - i;
-    const q = 1 - f;
-    const t = f;
-
-    switch (i % 6) {
-      case 0:
-        (r = 1), (g = t), (b = 0);
-        break;
-      case 1:
-        (r = q), (g = 1), (b = 0);
-        break;
-      case 2:
-        (r = 0), (g = 1), (b = t);
-        break;
-      case 3:
-        (r = 0), (g = q), (b = 1);
-        break;
-      case 4:
-        (r = t), (g = 0), (b = 1);
-        break;
-      case 5:
-        (r = 1), (g = 0), (b = q);
-        break;
-    }
-
-    return [Math.floor(r * 255), Math.floor(g * 255), Math.floor(b * 255)];
-  }
+function hsvToRgb(h, s = 1, v = 1) {
+	let r, g, b;
+	let i = Math.floor(h * 6);
+	let f = h * 6 - i;
+	let p = v * (1 - s);
+	let q = v * (1 - f * s);
+	let t = v * (1 - (1 - f) * s);
+	switch (i % 6) {
+		case 0:
+			(r = v), (g = t), (b = p);
+			break;
+		case 1:
+			(r = q), (g = v), (b = p);
+			break;
+		case 2:
+			(r = p), (g = v), (b = t);
+			break;
+		case 3:
+			(r = p), (g = q), (b = v);
+			break;
+		case 4:
+			(r = t), (g = p), (b = v);
+			break;
+		case 5:
+			(r = v), (g = p), (b = q);
+			break;
+	}
+	return [Math.floor(r * 255), Math.floor(g * 255), Math.floor(b * 255)];
+}
 
   function rgbToHex(r, g, b) {
     return (
@@ -125,6 +137,6 @@ function createCircularBars() {
     return compressedData;
   }
 
-  createCircularBars();
-  setInterval(updateBars, 100);
+  
+  // setInterval(updateBars, 100);
 });
