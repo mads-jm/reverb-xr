@@ -95,82 +95,139 @@ AFRAME.registerComponent('custom-camera', {
 	init: function () {
 		// Create camera entity
 		const camera = document.createElement('a-camera');
-		camera.setAttribute('wasd-controls', 'fly: true');
 		camera.setAttribute('look-controls', 'enabled: true');
 		camera.setAttribute('cursor', 'rayOrigin: mouse');
-
-		// Create cursor entity
-		// const cursor = document.createElement('a-cursor');
-		// cursor.setAttribute('id', 'cursor');
-		// cursor.setAttribute(
-		// 	'animation__click',
-		// 	'property: scale; from: 0.1 0.1 0.1; to: 0.5 0.5 0.5; easing: easeInCubic; dur: 150; startEvents: click'
-		// );
-		// cursor.setAttribute(
-		// 	'animation__clickreset',
-		// 	'property: scale; to: 0.1 0.1 0.1; dur: 1; startEvents: animationcomplete__click'
-		// );
-		// cursor.setAttribute(
-		// 	'animation__fusing',
-		// 	'property: scale; from: 1 1 1; to: 0.5 0.5 0.5; easing: easeInCubic; dur: 150; startEvents: fusing'
-		// );
-
-		// // Append cursor to camera
-		// camera.appendChild(cursor);
-
-		
+    // No flight in lobby pls :)
+		if (window.location.href.includes('aframe.html')) {
+			camera.setAttribute('wasd-controls', 'acceleration: 10; fly: false');
+		} else {
+			camera.setAttribute('wasd-controls', 'acceleration: 100; fly: true');
+		}
 
 		const menuItems = [
-            { position: '-1 -1.5 -4', rotation: '0 16.4 0', id: 'hideShow', text: 'Hide', width: '0.95' },
-            { position: '0 -1.5 -4.15', rotation: '0 0 0', id: 'playPause', text: 'Play', width: '1' },
-            { position: '1 -1.5 -4', rotation: '0 -16.4 0', id: 'menu3', text: 'About', width: '0.95' },
-			{ position: '1.84 -1.5 -3.62', rotation: '0 -34 0', id: 'settings', text: 'Rooms', width: '0.85' },
-			{ position: '-1.84 -1.5 -3.62', rotation: '0 34 0', id: 'menu5', text: 'Settings', width: '0.85'},
-			{ position: "0 -0.4 -0.4", rotation: "-45 0 0", id: "show", text: "/\\", width: "0.045", height: "0.15", visible: "false", color: "white"},
-        ];
-
-
-
-        menuItems.forEach(item => {
-            const menuItem = document.createElement('a-entity');
-            menuItem.setAttribute('position', item.position);
-            menuItem.setAttribute('rotation', item.rotation);
-			menuItem.setAttribute('class', 'menuItem');
-
-            const box = document.createElement('a-box');
-			box.setAttribute('id', item.id);
-            box.setAttribute('position', '0 0 0');
-            box.setAttribute('depth', '0.1');
-            box.setAttribute('height', item.height || '0.5');
-            box.setAttribute('width', item.width);
-            box.setAttribute('color', 'grey');
-            box.setAttribute('shadow', 'cast: false; receive: false;');
-            box.setAttribute('material', 'flatShading: false;');
-			box.setAttribute('onClick', 'handleClick(this.id)');
-            box.setAttribute('onmousedown', 'handleMouseDown(this)');
-            box.setAttribute('onmouseup', 'handleMouseUp(this)');
-			box.setAttribute('visible', item.visible || 'true');
-
-            const text = document.createElement('a-text');
-            text.setAttribute('value', item.text);
-            text.setAttribute('align', 'center');
-            text.setAttribute('color', item.color || 'blue');
-            text.setAttribute('position', '0 0 0.05');
-
-            box.appendChild(text);
-            menuItem.appendChild(box);
-            camera.appendChild(menuItem);
-        });
-
-		const subMenu = [
-			{ position: "-1 -0.5 -4", rotation: "0 16.4 0", id: "sub1", text: "Dual", width: "0.95"},
-			{ position: "0 -0.5 -4.15", rotation: "0 0 0", id: "sub2", text: "Start", width: "1"},
-			{ position: "1 -0.5 -4", rotation: "0 -16.4 0", id: "sub3", text: "subM3", width: "0.95"},
-			{ position: "1.84 -0.5 -3.62", rotation: "0 -34 0", id: "sub4", text: "Bars", width: "0.85"},
-			{ position: "-1.84 -0.5 -3.62", rotation: "0 34 0", id: "sub5", text: "Wave", width: "0.85"},
+			{
+				position: '-0.33 -0.67 -1.13',
+				rotation: '0 8.5 0',
+				id: 'hideShow',
+				text: 'Hide',
+				width: '0.31',
+				textwidth: '1.55',
+			},
+			{
+				position: '0 -0.67 -1.155',
+				rotation: '0 0 0',
+				id: 'playPause',
+				text: 'Play',
+				width: '0.33',
+				textwidth: '1.65',
+			},
+			{
+				position: '0.33 -0.67 -1.13',
+				rotation: '0 -8.5 0',
+				id: 'menu3',
+				text: 'About',
+				width: '0.31',
+				textwidth: '1.55',
+			},
+			{
+				position: '0.64 -0.67 -1.063',
+				rotation: '0 -16.2 0',
+				id: 'settings',
+				text: 'Rooms',
+				width: '0.3',
+				textwidth: '1.5',
+			},
+			{
+				position: '-0.64 -0.67 -1.063',
+				rotation: '0 16.2 0',
+				id: 'menu5',
+				text: 'Settings',
+				width: '0.3',
+				textwidth: '1.5',
+			},
+			{
+				position: '0 -0.35 -0.4',
+				rotation: '-45 0 0',
+				id: 'show',
+				text: '/\\',
+				width: '0.02',
+				height: '0.06',
+				depth: '0.1',
+				visible: 'false',
+				color: 'white',
+			},
 		];
 
-		subMenu.forEach(item => {
+		menuItems.forEach((item) => {
+			const menuItem = document.createElement('a-entity');
+			menuItem.setAttribute('position', item.position);
+			menuItem.setAttribute('rotation', item.rotation);
+			menuItem.setAttribute('class', 'menuItem');
+
+			const box = document.createElement('a-box');
+			box.setAttribute('id', item.id);
+			box.setAttribute('position', '0 0 0');
+			box.setAttribute('depth', item.depth || '0.033');
+			box.setAttribute('height', item.height || '0.16');
+			box.setAttribute('width', item.width);
+			box.setAttribute('color', 'grey');
+			box.setAttribute('shadow', 'cast: false; receive: false;');
+			box.setAttribute('material', 'flatShading: false;');
+			box.setAttribute('onClick', 'handleClick(this.id)');
+			box.setAttribute('onmousedown', 'handleMouseDown(this)');
+			box.setAttribute('onmouseup', 'handleMouseUp(this)');
+			box.setAttribute('visible', item.visible || 'true');
+
+			const text = document.createElement('a-text');
+			text.setAttribute('width', item.textwidth || '1');
+			text.setAttribute('value', item.text);
+			text.setAttribute('align', 'center');
+			text.setAttribute('color', item.color || 'blue');
+			text.setAttribute('position', '0 0.015 0.05');
+
+			box.appendChild(text);
+			menuItem.appendChild(box);
+			camera.appendChild(menuItem);
+		});
+		const subMenu = [
+			{
+				position: '-0.33 -0.4 -1.13',
+				rotation: '0 8.5 0',
+				id: 'sub1',
+				text: 'Dual',
+				width: '0.31',
+			},
+			{
+				position: '0 -0.4 -1.155',
+				rotation: '0 0 0',
+				id: 'sub2',
+				text: 'Start',
+				width: '0.33',
+			},
+			{
+				position: '0.33 -0.4 -1.13',
+				rotation: '0 -8.5 0',
+				id: 'sub3',
+				text: 'subM3',
+				width: '0.31',
+			},
+			{
+				position: '0.64 -0.4 -1.063',
+				rotation: '0 -16.2 0',
+				id: 'sub4',
+				text: 'Bars',
+				width: '0.3',
+			},
+			{
+				position: '-0.64 -0.4 -1.063',
+				rotation: '0 16 0',
+				id: 'sub5',
+				text: 'Wave',
+				width: '0.3',
+			},
+		];
+
+		subMenu.forEach((item) => {
 			const subMenu = document.createElement('a-entity');
 			subMenu.setAttribute('position', item.position);
 			subMenu.setAttribute('rotation', item.rotation);
@@ -179,8 +236,8 @@ AFRAME.registerComponent('custom-camera', {
 			const box = document.createElement('a-box');
 			box.setAttribute('id', item.id);
 			box.setAttribute('position', '0 0 0');
-			box.setAttribute('depth', '0.1');
-			box.setAttribute('height', item.height || '0.5');
+			box.setAttribute('depth', '0.033');
+			box.setAttribute('height', item.height || '0.16');
 			box.setAttribute('width', item.width);
 			box.setAttribute('color', 'grey');
 			box.setAttribute('shadow', 'cast: false; receive: false;');
@@ -191,38 +248,78 @@ AFRAME.registerComponent('custom-camera', {
 			box.setAttribute('visible', 'false');
 
 			const text = document.createElement('a-text');
+			text.setAttribute('width', item.width * 5 || '1');
 			text.setAttribute('value', item.text);
 			text.setAttribute('align', 'center');
 			text.setAttribute('color', this.color || 'blue');
-			text.setAttribute('position', '0 0 0.05');
-			
+			text.setAttribute('position', '0 0.015 0.05');
+
 			box.appendChild(text);
 			subMenu.appendChild(box);
 			camera.appendChild(subMenu);
 		});
 
-
 		// Create curved backgrounds
-        const curvedImages = [
-			{ id: 'menuBackground', src: 'grey.png', radius: '3.25', thetaLength: '100', height: '0.75', position: '0 -1.5 -1', rotation: '0 130 0'},
-            { id: 'subMenuBackground1', src: 'grey.png', radius: '3.25', thetaLength: '100', height: '0.75', position: '0 -1.5 -1', rotation: '0 130 0' },
-            { id: 'subMenuBackground2', src: 'grey.png', radius: '3.25', thetaLength: '100', height: '0.75', position: '0 -1.5 -1', rotation: '0 130 0' },
-			{ id: 'subMenuBackground3', src: 'grey.png', radius: '3.25', thetaLength: '100', height: '0.75', position: '0 -1.5 -1', rotation: '0 130 0' },
-			{ id: 'subMenuBackground4', src: 'grey.png', radius: '3.25', thetaLength: '100', height: '0.75', position: '0 -1.5 -1', rotation: '0 130 0' },
-        ];
+		const curvedImages = [
+			{
+				id: 'menuBackground',
+				src: '../assets/grey.png',
+				radius: '2.25',
+				thetaLength: '42',
+				height: '0.2',
+				position: '0 -0.67 1.1',
+				rotation: '0 159 0',
+			},
+			{
+				id: 'subMenuBackground1',
+				src: '../assets/grey.png',
+				radius: '2.25',
+				thetaLength: '42',
+				height: '0.2',
+				position: '0 -0.67 1.1',
+				rotation: '0 159 0',
+			},
+			{
+				id: 'subMenuBackground2',
+				src: '../assets/grey.png',
+				radius: '2.25',
+				thetaLength: '42',
+				height: '0.2',
+				position: '0 -0.67 1.1',
+				rotation: '0 159 0',
+			},
+			{
+				id: 'subMenuBackground3',
+				src: '../assets/grey.png',
+				radius: '2.25',
+				thetaLength: '42',
+				height: '0.2',
+				position: '0 -0.67 1.1',
+				rotation: '0 159 0',
+			},
+			{
+				id: 'subMenuBackground4',
+				src: '../assets/grey.png',
+				radius: '2.25',
+				thetaLength: '42',
+				height: '0.2',
+				position: '0 -0.67 1.1',
+				rotation: '0 159 0',
+			},
+		];
 
-        curvedImages.forEach(image => {
-            const curvedImage = document.createElement('a-curvedimage');
-            curvedImage.setAttribute('id', image.id);
-            curvedImage.setAttribute('src', image.src);
-            curvedImage.setAttribute('radius', image.radius);
-            curvedImage.setAttribute('theta-length', image.thetaLength);
-            curvedImage.setAttribute('height', image.height);
-            curvedImage.setAttribute('position', image.position);
-            curvedImage.setAttribute('rotation', image.rotation);
+		curvedImages.forEach((image) => {
+			const curvedImage = document.createElement('a-curvedimage');
+			curvedImage.setAttribute('id', image.id);
+			curvedImage.setAttribute('src', image.src);
+			curvedImage.setAttribute('radius', image.radius);
+			curvedImage.setAttribute('theta-length', image.thetaLength);
+			curvedImage.setAttribute('height', image.height);
+			curvedImage.setAttribute('position', image.position);
+			curvedImage.setAttribute('rotation', image.rotation);
 
-            camera.appendChild(curvedImage);
-        });
+			camera.appendChild(curvedImage);
+		});
 
 		// Append camera to the current entity
 		this.el.appendChild(camera);

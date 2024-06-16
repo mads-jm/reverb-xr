@@ -1,17 +1,27 @@
 <!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
+<html>
+  <head>
     <title>Three.js Particle Orb</title>
     <style>
-        body { margin: 0; }
-        canvas { display: block; }
-    </style>
+      body {
+        margin: 0;
+      }
 
-</head>
-<body>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+      canvas {
+        display: block;
+      }
+    </style>
+    <script src="https://aframe.io/releases/1.2.0/aframe.min.js"></script>
     <script src="./scripts/stage-particle-script.js"></script>
     <script type="module" src="./scripts/stage-particle.js"></script>
-</body>
+  </head>
+
+  <body>
+    <a-scene>
+      <a-entity id="particles"></a-entity>
+      <a-sky color="#000"></a-sky>
+    </a-scene>
+
+    <script></script>
+  </body>
 </html>

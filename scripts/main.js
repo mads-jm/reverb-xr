@@ -25,6 +25,15 @@ document.addEventListener('DOMContentLoaded', () => {
 	// 	} else audioProcessor.pause();
 	// });
 
+	// Photo Sensitivity Warning
+	const modal = document.getElementById('warning-modal');
+	const acceptButton = document.getElementById('accept-button');
+
+	acceptButton.addEventListener('click', function () {
+		modal.style.display = 'none';
+		aframeIframe.style.display = 'block';
+	});
+
 	micOption.addEventListener('change', () => {
 		if (micOption.checked) {
 			startMicButton.disabled = false;
@@ -72,6 +81,9 @@ document.addEventListener('DOMContentLoaded', () => {
 		}
 		requestAnimationFrame(sendAudioDataToAFrame);
 	}
-
+	aframeIframe.contentWindow.postMessage(
+		{ type: 'binCount', data: audioProcessor.getFrequencyBinCount() },
+		'*'
+	);
 	sendAudioDataToAFrame();
 });
