@@ -70,6 +70,7 @@ document.addEventListener('DOMContentLoaded', () => {
 	sceneSelect.addEventListener('change', () => {
 		if(audioProcessor.isActive) {
 			aframeIframe.src = `stage-${sceneSelect.value}.html`;
+			document.getElementById('oops').style.display = 'none';
 			console.log('switching to scene', sceneSelect.value);
 		}else{
 			document.getElementById('oops').style.display = 'inline';
