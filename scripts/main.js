@@ -10,24 +10,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
 	const fileInput = document.getElementById('file-input');
 	const aframeIframe = document.getElementById('aframe-iframe');
+	
+	const playPause = document.getElementById("playPauseBTN");
 
-	function playPause(){
-		if(count%2===0){
-			count++;
-			audioProcessor.play();
-		}
-		else
-			audioProcessor.pause();
-	}
 
-	PlayPauseBTN.addEventListener('click', () => {
-		if(count%2===0){
-			count++;
-			audioProcessor.play();
-		}
-		else
-			audioProcessor.pause();
-	});
 
 	micOption.addEventListener('change', () => {
 		if (micOption.checked) {
@@ -58,6 +44,13 @@ document.addEventListener('DOMContentLoaded', () => {
 			if (file) {
 				audioProcessor.initFile(file);
 			}
+		});
+
+		playPause.addEventListener('click', () => {
+			audioProcessor.pause();
+				
+
+
 		});
 
   function sendAudioDataToAFrame() {

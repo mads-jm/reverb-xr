@@ -28,6 +28,16 @@ export class AudioProcessor {
 		return AudioProcessor.instance;
 	}
 
+	async play() {
+		this.isActive = true;
+		this.audioContext.resume();
+	}
+
+	async pause() {
+		this.isActive = false;
+		this.audioContext.suspend();
+	}
+
 	async initMicrophone() {
 		if (!this.isActive) {
 			this.state = await this.state.initMicrophone();
