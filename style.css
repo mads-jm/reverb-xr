@@ -59,3 +59,26 @@ button {
   background: linear-gradient(#ffffff, #aba9a9);
   border-radius: 10px;
 }
+
+.modal {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    background-color: #282c34;
+}
+
+.modal-content {
+    background-color: #626975;
+    padding: 20px;
+    border-radius: 8px;
+    text-align: center;
+    max-width: 500px;
+    width: 80%;
+}
