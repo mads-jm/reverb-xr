@@ -68,8 +68,14 @@ document.addEventListener('DOMContentLoaded', () => {
 	});
 
 	sceneSelect.addEventListener('change', () => {
-		aframeIframe.src = `stage-${sceneSelect.value}.html`;
-		console.log('switching to scene',sceneSelect.value);
+		if(audioProcessor.isActive) {
+			aframeIframe.src = `stage-${sceneSelect.value}.html`;
+			console.log('switching to scene', sceneSelect.value);
+		}else{
+			document.getElementById('oops').style.display = 'inline';
+			console.log('Attempted to switch scene before initializing audio');
+		}
+		
 	});
 
 	function sendAudioDataToAFrame() {

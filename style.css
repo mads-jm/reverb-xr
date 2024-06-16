@@ -42,11 +42,20 @@ pre {
   border: 1px solid #666;
 }
 
-.jetbrains-mono-1 {
+.jetbrains-mono {
   font-family: "JetBrains Mono", monospace;
   font-optical-sizing: auto;
   font-weight: 400;
   font-style: normal;
+}
+
+.jetbrains-mono-e {
+  font-family: "JetBrains Mono", monospace;
+  font-optical-sizing: auto;
+  font-size: 12px;
+  font-weight: 400;
+  font-style: italic;
+  color: #ff0000;
 }
 
 button {
