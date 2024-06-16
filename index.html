@@ -55,6 +55,15 @@
 			<button id="pause-button" class="jetbrains-mono" disabled>Pause</button>
 			<label for="volume-slider" class="jetbrains-mono">Volume:</label>
 			<input type="range" id="volume-slider" min="0" max="1" step="0.01" />
+			<select name="Scene:" id="scene-select" class="jetbrains-mono">
+				<option value="lobby">Lobby</option>
+				<option value="bars">Bars</option>
+				<option value="wave">Wave</option>
+				<option value="dualwave">Dual Wave</option>
+				<option value="boxwave">Box Wave</option>
+				<option value="particle">Particle</option>
+				<option value="about">About</option>
+			</select>
 		</div>
 		<div id="warning-modal" class="modal">
 			<div class="modal-content">
@@ -70,8 +79,8 @@
 		<!-- Aframe iframe container -->
 		<iframe
 			id="aframe-iframe"
-			src="loading.html"
-			style="display: none; width: 99%; height: 99%;"
+			src="stage-loading.html"
+			style="display: none; width: 99%; height: 99%"
 		></iframe>
 	</body>
 </html>

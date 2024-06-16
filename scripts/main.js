@@ -7,6 +7,7 @@ document.addEventListener('DOMContentLoaded', () => {
 	const fileOption = document.getElementById('file-option');
 	const startMicButton = document.getElementById('start-mic');
 	const selectFileButton = document.getElementById('select-file');
+	const sceneSelect = document.getElementById('scene-select');
 
 	const fileInput = document.getElementById('file-input');
 	const aframeIframe = document.getElementById('aframe-iframe');
@@ -64,6 +65,11 @@ document.addEventListener('DOMContentLoaded', () => {
 		if (file) {
 			audioProcessor.initFile(file);
 		}
+	});
+
+	sceneSelect.addEventListener('change', () => {
+		aframeIframe.src = `stage-${sceneSelect.value}.html`;
+		console.log('switching to scene',sceneSelect.value);
 	});
 
 	function sendAudioDataToAFrame() {
