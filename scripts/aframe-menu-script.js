@@ -160,20 +160,6 @@ window.handleClick = function (id) {
       "animation",
       "property: position; to: " + targetPosition4 + "; dur: 500"
     );
-  } else if (id === "menu3" && !isHidden) {
-    // about
-    if (window.location.href.indexOf("about") === -1) {
-      window.location.href = "about.html";
-    } else {
-      window.location.href = "stage-lobby.html";
-    }
-  } else if (id === "menu5" && !isHidden) {
-    // settings
-    if (window.location.href.indexOf("settings") === -1) {
-      window.location.href = "settings.html";
-    } else {
-      window.location.href = "stage-lobby.html";
-    }
   } else if (id === "sub1" && isUp) {
     // DualWave
     if (window.location.href.indexOf("stage-dualwave") === -1) {
@@ -184,8 +170,13 @@ window.handleClick = function (id) {
   } else if (id === "sub2" && isUp) {
     // Start
     window.location.href = "stage-lobby.html";
-  } else if (id === "sub3") {
-    // window.location.href = 'stage-wave.html';
+  } else if (id === "sub3" && isUp) {
+    // Particle
+    if (window.location.href.indexOf("stage-particle") === -1) {
+      window.location.href = "stage-particle.html";
+    } else {
+      window.location.href = "stage-lobby.html";
+    }
   } else if (id === "sub4" && isUp) {
     // Bars
     if (window.location.href.indexOf("stage-bars") === -1) {
