@@ -294,11 +294,14 @@ AFRAME.registerComponent("custom-camera", {
     rightHand.setAttribute(
       "hand-controls",
       "hand: right; handModelStyle: highPoly;");
-      rightHand.setAttribute("laser-controls", "hand: right;");
+    rightHand.setAttribute("laser-controls", "hand: right;");
     rig.appendChild(rightHand);
 
     const rightLaser = document.createElement("a-entity");
-    rightLaser.setAttribute("raycaster", "objects: .interactable");
+    rightLaser.setAttribute(
+      "raycaster",
+      "objects: .interactable; showLine: true;"
+    );
     rightLaser.setAttribute("line", "color: red; opacity: 0.75");
     rightHand.appendChild(rightLaser);
 
@@ -410,12 +413,12 @@ AFRAME.registerComponent("thumbstick-logging", {
     // Update position based on thumbstick input
     if (evt.target.id === "leftHand") {
       if (evt.detail.y > 0.1) {
-        position.x -= forward.x * moveSpeed;
-        position.z -= forward.z * moveSpeed;
-      }
-      if (evt.detail.y < -0.1) {
         position.x += forward.x * moveSpeed;
         position.z += forward.z * moveSpeed;
+      }
+      if (evt.detail.y < -0.1) {
+        position.x -= forward.x * moveSpeed;
+        position.z -= forward.z * moveSpeed;
       }
       if (evt.detail.x < -0.1) {
         position.x -= right.x * moveSpeed;
@@ -426,6 +429,15 @@ AFRAME.registerComponent("thumbstick-logging", {
         position.z += right.z * moveSpeed;
       }
       rig.setAttribute("position", position);
+    }
+    if ( evt.target.id === "rightHand" && (evt.detail.x < -0.1 || evt.detail.x > 0.1)) {
+      var rotationSpeed = 2;
+      rotation.y -= evt.detail.x * rotationSpeed;
+      rig.setAttribute("rotation", {
+        x: rotation.x,
+        y: rotation.y,
+        z: rotation.z,
+      });
     }
   },
 });
