@@ -68,10 +68,24 @@ document.addEventListener('DOMContentLoaded', () => {
 	});
 
 	playPause.addEventListener('click', () => {
-		if (audioProcessor.isPlaying) audioProcessor.pause();
-		else audioProcessor.play();
+		if (audioProcessor.isPlaying) {
+			audioProcessor.pause();
+			aframeIframe.contentWindow.postMessage({ type: 'playPause', data: 'pause' }, '*');
+		} else  {
+			audioProcessor.play();
+			aframeIframe.contentWindow.postMessage({ type: 'playPause', data: 'play' }, '*');
+		}
 	});
 
+	window.addEventListener('message', function (event) {
+		if (event.data.type === 'playPauseTo') {
+			if (event.data.data === 'play') {
+				audioProcessor.play();
+			} else {
+				audioProcessor.pause();
+			}
+		}
+	});
 	volumeControl.addEventListener(
 		'input',
 		() => {

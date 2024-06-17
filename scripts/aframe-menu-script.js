@@ -6,6 +6,20 @@ function handleMouseUp(element) {
   element.setAttribute("material", "color", "grey");
 }
 
+window.addEventListener('message', function(event) {
+  if (event.data.type === 'playPause') {
+    var playPause = document.getElementById("playPause");
+    var text = playPause.querySelector("a-text");
+    if (event.data.data === 'play') {
+      text.setAttribute("value", "Pause");
+      text.setAttribute("color", "red");
+    } else {
+      text.setAttribute("value", "Play");
+      text.setAttribute("color", "blue");
+    }
+  }
+});
+
 var zOffset = 0;
 var yOffset = 0;
 window.addEventListener("enter-vr", (e) => {
@@ -27,9 +41,11 @@ window.handleClick = function (id) {
     if (text.getAttribute("value") === "Play") {
       text.setAttribute("value", "Pause");
       text.setAttribute("color", "red");
+      window.parent.postMessage({ type: "playPauseTo", data: "play" }, "*");
     } else {
       text.setAttribute("value", "Play");
       text.setAttribute("color", "blue");
+      window.parent.postMessage({ type: "playPauseTo", data: "pause" }, "*");
     }
   } else if (
     (id === "hideShow" && !isHidden) | (id === "show" && isHidden) &&
