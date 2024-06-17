@@ -11,10 +11,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
 	const fileInput = document.getElementById('file-input');
 	const aframeIframe = document.getElementById('aframe-iframe');
-	
-	const playPause = document.getElementById('playPauseBTN');
-	const volumeControl = document.querySelector("#volume");
 
+	const playPause = document.getElementById('playPauseBTN');
+	const volumeControl = document.getElementById('volume-slider');
 
 	// Photo Sensitivity Warning
 	const modal = document.getElementById('warning-modal');
@@ -58,32 +57,28 @@ document.addEventListener('DOMContentLoaded', () => {
 	});
 
 	sceneSelect.addEventListener('change', () => {
-		if(audioProcessor.isActive) {
+		if (audioProcessor.isActive) {
 			aframeIframe.src = `stage-${sceneSelect.value}.html`;
 			document.getElementById('oops').style.display = 'none';
 			console.log('switching to scene', sceneSelect.value);
-		}else{
+		} else {
 			document.getElementById('oops').style.display = 'inline';
 			console.log('Attempted to switch scene before initializing audio');
 		}
-		
 	});
 
+	playPause.addEventListener('click', () => {
+		if (audioProcessor.isPlaying) audioProcessor.pause();
+		else audioProcessor.play();
+	});
 
-		playPause.addEventListener('click', () => {
-			if(audioProcessor.isPlaying)
-				audioProcessor.pause();
-			else
-				audioProcessor.play();
-		});
-
-
-		volume-slider.addEventListener('change', () => {
+	volumeControl.addEventListener(
+		'input',
+		() => {
 			audioProcessor.state.gainNode.gain.value = volumeControl.value;
 		},
-		false,
-		);
-
+		false
+	);
 
 	function sendAudioDataToAFrame() {
 		if (audioProcessor.isActive) {
