@@ -263,12 +263,14 @@ AFRAME.registerComponent("custom-camera", {
     //rig entity
     const rig = document.createElement("a-entity");
     rig.setAttribute("id", "rig");
-    rig.setAttribute("position", "25 10 0");
+    rig.setAttribute("position", "0 1.6 0");
     rig.setAttribute("movement-controls", "speed: 0.2");
     rig.setAttribute("thumbstick-logging", " ");
 
     // Create camera entity
     const camera = document.createElement("a-camera");
+    rig.appendChild(camera);
+
     // No flight in lobby pls :)
     if (window.location.href.includes("stage-lobby.html")) {
       camera.setAttribute("wasd-controls", "acceleration: 10; fly: false");
@@ -354,8 +356,6 @@ AFRAME.registerComponent("custom-camera", {
 
       camera.appendChild(curvedImage);
     });
-    //append camera to rig
-    rig.appendChild(camera);
 
     // Append camera to the current entity
     this.el.appendChild(camera);
