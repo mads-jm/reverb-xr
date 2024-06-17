@@ -283,15 +283,17 @@ AFRAME.registerComponent("custom-camera", {
     //left hand controller
     const leftHand = document.createElement("a-entity");
     leftHand.setAttribute("id", "leftHand");
-    leftHand.setAttribute("hand-controls", "left");
-    leftHand.setAttribute("position", "-0.5 1.6 -0.5");
+    leftHand.setAttribute(
+      "hand-controls",
+      "hand: left; handModelStyle: lowPoly; color: #FF9900");
     rig.appendChild(leftHand);
 
     //right hand controller
     const rightHand = document.createElement("a-entity");
-    leftHand.setAttribute("id", "leftHand");
-    leftHand.setAttribute("hand-controls", "right");
-    leftHand.setAttribute("position", "0.5 1.6 -0.5");
+    leftHand.setAttribute("id", "rightHand");
+    leftHand.setAttribute(
+      "hand-controls",
+      "hand: right; handModelStyle: lowPoly; color: #FF9900");
     rig.appendChild(rightHand);
 
     menuItems.forEach((item) => {
