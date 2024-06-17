@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>Loading</title>
+		<meta name="description" content="Basic Scene - A-Frame" />
+		<script src="https://aframe.io/releases/1.3.0/aframe.min.js"></script>
+		<style>
+			.fade-black {
+				position: fixed;
+				top: 0;
+				left: 0;
+				width: 100%;
+				height: 100%;
+				background: black;
+				opacity: 0;
+				transition: opacity 1s ease-in-out;
+				z-index: 10;
+			}
+
+			.fade-black.show {
+				opacity: 1;
+			}
+		</style>
+		<script>
+			const aframeIframe = window.frameElement;
+			// Function to redirect to whiteRoom.html after 15 seconds
+			function redirectToMainRoom() {
+				setTimeout(function () {
+					// Show black screen
+					document.getElementById('fade-black').classList.add('show');
+					// Wait for the transition to complete before redirecting
+					setTimeout(function () {
+						window.location.href = 'stage-lobby.html';
+					}, 1000); // 1 second for the fade to complete
+				}, 4000); // 4 seconds + 1 second for fade
+			}
+			// logging of visibility of aframe content
+			function checkVisibility() {
+				if (aframeIframe && aframeIframe.style.display !== 'none') {
+					console.log('Iframe is visible');
+					redirectToMainRoom();
+				} else {
+					console.log('Iframe is not visible');
+				}
+			}
+			const observer = new MutationObserver(checkVisibility);
+			// Observe the parent element (the iframe) for attribute changes
+			window.addEventListener('load', () => {
+				if (aframeIframe) {
+					observer.observe(aframeIframe, {
+						attributes: true,
+						attributeFilter: ['style'],
+					});
+				}
+			});
+
+			checkVisibility();
+		</script>
+	</head>
+
+	<body>
+		<a-scene>
+			<a-assets>
+				<img
+					id="skyTexture"
+					src="https://cdn.aframe.io/a-painter/images/sky.jpg"
+				/>
+			</a-assets>
+
+			<a-sky
+				height="2048"
+				radius="30"
+				src="#skyTexture"
+				theta-length="90"
+				width="2048"
+			></a-sky>
+			<a-light type="ambient" color="#445451"></a-light>
+			<a-light type="point" intensity="2" position="2 4 4"></a-light>
+			<a-plane
+				color="#000000"
+				rotation="-90 0 0"
+				height="100"
+				width="100"
+			></a-plane>
+
+			<!-- Loading dots in the middle of the A-Frame scene -->
+			<a-entity position="0 2 -3" class="loading-dots">
+				<a-entity
+					geometry="primitive: circle; radius: 0.1"
+					material="color: white"
+					position="-0.3 0 0"
+          animation="property: scale; from: 0 0 0; to: 1 1 1; dur: 1500; loop: true; dir: alternate; easing: easeInOutQuad"
+				>
+				</a-entity>
+				<a-entity
+					geometry="primitive: circle; radius: 0.1"
+					material="color: white"
+					position="0 0 0"
+          animation="property: scale; from: 0 0 0; to: 1 1 1; dur: 1500; loop: true; dir: alternate; easing: easeInOutQuad; delay: 450"
+				>
+				</a-entity>
+				<a-entity
+					geometry="primitive: circle; radius: 0.1"
+					material="color: white"
+					position="0.3 0 0"
+          animation="property: scale; from: 0 0 0; to: 1 1 1; dur: 1500; loop: true; dir: alternate; easing: easeInOutQuad; delay: 900"
+				>
+				</a-entity>
+			</a-entity>
+		</a-scene>
+
+		<!-- Black overlay for fade-out effect -->
+		<div id="fade-black" class="fade-black"></div>
+	</body>
+</html>

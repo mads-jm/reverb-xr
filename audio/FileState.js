@@ -5,11 +5,12 @@ export class FileState {
 		this.audioContext = audioContext;
 		this.analyser = analyser;
 		this.audioBuffer = audioBuffer;
-
+		this.gainNode = audioContext.createGain();
 		this.source = audioContext.createBufferSource();
 		this.source.buffer = audioBuffer;
 		this.source.connect(this.analyser);
 		this.analyser.connect(this.audioContext.destination);
+		this.gainNode.connect(this.audioContext.destination);
 		this.source.start(0);
 		this.startTime = this.audioContext.currentTime;
 		console.log('playback started');

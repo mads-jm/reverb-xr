@@ -15,9 +15,9 @@ export class AudioProcessor {
 		this.dataArray = new Uint8Array(this.analyser.frequencyBinCount);
 		this.state = new InitializedState(this.audioContext, this.analyser);
 		this.isActive = false;
+		this.isPlaying = true;
 		this.source = null;
 		this.startTime = null;
-
 		AudioProcessor.instance = this;
 	}
 
@@ -26,6 +26,16 @@ export class AudioProcessor {
 			AudioProcessor.instance = new AudioProcessor();
 		}
 		return AudioProcessor.instance;
+	}
+
+	async play() {
+		this.isPlaying = true;
+		this.audioContext.resume();
+	}
+
+	async pause() {
+		this.isPlaying = false;
+		this.audioContext.suspend();
 	}
 
 	async initMicrophone() {
@@ -88,5 +98,9 @@ export class AudioProcessor {
 	getTimeDomainDataForAPI() {
 		this.getTimeDomainData();
 		return this.dataArray.slice();
+	}
+
+	getFrequencyBinCount() {
+		return this.analyser.frequencyBinCount;
 	}
 }
