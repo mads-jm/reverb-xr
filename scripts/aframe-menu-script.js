@@ -22,7 +22,11 @@ window.handleClick = function (id) {
       text.setAttribute("value", "Play");
       text.setAttribute("color", "blue");
     }
-  } else if ((id === "hideShow") | (id === "show") && !isUp && !isMoving) {
+  } else if (
+    (id === "hideShow" && !isHidden) | (id === "show" && isHidden) &&
+    !isUp &&
+    !isMoving
+  ) {
     var b0 = document.getElementById("menuBackground");
     var b1 = document.getElementById("subMenuBackground1");
     var b2 = document.getElementById("subMenuBackground2");
@@ -87,6 +91,7 @@ window.handleClick = function (id) {
       isMoving = false;
     }, 500);
   } else if (id === "settings" && !isHidden) {
+
     var b1 = document.getElementById("subMenuBackground1");
     var b2 = document.getElementById("subMenuBackground2");
     var b3 = document.getElementById("subMenuBackground3");
@@ -170,11 +175,7 @@ window.handleClick = function (id) {
     }
   } else if (id === "sub2" && isUp) {
     // Start
-    if (window.location.href.indexOf("stage-start") === -1) {
-      window.location.href = "stage-start.html";
-    } else {
-      window.location.href = "aframe.html";
-    }
+    window.location.href = "aframe.html";
   } else if (id === "sub3") {
     // window.location.href = 'stage-wave.html';
   } else if (id === "sub4" && isUp) {
