@@ -17,6 +17,8 @@ export class AudioProcessor {
 		this.isActive = false;
 		this.source = null;
 		this.startTime = null;
+		this.isPlaying = true;
+		
 
 		AudioProcessor.instance = this;
 	}
@@ -29,12 +31,12 @@ export class AudioProcessor {
 	}
 
 	async play() {
-		this.isActive = true;
+		this.isPlaying = true;
 		this.audioContext.resume();
 	}
 
 	async pause() {
-		this.isActive = false;
+		this.isPlaying = false;
 		this.audioContext.suspend();
 	}
 

@@ -11,8 +11,8 @@ document.addEventListener('DOMContentLoaded', () => {
 	const fileInput = document.getElementById('file-input');
 	const aframeIframe = document.getElementById('aframe-iframe');
 	
-	const playPause = document.getElementById("playPauseBTN");
-
+	const playPause = document.getElementById('playPauseBTN');
+	const volumeControl = document.querySelector("#volume");
 
 
 	micOption.addEventListener('change', () => {
@@ -47,11 +47,22 @@ document.addEventListener('DOMContentLoaded', () => {
 		});
 
 		playPause.addEventListener('click', () => {
-			audioProcessor.pause();
-				
 
-
+			if(audioProcessor.isPlaying)
+				audioProcessor.pause();
+			else
+				audioProcessor.play();
 		});
+
+
+		
+
+		volumeControl.addEventListener('input', () => {
+			audioProcessor.state.gainNode.gain.value = volumeControl.value;
+		},
+		false,
+		);
+
 
   function sendAudioDataToAFrame() {
 		if (audioProcessor.isActive) {
