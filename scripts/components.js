@@ -413,12 +413,12 @@ AFRAME.registerComponent("thumbstick-logging", {
     // Update position based on thumbstick input
     if (evt.target.id === "leftHand") {
       if (evt.detail.y > 0.1) {
-        position.x += forward.x * moveSpeed;
-        position.z += forward.z * moveSpeed;
-      }
-      if (evt.detail.y < -0.1) {
         position.x -= forward.x * moveSpeed;
         position.z -= forward.z * moveSpeed;
+      }
+      if (evt.detail.y < -0.1) {
+        position.x += forward.x * moveSpeed;
+        position.z += forward.z * moveSpeed;
       }
       if (evt.detail.x < -0.1) {
         position.x -= right.x * moveSpeed;
