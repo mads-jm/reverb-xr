@@ -268,17 +268,27 @@ AFRAME.registerComponent("point-light", {
 
 AFRAME.registerComponent("custom-camera", {
   init: function () {
+    // Create rig entity
+    const rig = document.createElement("a-entity");
+    rig.setAttribute("id", "rig");
+    rig.setAttribute("position", "25 10 0");
+    rig.setAttribute("movement-controls", "speed: 0.2");
+
     // Create camera entity
     const camera = document.createElement("a-camera");
-    // No flight in lobby pls :)
-		if (window.location.href.includes('stage-lobby.html')) {
-			camera.setAttribute('wasd-controls', 'acceleration: 10; fly: false');
-		} else {
-			camera.setAttribute('wasd-controls', 'acceleration: 100; fly: true');
-		}
+    camera.setAttribute("id", "camera");
+
+    // Set WASD controls based on location
+    if (window.location.href.includes('stage-lobby.html')) {
+      camera.setAttribute('wasd-controls', 'acceleration: 10; fly: false');
+    } else {
+      camera.setAttribute('wasd-controls', 'acceleration: 100; fly: true');
+    }
+
     camera.setAttribute("look-controls", "enabled: true");
     camera.setAttribute("cursor", "rayOrigin: mouse");
 
+    // Append menu items to camera
     menuItems.forEach((item) => {
       const menuItem = document.createElement("a-entity");
       menuItem.setAttribute("position", item.position);
@@ -356,29 +366,88 @@ AFRAME.registerComponent("custom-camera", {
       camera.appendChild(curvedImage);
     });
 
+    // Append camera to rig
+    rig.appendChild(camera);
+
+    // Append rig to the scene
+    this.el.sceneEl.appendChild(rig);
+
+    // Add thumbstick event listener to rig
+    this.el.addEventListener("thumbstickmoved", this.handleThumbstick);
+  },
+
+  handleThumbstick: function (evt) {
+    const rig = document.getElementById("rig");
+    if (!rig) return;
+
+    const moveSpeed = 0.05; // Adjust movement speed here
+    const position = rig.getAttribute("position");
+
+    if (evt.detail.y > 0.95) {
+      position.z -= moveSpeed;
+    }
+    if (evt.detail.y < -0.95) {
+      position.z += moveSpeed;
+    }
+    if (evt.detail.x < -0.95) {
+      position.x -= moveSpeed;
+    }
+    if (evt.detail.x > 0.95) {
+      position.x += moveSpeed;
+    }
+
+    rig.setAttribute("position", position);
+  }
+});
+
+
+    subMenu.forEach((item) => {
+      const subMenu = document.createElement("a-entity");
+      subMenu.setAttribute("position", item.position);
+      subMenu.setAttribute("rotation", item.rotation);
+      subMenu.setAttribute("class", "subMenu");
+
+      const box = document.createElement("a-box");
+      box.setAttribute("id", item.id);
+      box.setAttribute("position", "0 0 0");
+      box.setAttribute("depth", "0.033");
+      box.setAttribute("height", item.height || "0.16");
+      box.setAttribute("width", item.width);
+      box.setAttribute("color", "grey");
+      box.setAttribute("shadow", "cast: false; receive: false;");
+      box.setAttribute("material", "flatShading: false;");
+      box.setAttribute("onClick", "handleClick(this.id)");
+      box.setAttribute("onmousedown", "handleMouseDown(this)");
+      box.setAttribute("onmouseup", "handleMouseUp(this)");
+      box.setAttribute("visible", item.visible || "false");
+
+      const text = document.createElement("a-text");
+      text.setAttribute("width", item.width * 5 || "1");
+      text.setAttribute("value", item.text);
+      text.setAttribute("align", "center");
+      text.setAttribute("color", this.color || "blue");
+      text.setAttribute("position", "0 0.015 0.05");
+
+      box.appendChild(text);
+      subMenu.appendChild(box);
+      camera.appendChild(subMenu);
+    });
+
+    curvedImages.forEach((image) => {
+      const curvedImage = document.createElement("a-curvedimage");
+      curvedImage.setAttribute("id", image.id);
+      curvedImage.setAttribute("src", "assets/grey.png");
+      curvedImage.setAttribute("radius", image.radius);
+      curvedImage.setAttribute("theta-length", image.thetaLength);
+      curvedImage.setAttribute("height", image.height);
+      curvedImage.setAttribute("position", image.position);
+      curvedImage.setAttribute("rotation", image.rotation);
+
+      camera.appendChild(curvedImage);
+    });
+
     // Append camera to the current entity
     this.el.appendChild(camera);
   },
 });
 
-// Register a thumbstick logging component
-AFRAME.registerComponent("thumbstick-logging", {
-  init: function () {
-    this.el.addEventListener("thumbstickmoved", this.logThumbstick);
-  },
-
-  logThumbstick: function (evt) {
-    if (evt.detail.y > 0.95) {
-      console.log("DOWN");
-    }
-    if (evt.detail.y < -0.95) {
-      console.log("UP");
-    }
-    if (evt.detail.x < -0.95) {
-      console.log("LEFT");
-    }
-    if (evt.detail.x > 0.95) {
-      console.log("RIGHT");
-    }
-  },
-});
