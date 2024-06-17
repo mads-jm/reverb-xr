@@ -1,100 +1,106 @@
 document.addEventListener("DOMContentLoaded", () => {
-  const visualizer = document.querySelector("#audio-visualizer");
-  console.log("A-Frame script loaded");
+  const disk = document.querySelector("#particle-disk");
+  const centralSphere = document.querySelector("#central-sphere");
+  let latestFrequencyData = [];
+  let initialRotation = { x: 0, y: 0, z: 0 }; // Initial rotation values
+  let particleRotationSpeeds = [];
+  let particleInitialPositions = [];
+  let globalRotationDirection = 1; // 1 for clockwise, -1 for counterclockwise
+
+  console.log("Particle script loaded");
 
   window.addEventListener("message", (event) => {
     if (event.data.type === "frequencyData") {
       console.log("Frequency data received:", event.data.data);
-      updateParticles(event.data.data);
+      latestFrequencyData = smoothData(event.data.data);
+      updateParticles(latestFrequencyData);
     }
   });
 
-  function createParticles() {
-    const particles = document.querySelector("#particles");
-    const sphereRadius = 4;
-    const divisions = 100;
+  // Retrieve disk's initial rotation
+  disk.object3D.rotation.set(
+    THREE.Math.degToRad(initialRotation.x),
+    THREE.Math.degToRad(initialRotation.y),
+    THREE.Math.degToRad(initialRotation.z)
+  );
 
-    for (let i = 0; i <= divisions; i++) {
-      const phi = (Math.PI * i) / divisions;
-      for (let j = 0; j <= divisions * 2; j++) {
-        const theta = (2 * Math.PI * j) / divisions;
-        const x = sphereRadius * Math.sin(phi) * Math.cos(theta);
-        const y = sphereRadius * Math.sin(phi) * Math.sin(theta);
-        const z = sphereRadius * Math.cos(phi);
+  function createRandomParticles() {
+    const maxParticles = 1000;
+    const numParticles = Math.floor(Math.random() * maxParticles) + 1;
+    for (let i = 0; i < numParticles; i++) {
+      // Generate random spherical coordinates
+      const radius = Math.random() * 5;
+      const theta = Math.random() * 2 * Math.PI;
+      const phi = Math.acos(2 * Math.random() - 1);
+      const x = radius * Math.sin(phi) * Math.cos(theta);
+      const y = radius * Math.sin(phi) * Math.sin(theta);
+      const z = radius * Math.cos(phi);
+      const particle = document.createElement("a-sphere");
+      particle.setAttribute("radius", 0.03);
+      particle.setAttribute("color", "#FFFFFF"); // Set all particles to white
+      particle.setAttribute("position", `${x} ${y} ${z}`);
+      disk.appendChild(particle);
 
-        const particle = document.createElement("a-sphere");
-        particle.setAttribute("radius", 0.03);
-        particle.setAttribute("color", "#FFFFFF");
-        particle.setAttribute("position", { x, y, z });
-        particle.setAttribute("initial-position", { x, y, z });
-
-        particles.appendChild(particle);
-      }
+      // Store the initial position and assign a random rotation speed
+      particleInitialPositions.push({ x, y, z });
+      const rotationSpeed = (Math.random() - 0.5) * 0.5; // Random speed
+      particleRotationSpeeds.push(rotationSpeed);
     }
   }
 
   function updateParticles(frequencyData) {
-    frequencyData = smoothData(frequencyData);
-
-    const particles = document.querySelector("#particles");
-    const particleElements = particles.children;
     const buffer = 0.95;
-
-    for (let i = 0; i < particleElements.length; i++) {
-      const particle = particleElements[i];
-      const scale = (frequencyData[i % frequencyData.length] / 255.0) * buffer;
-      const initialPosition = particle.getAttribute("initial-position");
-
-      // This moves the particles based on frequency data
-      particle.setAttribute("position", {
-        x: initialPosition.x * (1 + scale),
-        y: initialPosition.y * (1 + scale),
-        z: initialPosition.z * (1 + scale),
+    const particles = disk.children;
+    for (let i = 0; i < particles.length; i++) {
+      const scaleY =
+        (frequencyData[i % frequencyData.length] / 255.0) * 6 * buffer;
+      const adjustedRotationSpeed =
+        (frequencyData[i % frequencyData.length] / 255.0) * 0.1; // Adjust rotation speed based on frequency data
+      particleRotationSpeeds[i] = adjustedRotationSpeed;
+      particles[i].setAttribute("scale", {
+        x: scaleY,
+        y: scaleY,
+        z: scaleY,
       });
-
-      const hue = (i / particleElements.length) * 360;
-      const [r, g, b] = hsvToRgb(hue / 360);
-      const hexColor = rgbToHex(r, g, b);
-      particle.setAttribute("color", hexColor);
     }
   }
 
-  function hsvToRgb(h) {
-    let r, g, b;
-    const i = Math.floor(h * 6);
-    const f = h * 6 - i;
-    const q = 1 - f;
-    const t = f;
+  // Function to animate the particles
+  function animate() {
+    const particles = disk.children;
+    if (latestFrequencyData.length > 0) {
+      const avgFrequency =
+        latestFrequencyData.reduce((sum, val) => sum + val, 0) /
+        latestFrequencyData.length;
+      const rotationSpeed = (avgFrequency / 255) * 0.1; // Scale rotation speed based on frequency data
+      disk.object3D.rotation.y +=
+        THREE.Math.degToRad(rotationSpeed) * globalRotationDirection;
 
-    switch (i % 6) {
-      case 0:
-        (r = 1), (g = t), (b = 0);
-        break;
-      case 1:
-        (r = q), (g = 1), (b = 0);
-        break;
-      case 2:
-        (r = 0), (g = 1), (b = t);
-        break;
-      case 3:
-        (r = 0), (g = q), (b = 1);
-        break;
-      case 4:
-        (r = t), (g = 0), (b = 1);
-        break;
-      case 5:
-        (r = 1), (g = 0), (b = q);
-        break;
+      for (let i = 0; i < particles.length; i++) {
+        const particle = particles[i];
+        const initialPosition = particleInitialPositions[i];
+        const angle = particleRotationSpeeds[i];
+
+        // Calculate new position based on rotation
+        const x =
+          initialPosition.x * Math.cos(angle) -
+          initialPosition.z * Math.sin(angle);
+        const z =
+          initialPosition.x * Math.sin(angle) +
+          initialPosition.z * Math.cos(angle);
+        particle.setAttribute("position", { x, y: initialPosition.y, z });
+        particleInitialPositions[i] = { x, y: initialPosition.y, z };
+      }
+
+      const scaleFactor = 1 + avgFrequency / 255;
+      centralSphere.setAttribute("scale", {
+        x: scaleFactor,
+        y: scaleFactor,
+        z: scaleFactor,
+      });
     }
 
-    return [Math.floor(r * 255), Math.floor(g * 255), Math.floor(b * 255)];
-  }
-
-  function rgbToHex(r, g, b) {
-    return (
-      "#" +
-      ((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1).toUpperCase()
-    );
+    requestAnimationFrame(animate);
   }
 
   function smoothData(data, windowSize = 1) {
@@ -125,8 +131,11 @@ document.addEventListener("DOMContentLoaded", () => {
     return compressedData;
   }
 
-  createParticles();
-  setInterval(() => {
-    // a placeholder, the particles will be updated through the updateParticles function with event listener
-  }, 100);
+  // Change the global rotation direction
+  function changeRotationDirection() {
+    globalRotationDirection *= -1;
+  }
+
+  createRandomParticles();
+  animate();
 });

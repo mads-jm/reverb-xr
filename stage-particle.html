@@ -1,27 +1,22 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
   <head>
-    <title>Three.js Particle Orb</title>
-    <style>
-      body {
-        margin: 0;
-      }
-
-      canvas {
-        display: block;
-      }
-    </style>
+    <meta charset="utf-8" />
+    <title>Particle Stage</title>
+    <meta name="description" content="Particle Stage" />
     <script src="https://aframe.io/releases/1.2.0/aframe.min.js"></script>
     <script src="./scripts/stage-particle-script.js"></script>
-    <script type="module" src="./scripts/stage-particle.js"></script>
+    <script src="./scripts/components.js"></script>
   </head>
-
   <body>
-    <a-scene>
-      <a-entity id="particles"></a-entity>
-      <a-sky color="#000"></a-sky>
+    <a-scene background="color: black">
+      <a-entity custom-camera></a-entity>
+      <a-entity
+        id="particle-disk"
+        position="0 1.25 -10"
+        rotation="45 90 180"
+      ></a-entity>
+      <a-sphere id="central-sphere" radius="2" position="0 1.25 -10"></a-sphere>
     </a-scene>
-
-    <script></script>
   </body>
 </html>

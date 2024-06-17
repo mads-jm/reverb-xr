@@ -28,10 +28,7 @@ document.addEventListener("DOMContentLoaded", () => {
         });
         switch (el.id) {
           case "aboutButton":
-            window.location.href = "about.html";
-            break;
-          case "settingsButton":
-            window.location.href = "settings.html";
+            window.location.href = "stage-about.html";
             break;
           case "startButton":
             window.location.href = "stage-boxwave.html";

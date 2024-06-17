@@ -7,23 +7,13 @@ document.addEventListener('DOMContentLoaded', () => {
 	const fileOption = document.getElementById('file-option');
 	const startMicButton = document.getElementById('start-mic');
 	const selectFileButton = document.getElementById('select-file');
+	const sceneSelect = document.getElementById('scene-select');
 
 	const fileInput = document.getElementById('file-input');
 	const aframeIframe = document.getElementById('aframe-iframe');
 
-	function playPause() {
-		if (count % 2 === 0) {
-			count++;
-			audioProcessor.play();
-		} else audioProcessor.pause();
-	}
-
-	// PlayPauseBTN.addEventListener('click', () => {
-	// 	if (count % 2 === 0) {
-	// 		count++;
-	// 		audioProcessor.play();
-	// 	} else audioProcessor.pause();
-	// });
+	const playPause = document.getElementById('playPauseBTN');
+	const volumeControl = document.getElementById('volume-slider');
 
 	// Photo Sensitivity Warning
 	const modal = document.getElementById('warning-modal');
@@ -65,6 +55,30 @@ document.addEventListener('DOMContentLoaded', () => {
 			audioProcessor.initFile(file);
 		}
 	});
+
+	sceneSelect.addEventListener('change', () => {
+		if (audioProcessor.isActive) {
+			aframeIframe.src = `stage-${sceneSelect.value}.html`;
+			document.getElementById('oops').style.display = 'none';
+			console.log('switching to scene', sceneSelect.value);
+		} else {
+			document.getElementById('oops').style.display = 'inline';
+			console.log('Attempted to switch scene before initializing audio');
+		}
+	});
+
+	playPause.addEventListener('click', () => {
+		if (audioProcessor.isPlaying) audioProcessor.pause();
+		else audioProcessor.play();
+	});
+
+	volumeControl.addEventListener(
+		'input',
+		() => {
+			audioProcessor.state.gainNode.gain.value = volumeControl.value;
+		},
+		false
+	);
 
 	function sendAudioDataToAFrame() {
 		if (audioProcessor.isActive) {
