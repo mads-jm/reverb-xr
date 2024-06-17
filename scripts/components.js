@@ -264,7 +264,7 @@ AFRAME.registerComponent("custom-camera", {
     const rig = document.createElement("a-entity");
     rig.setAttribute("id", "rig");
     rig.setAttribute("position", "0 1.6 0");
-    rig.setAttribute("movement-controls", "speed: 0.2");
+    rig.setAttribute("movement-controls", "speed: 0.1");
     rig.setAttribute("thumbstick-logging", " ");
 
     // Create camera entity
@@ -294,7 +294,13 @@ AFRAME.registerComponent("custom-camera", {
     rightHand.setAttribute(
       "hand-controls",
       "hand: right; handModelStyle: highPoly;");
+      rightHand.setAttribute("laser-controls", "hand: right;");
     rig.appendChild(rightHand);
+
+    const rightLaser = document.createElement("a-entity");
+    rightLaser.setAttribute("raycaster", "objects: .interactable");
+    rightLaser.setAttribute("line", "color: red; opacity: 0.75");
+    rightHand.appendChild(rightLaser);
 
     menuItems.forEach((item) => {
       const menuItem = document.createElement("a-entity");
@@ -387,7 +393,7 @@ AFRAME.registerComponent("thumbstick-logging", {
     var camera = rig.querySelector("a-camera");
     var position = rig.getAttribute("position");
     var rotation = camera.object3D.rotation;
-    var moveSpeed = 0.2; 
+    var moveSpeed = 0.1; 
 
     //calculate the forward vector based on the camera's rotation
     var forward = new THREE.Vector3(0,0,-1);
@@ -420,13 +426,6 @@ AFRAME.registerComponent("thumbstick-logging", {
         position.z += right.z * moveSpeed;
       }
       rig.setAttribute("position", position);
-    }
-
-    //update the rotation of the rig based on the right thumbstick input
-    if (evt.target.id === "rightHand" && (evt.detail.x < -0.1 || evt.detail.x > 0.1)) {
-      var rotationSpeed = 2; 
-      rotation.y -= evt.detail.x * rotationSpeed;
-      rig.setAttribute("rotation", { x: rotation.x, y: rotation.y, z: rotation.z });
     }
   },
 });
