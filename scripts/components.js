@@ -357,8 +357,8 @@ AFRAME.registerComponent("custom-camera", {
       camera.appendChild(curvedImage);
     });
 
-    // Append camera to the current entity
-    this.el.appendChild(camera);
+    // Append rig entity to the current entity
+    this.el.appendChild(rig);
   },
 });
 
@@ -367,22 +367,8 @@ AFRAME.registerComponent("thumbstick-logging", {
     this.el.addEventListener("thumbstickmoved", this.logThumbstick.bind(this));
   },
   logThumbstick: function (evt) {
-    // Log thumbstick direction
-    if (evt.detail.y > 0.95) {
-      console.log("DOWN");
-    }
-    if (evt.detail.y < -0.95) {
-      console.log("UP");
-    }
-    if (evt.detail.x < -0.95) {
-      console.log("LEFT");
-    }
-    if (evt.detail.x > 0.95) {
-      console.log("RIGHT");
-    }
-
-    // Get the current position of the entity
-    var position = this.el.getAttribute("position");
+    var rig = document.querySelector("#rig");
+    var position = rig.getAttribute("position");
     var moveSpeed = 0.1; // Adjust movement speed here
 
     // Update position based on thumbstick input
@@ -391,7 +377,7 @@ AFRAME.registerComponent("thumbstick-logging", {
     } // Move forward
     if (evt.detail.y < -0.1) {
       position.z += moveSpeed;
-    } // Move backward
+    } // Move backwards
     if (evt.detail.x < -0.1) {
       position.x -= moveSpeed;
     } // Move left
@@ -400,6 +386,6 @@ AFRAME.registerComponent("thumbstick-logging", {
     } // Move right
 
     // Set the new position
-    this.el.setAttribute("position", position);
+    rig.setAttribute("position", position);
   },
 });
