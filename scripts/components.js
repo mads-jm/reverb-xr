@@ -260,6 +260,13 @@ AFRAME.registerComponent("point-light", {
 
 AFRAME.registerComponent("custom-camera", {
   init: function () {
+    //rig entity
+    const rig = document.createElement("a-entity");
+    rig.setAttribute("id", "rig");
+    rig.setAttribute("position", "25 10 0");
+    rig.setAttribute("movement-controls", "speed: 0.2");
+    rig.setAttribute("thumbstick-logging", " ");
+
     // Create camera entity
     const camera = document.createElement("a-camera");
     // No flight in lobby pls :)
@@ -347,19 +354,20 @@ AFRAME.registerComponent("custom-camera", {
 
       camera.appendChild(curvedImage);
     });
+    //append camera to rig
+    rig.appendChild(camera);
 
     // Append camera to the current entity
     this.el.appendChild(camera);
   },
 });
 
-// Register a thumbstick logging component
 AFRAME.registerComponent("thumbstick-logging", {
   init: function () {
-    this.el.addEventListener("thumbstickmoved", this.logThumbstick);
+    this.el.addEventListener("thumbstickmoved", this.logThumbstick.bind(this));
   },
-
   logThumbstick: function (evt) {
+    // Log thumbstick direction
     if (evt.detail.y > 0.95) {
       console.log("DOWN");
     }
@@ -372,5 +380,26 @@ AFRAME.registerComponent("thumbstick-logging", {
     if (evt.detail.x > 0.95) {
       console.log("RIGHT");
     }
+
+    // Get the current position of the entity
+    var position = this.el.getAttribute("position");
+    var moveSpeed = 0.1; // Adjust movement speed here
+
+    // Update position based on thumbstick input
+    if (evt.detail.y > 0.1) {
+      position.z -= moveSpeed;
+    } // Move forward
+    if (evt.detail.y < -0.1) {
+      position.z += moveSpeed;
+    } // Move backward
+    if (evt.detail.x < -0.1) {
+      position.x -= moveSpeed;
+    } // Move left
+    if (evt.detail.x > 0.1) {
+      position.x += moveSpeed;
+    } // Move right
+
+    // Set the new position
+    this.el.setAttribute("position", position);
   },
 });
