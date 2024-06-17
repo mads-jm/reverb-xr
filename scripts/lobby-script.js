@@ -26,44 +26,19 @@ document.addEventListener("DOMContentLoaded", () => {
             easing: "easeOutCubic",
           });
         });
-        switch (el.id) {
-          case "aboutButton":
-            window.location.href = "stage-about.html";
-            break;
-          case "startButton":
-            window.location.href = "stage-boxwave.html";
-            break;
-          case "barsButton":
-            window.location.href = "stage-bars.html";
-            break;
-          case "waveButton":
-            window.location.href = "stage-wave.html";
-            break;
-          case "dualwaveButton":
-            window.location.href = "stage-dualwave.html";
-            break;
-          case "particleButton":
-            window.location.href = "stage-particle.html";
-            break;
-          default:
-            break;
-        }
+        
+      });
+      el.addEventListener("start", function () {
+        console.log("start");
+        window.href = "stage-boxwave.html";
       });
     },
   });
 
   // Apply the component to the buttons
-  document.querySelector("#aboutButton").setAttribute("button-interaction", "");
-  document
-    .querySelector("#settingsButton")
-    .setAttribute("button-interaction", "");
+  // document
+  //   .querySelector("#settingsButton")
+  //   .setAttribute("button-interaction", "");
   document.querySelector("#startButton").setAttribute("button-interaction", "");
-  document.querySelector("#barsButton").setAttribute("button-interaction", "");
-  document.querySelector("#waveButton").setAttribute("button-interaction", "");
-  document
-    .querySelector("#dualwaveButton")
-    .setAttribute("button-interaction", "");
-  document
-    .querySelector("#particleButton")
-    .setAttribute("button-interaction", "");
+
 });
