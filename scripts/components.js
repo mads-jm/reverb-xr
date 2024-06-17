@@ -369,21 +369,42 @@ AFRAME.registerComponent("thumbstick-logging", {
   logThumbstick: function (evt) {
     var rig = document.querySelector("#rig");
     var position = rig.getAttribute("position");
+    var rotation = camera.object3D.rotation;
     var moveSpeed = 0.1; // Adjust movement speed here
+
+    //calculate the forward vector based on the camera's rotation
+    var forward = new THREE.Vector3(0,0,-1);
+    forward.applyQuaternion(camera.object3D.quaternion);
+    forward.y = 0;
+    forward.normalize();
+
+    //calculate the right vector
+    var right = new THREE.Vector3(1,0,0);
+    right.applyQuaternion(camera.object3D.quaternion);
+    right.y = 0;
+    right.normalize();
 
     // Update position based on thumbstick input
     if (evt.detail.y > 0.1) {
-      position.z += moveSpeed;
-    } // Move forward
+      // Move forward
+      position.x += forward.x * moveSpeed;
+      position.z += forward.z * moveSpeed;
+    } 
     if (evt.detail.y < -0.1) {
-      position.z -= moveSpeed;
-    } // Move backwards
+      // Move backwards
+      position.x -= forward.x * moveSpeed;
+      position.z -= forward.z * moveSpeed;
+    } 
     if (evt.detail.x < -0.1) {
-      position.x += moveSpeed;
-    } // Move left
+      // Move left
+       position.x -= right.x * moveSpeed; 
+       position.z -= right.z * moveSpeed;
+    } 
     if (evt.detail.x > 0.1) {
-      position.x -= moveSpeed;
-    } // Move right
+      // Move right
+       position.x += right.x * moveSpeed;
+       position.z += right.z * moveSpeed;
+    } 
 
     // Set the new position
     rig.setAttribute("position", position);
