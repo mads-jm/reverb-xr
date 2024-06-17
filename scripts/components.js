@@ -168,7 +168,7 @@ const menuItems = [
 AFRAME.registerComponent("button", {
   schema: {
     position: { type: "vec3", default: { x: 0, y: 0, z: 0 } },
-    text: { type: "string", default: "Click Me" },
+    text: { type: "string", default: "" },
     clickAction: { type: "string", default: "" },
   },
 
