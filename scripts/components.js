@@ -264,7 +264,7 @@ AFRAME.registerComponent("custom-camera", {
     const rig = document.createElement("a-entity");
     rig.setAttribute("id", "rig");
     rig.setAttribute("position", "0 1.6 0");
-    rig.setAttribute("movement-controls", "speed: 0.5");
+    rig.setAttribute("movement-controls", "speed: 0.3");
     rig.setAttribute("thumbstick-logging", " ");
 
     // Create camera entity
@@ -387,7 +387,7 @@ AFRAME.registerComponent("thumbstick-logging", {
     var camera = rig.querySelector("a-camera");
     var position = rig.getAttribute("position");
     var rotation = camera.object3D.rotation;
-    var moveSpeed = 0.5; 
+    var moveSpeed = 0.3; 
 
     //calculate the forward vector based on the camera's rotation
     var forward = new THREE.Vector3(0,0,-1);
@@ -402,38 +402,35 @@ AFRAME.registerComponent("thumbstick-logging", {
     right.normalize();
 
     // Update position based on thumbstick input
-    if (evt.detail.y > 0.1) {
-      // Move forward
-      position.x += forward.x * moveSpeed;
-      position.z += forward.z * moveSpeed;
-    } 
-    if (evt.detail.y < -0.1) {
-      // Move backwards
-      position.x -= forward.x * moveSpeed;
-      position.z -= forward.z * moveSpeed;
-    } 
-    if (evt.detail.x < -0.1) {
-      // Move left
-       position.x -= right.x * moveSpeed; 
-       position.z -= right.z * moveSpeed;
-    } 
-    if (evt.detail.x > 0.1) {
-      // Move right
-       position.x += right.x * moveSpeed;
-       position.z += right.z * moveSpeed;
-    } 
-
-    rig.setAttribute("position", position);
+    if (evt.target.id === "leftHand") {
+      if (evt.detail.y > 0.1) {
+        // Move backwards (reverse)
+        position.x -= forward.x * moveSpeed;
+        position.z -= forward.z * moveSpeed;
+      }
+      if (evt.detail.y < -0.1) {
+        // Move forwards (reverse)
+        position.x += forward.x * moveSpeed;
+        position.z += forward.z * moveSpeed;
+      }
+      if (evt.detail.x < -0.1) {
+        // Move right (reverse)
+        position.x += right.x * moveSpeed;
+        position.z += right.z * moveSpeed;
+      }
+      if (evt.detail.x > 0.1) {
+        // Move left (reverse)
+        position.x -= right.x * moveSpeed;
+        position.z -= right.z * moveSpeed;
+      }
+      rig.setAttribute("position", position);
+    }
 
     //update the rotation of the rig based on the right thumbstick input
-    if (evt.detail.x < -0.1 || evt.detail.x > 0.1) {
+    if (evt.target.id === "rightHand" && (evt.detail.x < -0.1 || evt.detail.x > 0.1)) {
       var rotationSpeed = 0.05; // Rotation speed
       rotation.y -= evt.detail.x * rotationSpeed;
-      rig.setAttribute("rotation", {
-        x: rotation.x,
-        y: THREE.Math.radToDeg(rotation.y),
-        z: rotation.z,
-      });
+      rig.setAttribute("rotation", { x: rotation.x, y: THREE.Math.radToDeg(rotation.y), z: rotation.z });
     }
   },
 });
