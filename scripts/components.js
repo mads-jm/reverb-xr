@@ -264,7 +264,7 @@ AFRAME.registerComponent("custom-camera", {
     const rig = document.createElement("a-entity");
     rig.setAttribute("id", "rig");
     rig.setAttribute("position", "0 1.6 0");
-    rig.setAttribute("movement-controls", "speed: 0.2");
+    rig.setAttribute("movement-controls", "speed: 0.4");
     rig.setAttribute("thumbstick-logging", " ");
 
     // Create camera entity
@@ -279,6 +279,22 @@ AFRAME.registerComponent("custom-camera", {
     }
     camera.setAttribute("look-controls", "enabled: true");
     camera.setAttribute("cursor", "rayOrigin: mouse");
+
+    //left hand controller
+    const leftHand = document.createElement("a-entity");
+    leftHand.setAttribute("id", "leftHand");
+    leftHand.setAttribute("hand-controls", "left");
+    leftHand.setAttribute("laser-controls", "hand: left");
+    leftHand.setAttribute("position", "-0.5 1.6 -0.5");
+    rig.appendChild(leftHand);
+
+    //right hand controller
+    const rightHand = document.createElement("a-entity");
+    leftHand.setAttribute("id", "leftHand");
+    leftHand.setAttribute("hand-controls", "right");
+    leftHand.setAttribute("laser-controls", "hand: right");
+    leftHand.setAttribute("position", "0.5 1.6 -0.5");
+    rig.appendChild(rightHand);
 
     menuItems.forEach((item) => {
       const menuItem = document.createElement("a-entity");
@@ -370,7 +386,7 @@ AFRAME.registerComponent("thumbstick-logging", {
     var rig = document.querySelector("#rig");
     var position = rig.getAttribute("position");
     var rotation = camera.object3D.rotation;
-    var moveSpeed = 0.1; // Adjust movement speed here
+    var moveSpeed = 0.3; 
 
     //calculate the forward vector based on the camera's rotation
     var forward = new THREE.Vector3(0,0,-1);
@@ -406,7 +422,6 @@ AFRAME.registerComponent("thumbstick-logging", {
        position.z += right.z * moveSpeed;
     } 
 
-    // Set the new position
     rig.setAttribute("position", position);
   },
 });
