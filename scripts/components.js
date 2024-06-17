@@ -264,7 +264,7 @@ AFRAME.registerComponent("custom-camera", {
     const rig = document.createElement("a-entity");
     rig.setAttribute("id", "rig");
     rig.setAttribute("position", "0 1.6 0");
-    rig.setAttribute("movement-controls", "speed: 0.2");
+    rig.setAttribute("movement-controls", "speed: 0.5");
     rig.setAttribute("thumbstick-logging", " ");
 
     // Create camera entity
@@ -285,15 +285,15 @@ AFRAME.registerComponent("custom-camera", {
     leftHand.setAttribute("id", "leftHand");
     leftHand.setAttribute(
       "hand-controls",
-      "hand: left; handModelStyle: lowPoly; color: #FF9900");
+      "hand: left; handModelStyle: highPoly;");
     rig.appendChild(leftHand);
 
     //right hand controller
     const rightHand = document.createElement("a-entity");
-    leftHand.setAttribute("id", "rightHand");
-    leftHand.setAttribute(
+    rightHand.setAttribute("id", "rightHand");
+    rightHand.setAttribute(
       "hand-controls",
-      "hand: right; handModelStyle: lowPoly; color: #FF9900");
+      "hand: right; handModelStyle: highPoly;");
     rig.appendChild(rightHand);
 
     menuItems.forEach((item) => {
@@ -387,7 +387,7 @@ AFRAME.registerComponent("thumbstick-logging", {
     var camera = rig.querySelector("a-camera");
     var position = rig.getAttribute("position");
     var rotation = camera.object3D.rotation;
-    var moveSpeed = 0.3; 
+    var moveSpeed = 0.5; 
 
     //calculate the forward vector based on the camera's rotation
     var forward = new THREE.Vector3(0,0,-1);
@@ -424,5 +424,16 @@ AFRAME.registerComponent("thumbstick-logging", {
     } 
 
     rig.setAttribute("position", position);
+
+    //update the rotation of the rig based on the right thumbstick input
+    if (evt.detail.x < -0.1 || evt.detail.x > 0.1) {
+      var rotationSpeed = 0.05; // Rotation speed
+      rotation.y -= evt.detail.x * rotationSpeed;
+      rig.setAttribute("rotation", {
+        x: rotation.x,
+        y: THREE.Math.radToDeg(rotation.y),
+        z: rotation.z,
+      });
+    }
   },
 });
