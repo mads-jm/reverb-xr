@@ -1,22 +1,27 @@
 import { InitializedState } from "./InitializedState.js";
 
 export class AudioProcessor {
-  constructor() {
-    // limit to one instance for whole scope
-    if (AudioProcessor.instance) {
-      return AudioProcessor.instance;
-    }
-    this.audioContext = new (window.AudioContext ||
-      window.webkitAudioContext)();
-    this.analyser = this.audioContext.createAnalyser();
-    this.analyser.fftSize = 2048;
-    this.analyser.smoothingTimeConstant = 0.8;
-    this.bufferLength = this.analyser.frequencyBinCount;
-    this.dataArray = new Uint8Array(this.analyser.frequencyBinCount);
-    this.state = new InitializedState(this.audioContext, this.analyser);
-    this.isActive = false;
-    this.source = null;
-    this.startTime = null;
+
+	constructor() {
+		// limit to one instance for whole scope
+		if (AudioProcessor.instance) {
+			return AudioProcessor.instance;
+		}
+		this.audioContext = new (window.AudioContext ||
+			window.webkitAudioContext)();
+		this.analyser = this.audioContext.createAnalyser();
+		this.analyser.fftSize = 2048;
+		this.analyser.smoothingTimeConstant = 0.8;
+		this.bufferLength = this.analyser.frequencyBinCount;
+		this.dataArray = new Uint8Array(this.analyser.frequencyBinCount);
+		this.state = new InitializedState(this.audioContext, this.analyser);
+		this.isActive = false;
+    this.isPlaying = true;
+		this.source = null;
+		this.startTime = null;
+
+		
+
 
     AudioProcessor.instance = this;
   }
@@ -28,16 +33,26 @@ export class AudioProcessor {
     return AudioProcessor.instance;
   }
 
-  async initMicrophone() {
-    if (!this.isActive) {
-      this.state = await this.state.initMicrophone();
-      this.isActive = true;
-      this.audioContext.resume();
-      console.log("initMicrophone");
-    } else {
-      console.log("already active");
-    }
-  }
+	async play() {
+		this.isPlaying = true;
+		this.audioContext.resume();
+	}
+
+	async pause() {
+		this.isPlaying = false;
+		this.audioContext.suspend();
+	}
+
+	async initMicrophone() {
+		if (!this.isActive) {
+			this.state = await this.state.initMicrophone();
+			this.isActive = true;
+			this.audioContext.resume();
+			console.log('initMicrophone');
+		} else {
+			console.log('already active');
+		}
+	}
 
   async initFile(file) {
     if (!this.isActive) {

@@ -11,20 +11,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
 	const fileInput = document.getElementById('file-input');
 	const aframeIframe = document.getElementById('aframe-iframe');
+	
+	const playPause = document.getElementById('playPauseBTN');
+	const volumeControl = document.querySelector("#volume");
 
-	function playPause() {
-		if (count % 2 === 0) {
-			count++;
-			audioProcessor.play();
-		} else audioProcessor.pause();
-	}
-
-	// PlayPauseBTN.addEventListener('click', () => {
-	// 	if (count % 2 === 0) {
-	// 		count++;
-	// 		audioProcessor.play();
-	// 	} else audioProcessor.pause();
-	// });
 
 	// Photo Sensitivity Warning
 	const modal = document.getElementById('warning-modal');
@@ -78,6 +68,22 @@ document.addEventListener('DOMContentLoaded', () => {
 		}
 		
 	});
+
+
+		playPause.addEventListener('click', () => {
+			if(audioProcessor.isPlaying)
+				audioProcessor.pause();
+			else
+				audioProcessor.play();
+		});
+
+
+		volume-slider.addEventListener('change', () => {
+			audioProcessor.state.gainNode.gain.value = volumeControl.value;
+		},
+		false,
+		);
+
 
 	function sendAudioDataToAFrame() {
 		if (audioProcessor.isActive) {

@@ -6,14 +6,17 @@ export class FileState {
     this.analyser = analyser;
     this.audioBuffer = audioBuffer;
 
-    this.source = audioContext.createBufferSource();
-    this.source.buffer = audioBuffer;
-    this.source.connect(this.analyser);
-    this.analyser.connect(this.audioContext.destination);
-    this.source.start(0);
-    this.startTime = this.audioContext.currentTime;
-    console.log("playback started");
-  }
+		this.gainNode = audioContext.createGain();
+		this.source = audioContext.createBufferSource();
+		this.source.buffer = audioBuffer;
+		this.source.connect(this.analyser);
+		this.analyser.connect(this.audioContext.destination);
+		this.gainNode.connect(this.audioContext.destination);
+		this.source.start(0);
+		this.startTime = this.audioContext.currentTime;
+		console.log('playback started');
+		
+	}
 
   stop() {
     this.source.stop(0);
