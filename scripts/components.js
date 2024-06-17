@@ -264,11 +264,13 @@ AFRAME.registerComponent("custom-camera", {
     const rig = document.createElement("a-entity");
     rig.setAttribute("id", "rig");
     rig.setAttribute("position", "0 1.6 0");
-    rig.setAttribute("movement-controls", "speed: 0.4");
+    rig.setAttribute("movement-controls", "speed: 0.2");
     rig.setAttribute("thumbstick-logging", " ");
 
     // Create camera entity
     const camera = document.createElement("a-camera");
+    camera.setAttribute("look-controls", "enabled: true");
+    camera.setAttribute("cursor", "rayOrigin: mouse");
     rig.appendChild(camera);
 
     // No flight in lobby pls :)
@@ -277,14 +279,11 @@ AFRAME.registerComponent("custom-camera", {
     } else {
       camera.setAttribute("wasd-controls", "acceleration: 100; fly: true");
     }
-    camera.setAttribute("look-controls", "enabled: true");
-    camera.setAttribute("cursor", "rayOrigin: mouse");
 
     //left hand controller
     const leftHand = document.createElement("a-entity");
     leftHand.setAttribute("id", "leftHand");
     leftHand.setAttribute("hand-controls", "left");
-    leftHand.setAttribute("laser-controls", "hand: left");
     leftHand.setAttribute("position", "-0.5 1.6 -0.5");
     rig.appendChild(leftHand);
 
@@ -292,7 +291,6 @@ AFRAME.registerComponent("custom-camera", {
     const rightHand = document.createElement("a-entity");
     leftHand.setAttribute("id", "leftHand");
     leftHand.setAttribute("hand-controls", "right");
-    leftHand.setAttribute("laser-controls", "hand: right");
     leftHand.setAttribute("position", "0.5 1.6 -0.5");
     rig.appendChild(rightHand);
 
@@ -384,6 +382,7 @@ AFRAME.registerComponent("thumbstick-logging", {
   },
   logThumbstick: function (evt) {
     var rig = document.querySelector("#rig");
+    var camera = rig.querySelector("a-camera");
     var position = rig.getAttribute("position");
     var rotation = camera.object3D.rotation;
     var moveSpeed = 0.3; 
