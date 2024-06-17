@@ -53,6 +53,7 @@ document.addEventListener('DOMContentLoaded', () => {
 		const file = event.target.files[0];
 		if (file) {
 			audioProcessor.initFile(file);
+			aframeIframe.contentWindow.postMessage({ type: 'playPause', data: 'play' }, '*');
 		}
 	});
 
