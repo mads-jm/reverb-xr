@@ -22,6 +22,27 @@
     >
       <a-entity custom-camera></a-entity>
 
+      <!-- VR Hand controls -->
+      <a-entity
+        id="leftHand"
+        hand-controls="hand: left; handModelStyle: lowPoly; color: #ffcccc"
+        hand-tracking-controls="hand: left;"
+        hand-tracking-grab-controls="hand: left;"
+        oculus-touch-controls="hand: left"
+        thumbstick-logging
+        laser-controls="hand: left"
+      ></a-entity>
+
+      <a-entity
+        id="rightHand"
+        hand-controls="hand: right; handModelStyle: lowPoly; color: #ffcccc"
+        hand-tracking-controls="hand: right;"
+        hand-tracking-grab-controls="hand: right;"
+        oculus-touch-controls="hand: right"
+        thumbstick-logging
+        laser-controls="hand: right"
+      ></a-entity>
+
       <!-- Point lights -->
       <a-entity point-light position="0 3 -2"></a-entity>
       <a-entity point-light position="0 3 2"></a-entity>
