@@ -4,8 +4,8 @@ var showPosition = "0 -0.41 -0.4";
 window.addEventListener("enter-vr", (e) => {
   if (AFRAME.utils.device.checkHeadsetConnected()) {
     // TODO: Set yOffset, zOffset, and showPosition based on VR display
-    zOffset = 0;
-    yOffset = 0;
+    zOffset = 0.5;
+    yOffset = 0.2;
     showPosition = "0 -0.41 -0.4";
     console.log("VR headset connected");
   }
