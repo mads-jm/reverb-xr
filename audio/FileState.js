@@ -1,10 +1,10 @@
-import { InitializedState } from './InitializedState.js';
+import { InitializedState } from "./InitializedState.js";
 
 export class FileState {
-	constructor(audioContext, analyser, audioBuffer) {
-		this.audioContext = audioContext;
-		this.analyser = analyser;
-		this.audioBuffer = audioBuffer;
+  constructor(audioContext, analyser, audioBuffer) {
+    this.audioContext = audioContext;
+    this.analyser = analyser;
+    this.audioBuffer = audioBuffer;
 
 		this.gainNode = audioContext.createGain();
 		this.source = audioContext.createBufferSource();
@@ -18,19 +18,19 @@ export class FileState {
 		
 	}
 
-	stop() {
-		this.source.stop(0);
-		this.source.disconnect();
-		return new InitializedState(this.audioContext, this.analyser);
-	}
+  stop() {
+    this.source.stop(0);
+    this.source.disconnect();
+    return new InitializedState(this.audioContext, this.analyser);
+  }
 
-	//pause / play / playlist implementation
+  //pause / play / playlist implementation
 
-	getFrequencyData(dataArray) {
-		return this.analyser.getByteFrequencyData(dataArray);
-	}
+  getFrequencyData(dataArray) {
+    return this.analyser.getByteFrequencyData(dataArray);
+  }
 
-	getTimeDomainData(dataArray) {
-		return this.analyser.getByteTimeDomainData(dataArray);
-	}
+  getTimeDomainData(dataArray) {
+    return this.analyser.getByteTimeDomainData(dataArray);
+  }
 }

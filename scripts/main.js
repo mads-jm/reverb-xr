@@ -7,6 +7,7 @@ document.addEventListener('DOMContentLoaded', () => {
 	const fileOption = document.getElementById('file-option');
 	const startMicButton = document.getElementById('start-mic');
 	const selectFileButton = document.getElementById('select-file');
+	const sceneSelect = document.getElementById('scene-select');
 
 	const fileInput = document.getElementById('file-input');
 	const aframeIframe = document.getElementById('aframe-iframe');
@@ -15,10 +16,20 @@ document.addEventListener('DOMContentLoaded', () => {
 	const volumeControl = document.querySelector("#volume");
 
 
+	// Photo Sensitivity Warning
+	const modal = document.getElementById('warning-modal');
+	const acceptButton = document.getElementById('accept-button');
+
+	acceptButton.addEventListener('click', function () {
+		modal.style.display = 'none';
+		aframeIframe.style.display = 'block';
+	});
+
 	micOption.addEventListener('change', () => {
 		if (micOption.checked) {
 			startMicButton.disabled = false;
 			selectFileButton.disabled = true;
+			console.log('startMicButton.disabled startMicButton.disabled');
 			audioProcessor.stop();
 		}
 	});
@@ -35,19 +46,31 @@ document.addEventListener('DOMContentLoaded', () => {
 		audioProcessor.initMicrophone();
 	});
 
-    selectFileButton.addEventListener('click', () => {
-			fileInput.click();
-		});
+	selectFileButton.addEventListener('click', () => {
+		fileInput.click();
+	});
 
-		fileInput.addEventListener('change', (event) => {
-			const file = event.target.files[0];
-			if (file) {
-				audioProcessor.initFile(file);
-			}
-		});
+	fileInput.addEventListener('change', (event) => {
+		const file = event.target.files[0];
+		if (file) {
+			audioProcessor.initFile(file);
+		}
+	});
+
+	sceneSelect.addEventListener('change', () => {
+		if(audioProcessor.isActive) {
+			aframeIframe.src = `stage-${sceneSelect.value}.html`;
+			document.getElementById('oops').style.display = 'none';
+			console.log('switching to scene', sceneSelect.value);
+		}else{
+			document.getElementById('oops').style.display = 'inline';
+			console.log('Attempted to switch scene before initializing audio');
+		}
+		
+	});
+
 
 		playPause.addEventListener('click', () => {
-
 			if(audioProcessor.isPlaying)
 				audioProcessor.pause();
 			else
@@ -55,16 +78,14 @@ document.addEventListener('DOMContentLoaded', () => {
 		});
 
 
-		
-
-		volumeControl.addEventListener('input', () => {
+		volume-slider.addEventListener('change', () => {
 			audioProcessor.state.gainNode.gain.value = volumeControl.value;
 		},
 		false,
 		);
 
 
-  function sendAudioDataToAFrame() {
+	function sendAudioDataToAFrame() {
 		if (audioProcessor.isActive) {
 			const frequencyData = audioProcessor.getFrequencyDataForAPI();
 			const timeDomainData = audioProcessor.getTimeDomainDataForAPI();
@@ -79,6 +100,9 @@ document.addEventListener('DOMContentLoaded', () => {
 		}
 		requestAnimationFrame(sendAudioDataToAFrame);
 	}
-	
+	aframeIframe.contentWindow.postMessage(
+		{ type: 'binCount', data: audioProcessor.getFrequencyBinCount() },
+		'*'
+	);
 	sendAudioDataToAFrame();
 });

@@ -1,7 +1,6 @@
 document.addEventListener("DOMContentLoaded", () => {
   const visualizer = document.querySelector("#audio-visualizer");
-  const active = false;
-  console.log("Bars script loaded");
+  console.log("A-Frame script loaded");
 
   window.addEventListener("message", (event) => {
     if (event.data.type === "frequencyData") {
@@ -11,13 +10,10 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 
   function createParticles() {
-    const particleGeometry = new THREE.SphereGeometry(0.03, 10, 10);
-    const particleMaterial = new THREE.MeshStandardMaterial({
-      color: 0xffffff,
-    });
-    const particles = new THREE.Group();
-    const sphereRadius = 5;
+    const particles = document.querySelector("#particles");
+    const sphereRadius = 4;
     const divisions = 100;
+
     for (let i = 0; i <= divisions; i++) {
       const phi = (Math.PI * i) / divisions;
       for (let j = 0; j <= divisions * 2; j++) {
@@ -25,38 +21,41 @@ document.addEventListener("DOMContentLoaded", () => {
         const x = sphereRadius * Math.sin(phi) * Math.cos(theta);
         const y = sphereRadius * Math.sin(phi) * Math.sin(theta);
         const z = sphereRadius * Math.cos(phi);
-        const particle = new THREE.Mesh(particleGeometry, particleMaterial);
-        particle.position.set(x, y, z);
-        particle.userData.initialPosition = { x, y, z }; //stores initial position
-        particles.add(particle);
+
+        const particle = document.createElement("a-sphere");
+        particle.setAttribute("radius", 0.03);
+        particle.setAttribute("color", "#FFFFFF");
+        particle.setAttribute("position", { x, y, z });
+        particle.setAttribute("initial-position", { x, y, z });
+
+        particles.appendChild(particle);
       }
     }
-
-    scene.add(particles);
   }
 
   function updateParticles(frequencyData) {
     frequencyData = smoothData(frequencyData);
 
-    const particles = scene.children.find((child) => child.type === "Group");
+    const particles = document.querySelector("#particles");
+    const particleElements = particles.children;
     const buffer = 0.95;
 
-    for (let i = 0; i < particles.children.length; i++) {
-      const particle = particles.children[i];
+    for (let i = 0; i < particleElements.length; i++) {
+      const particle = particleElements[i];
       const scale = (frequencyData[i % frequencyData.length] / 255.0) * buffer;
-      const initialPosition = particle.userData.initialPosition;
+      const initialPosition = particle.getAttribute("initial-position");
 
-      //this moves the particles based on frequency data
-      particle.position.set(
-        initialPosition.x * (1 + scale),
-        initialPosition.y * (1 + scale),
-        initialPosition.z * (1 + scale)
-      );
+      // This moves the particles based on frequency data
+      particle.setAttribute("position", {
+        x: initialPosition.x * (1 + scale),
+        y: initialPosition.y * (1 + scale),
+        z: initialPosition.z * (1 + scale),
+      });
 
-      const hue = (i / particles.children.length) * 360;
+      const hue = (i / particleElements.length) * 360;
       const [r, g, b] = hsvToRgb(hue / 360);
       const hexColor = rgbToHex(r, g, b);
-      particle.material.color.set(hexColor);
+      particle.setAttribute("color", hexColor);
     }
   }
 
@@ -128,45 +127,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
   createParticles();
   setInterval(() => {
-    //a placeholder,the particles will be updated through the updateParticles function with event listener
+    // a placeholder, the particles will be updated through the updateParticles function with event listener
   }, 100);
-});
-
-//create the scene, camera, and renderer
-const scene = new THREE.Scene();
-const camera = new THREE.PerspectiveCamera(
-  75,
-  window.innerWidth / window.innerHeight,
-  0.1,
-  1000
-);
-const renderer = new THREE.WebGLRenderer();
-renderer.setSize(window.innerWidth, window.innerHeight);
-document.body.appendChild(renderer.domElement);
-camera.position.z = 10;
-
-//lighting
-const pointLight = new THREE.PointLight(0xffffff, 1, 100);
-pointLight.position.set(10, 10, 10);
-scene.add(pointLight);
-const ambientLight = new THREE.AmbientLight(0x404040);
-scene.add(ambientLight);
-
-function animate() {
-  requestAnimationFrame(animate);
-  renderer.render(scene, camera);
-}
-animate();
-
-//mouse movement
-let mouseX = 0;
-let mouseY = 0;
-
-document.addEventListener("mousemove", (event) => {
-  mouseX = (event.clientX / window.innerWidth) * 2 - 1;
-  mouseY = -(event.clientY / window.innerHeight) * 2 + 1;
-
-  camera.position.x = mouseX * 10;
-  camera.position.y = mouseY * 10;
-  camera.lookAt(scene.position);
 });
