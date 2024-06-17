@@ -1,8 +1,6 @@
 function handleMouseDown(element) {
   element.setAttribute("material", "color", "black");
 }
-  element.setAttribute("material", "color", "black");
-}
 
 function handleMouseUp(element) {
   element.setAttribute("material", "color", "grey");
@@ -167,25 +165,25 @@ window.handleClick = function (id) {
     if (window.location.href.indexOf("about") === -1) {
       window.location.href = "about.html";
     } else {
-      window.location.href = "aframe.html";
+      window.location.href = "stage-lobby.html";
     }
   } else if (id === "menu5" && !isHidden) {
     // settings
     if (window.location.href.indexOf("settings") === -1) {
       window.location.href = "settings.html";
     } else {
-      window.location.href = "aframe.html";
+      window.location.href = "stage-lobby.html";
     }
   } else if (id === "sub1" && isUp) {
     // DualWave
     if (window.location.href.indexOf("stage-dualwave") === -1) {
       window.location.href = "stage-dualwave.html";
     } else {
-      window.location.href = "aframe.html";
+      window.location.href = "stage-lobby.html";
     }
   } else if (id === "sub2" && isUp) {
     // Start
-    window.location.href = "aframe.html";
+    window.location.href = "stage-lobby.html";
   } else if (id === "sub3") {
     // window.location.href = 'stage-wave.html';
   } else if (id === "sub4" && isUp) {
@@ -193,14 +191,14 @@ window.handleClick = function (id) {
     if (window.location.href.indexOf("stage-bars") === -1) {
       window.location.href = "stage-bars.html";
     } else {
-      window.location.href = "aframe.html";
+      window.location.href = "stage-lobby.html";
     }
   } else if (id === "sub5" && isUp) {
     // Wave
     if (window.location.href.indexOf("stage-wave") === -1) {
       window.location.href = "stage-wave.html";
     } else {
-      window.location.href = "aframe.html";
+      window.location.href = "stage-lobby.html";
     }
   }
 };

@@ -271,7 +271,7 @@ AFRAME.registerComponent("custom-camera", {
     // Create camera entity
     const camera = document.createElement("a-camera");
     // No flight in lobby pls :)
-		if (window.location.href.includes('aframe.html')) {
+		if (window.location.href.includes('stage-lobby.html')) {
 			camera.setAttribute('wasd-controls', 'acceleration: 10; fly: false');
 		} else {
 			camera.setAttribute('wasd-controls', 'acceleration: 100; fly: true');
