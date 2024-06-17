@@ -56,11 +56,9 @@ const curvedImages = [
 var visibility = "false";
 var sub1Text = "Dual";
 var sub2Text = "Start";
-var sub3Text = "subM3";
+var sub3Text = "Particle";
 var sub4Text = "Bars";
 var sub5Text = "Wave";
-var menu3Text = "About";
-var menu5Text = "Settings";
 console.log(window.location.href);
 if (window.location.href.indexOf("stage-dualwave") !== -1) {
   sub1Text = "Back";
@@ -68,21 +66,15 @@ if (window.location.href.indexOf("stage-dualwave") !== -1) {
   // } else if (window.location.href.indexOf("") !== -1) {
   // 	sub2Text = "Back";
   // 	console.log('in start');
-  // } else if (window.location.href.indexOf("") !== -1) {
-  // 	sub3Text = "Back";
-  // 	console.log('in subM3');
+} else if (window.location.href.indexOf("stage-particle") !== -1) {
+  sub3Text = "Back";
+  console.log("in particle");
 } else if (window.location.href.indexOf("stage-bars") !== -1) {
   sub4Text = "Back";
   console.log("in bars");
 } else if (window.location.href.indexOf("stage-wave") !== -1) {
   sub5Text = "Back";
   console.log("in wave");
-} else if (window.location.href.indexOf("about") !== -1) {
-  menu3Text = "Back";
-  console.log("in about");
-} else if (window.location.href.indexOf("settings") !== -1) {
-  menu5Text = "Back";
-  console.log("in settings");
 }
 const subMenu = [
   {
@@ -127,8 +119,8 @@ const menuItems = [
   {
     position: "-0.33 -0.67" + yOffset + " -1.13" + zOffset,
     rotation: "0 8.5 0",
-    id: "hideShow",
-    text: "Hide",
+    id: "menu5",
+    text: "",
     width: "0.31",
   },
   {
@@ -142,7 +134,7 @@ const menuItems = [
     position: "0.33 -0.67" + yOffset + " -1.13" + zOffset,
     rotation: "0 -8.5 0",
     id: "menu3",
-    text: menu3Text,
+    text: "",
     width: "0.31",
   },
   {
@@ -155,8 +147,8 @@ const menuItems = [
   {
     position: "-0.64 -0.67" + yOffset + " -1.063" + zOffset,
     rotation: "0 16.2 0",
-    id: "menu5",
-    text: menu5Text,
+    id: "hideShow",
+    text: "Hide",
     width: "0.3",
   },
   {
@@ -271,11 +263,11 @@ AFRAME.registerComponent("custom-camera", {
     // Create camera entity
     const camera = document.createElement("a-camera");
     // No flight in lobby pls :)
-		if (window.location.href.includes('stage-lobby.html')) {
-			camera.setAttribute('wasd-controls', 'acceleration: 10; fly: false');
-		} else {
-			camera.setAttribute('wasd-controls', 'acceleration: 100; fly: true');
-		}
+    if (window.location.href.includes("stage-lobby.html")) {
+      camera.setAttribute("wasd-controls", "acceleration: 10; fly: false");
+    } else {
+      camera.setAttribute("wasd-controls", "acceleration: 100; fly: true");
+    }
     camera.setAttribute("look-controls", "enabled: true");
     camera.setAttribute("cursor", "rayOrigin: mouse");
 
