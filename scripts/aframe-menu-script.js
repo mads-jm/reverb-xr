@@ -7,6 +7,17 @@ function handleMouseDown(element) {
 function handleMouseUp(element) {
   element.setAttribute("material", "color", "grey");
 }
+
+var zOffset = 0;
+var yOffset = 0;
+window.addEventListener("enter-vr", (e) => {
+  if (AFRAME.utils.device.checkHeadsetConnected()) {
+    // TODO: Set yOffset, and zOffset based on VR display
+    zOffset = 0;
+    yOffset = 0;
+  }
+});
+
 var isHidden = false;
 var isUp = false;
 var isMoving = false;
@@ -40,12 +51,12 @@ window.handleClick = function (id) {
     var tp1;
     var show = document.getElementById("show");
     if (!isHidden) {
-      tp1 = "0 -2 0";
+      tp1 = "0 -2" + yOffset + " 0" + zOffset;
       show.setAttribute("visible", "true");
       isHidden = true;
       // Hide all menu items
     } else {
-      tp1 = "0 -0.67 1.1";
+      tp1 = "0 -0.67" + yOffset + " 1.1" + zOffset;
       show.setAttribute("visible", "false");
       isHidden = false;
       // Show all menu items
@@ -91,7 +102,6 @@ window.handleClick = function (id) {
       isMoving = false;
     }, 500);
   } else if (id === "settings" && !isHidden) {
-
     var b1 = document.getElementById("subMenuBackground1");
     var b2 = document.getElementById("subMenuBackground2");
     var b3 = document.getElementById("subMenuBackground3");
@@ -113,10 +123,10 @@ window.handleClick = function (id) {
       s3.setAttribute("visible", "false");
       s4.setAttribute("visible", "false");
       s5.setAttribute("visible", "false");
-      targetPosition1 = "0 -0.67 1.1";
-      targetPosition2 = "0 -0.67 1.1";
-      targetPosition3 = "0 -0.67 1.1";
-      targetPosition4 = "0 -0.67 1.1";
+      targetPosition1 = "0 -0.67" + yOffset + " 1.1" + zOffset;
+      targetPosition2 = "0 -0.67" + yOffset + " 1.1" + zOffset;
+      targetPosition3 = "0 -0.67" + yOffset + " 1.1" + zOffset;
+      targetPosition4 = "0 -0.67" + yOffset + " 1.1" + zOffset;
       isUp = false;
     } else {
       // If the menu is down, move it up
@@ -129,10 +139,10 @@ window.handleClick = function (id) {
           s5.setAttribute("visible", "true");
         }
       }, 500);
-      targetPosition1 = "0 -0.40 1.1";
-      targetPosition2 = "0 -0.25 1.1";
-      targetPosition3 = "0 -0.1 1.1";
-      targetPosition4 = "0 0.05 1.1";
+      targetPosition1 = "0 -0.40" + yOffset + " 1.1" + zOffset;
+      targetPosition2 = "0 -0.25" + yOffset + " 1.1" + zOffset;
+      targetPosition3 = "0 -0.1" + yOffset + " 1.1" + zOffset;
+      targetPosition4 = "0 0.05" + yOffset + " 1.1" + zOffset;
       isUp = true;
     }
 

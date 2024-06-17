@@ -1,10 +1,23 @@
+var zOffset = 0;
+var yOffset = 0;
+var showPosition = "0 -0.41 -0.4";
+window.addEventListener("enter-vr", (e) => {
+  if (AFRAME.utils.device.checkHeadsetConnected()) {
+    // TODO: Set yOffset, zOffset, and showPosition based on VR display
+    zOffset = 0;
+    yOffset = 0;
+    showPosition = "0 -0.41 -0.4";
+    console.log("VR headset connected");
+  }
+});
+
 const curvedImages = [
   {
     id: "menuBackground",
     radius: "2.25",
     thetaLength: "42",
     height: "0.2",
-    position: "0 -0.67 1.1",
+    position: "0 -0.67" + yOffset + " 1.1" + zOffset,
     rotation: "0 159 0",
   },
   {
@@ -12,7 +25,7 @@ const curvedImages = [
     radius: "2.25",
     thetaLength: "42",
     height: "0.2",
-    position: "0 -0.67 1.1",
+    position: "0 -0.67" + yOffset + " 1.1" + zOffset,
     rotation: "0 159 0",
   },
   {
@@ -20,7 +33,7 @@ const curvedImages = [
     radius: "2.25",
     thetaLength: "42",
     height: "0.2",
-    position: "0 -0.67 1.1",
+    position: "0 -0.67" + yOffset + " 1.1" + zOffset,
     rotation: "0 159 0",
   },
   {
@@ -28,7 +41,7 @@ const curvedImages = [
     radius: "2.25",
     thetaLength: "42",
     height: "0.2",
-    position: "0 -0.67 1.1",
+    position: "0 -0.67" + yOffset + " 1.1" + zOffset,
     rotation: "0 159 0",
   },
   {
@@ -36,7 +49,7 @@ const curvedImages = [
     radius: "2.25",
     thetaLength: "42",
     height: "0.2",
-    position: "0 -0.67 1.1",
+    position: "0 -0.67" + yOffset + " 1.1" + zOffset,
     rotation: "0 159 0",
   },
 ];
@@ -73,7 +86,7 @@ if (window.location.href.indexOf("stage-dualwave") !== -1) {
 }
 const subMenu = [
   {
-    position: "-0.33 -0.4 -1.13",
+    position: "-0.33 -0.4" + yOffset + " -1.13" + zOffset,
     rotation: "0 8.5 0",
     id: "sub1",
     text: sub1Text,
@@ -81,28 +94,28 @@ const subMenu = [
     visible: visibility,
   },
   {
-    position: "0 -0.4 -1.155",
+    position: "0 -0.4" + yOffset + " -1.155" + zOffset,
     rotation: "0 0 0",
     id: "sub2",
     text: sub2Text,
     width: "0.33",
   },
   {
-    position: "0.33 -0.4 -1.13",
+    position: "0.33 -0.4" + yOffset + " -1.13" + zOffset,
     rotation: "0 -8.5 0",
     id: "sub3",
     text: sub3Text,
     width: "0.31",
   },
   {
-    position: "0.64 -0.4 -1.063",
+    position: "0.64 -0.4" + yOffset + " -1.063" + zOffset,
     rotation: "0 -16.2 0",
     id: "sub4",
     text: sub4Text,
     width: "0.3",
   },
   {
-    position: "-0.64 -0.4 -1.063",
+    position: "-0.64 -0.4" + yOffset + " -1.063" + zOffset,
     rotation: "0 16 0",
     id: "sub5",
     text: sub5Text,
@@ -112,42 +125,42 @@ const subMenu = [
 
 const menuItems = [
   {
-    position: "-0.33 -0.67 -1.13",
+    position: "-0.33 -0.67" + yOffset + " -1.13" + zOffset,
     rotation: "0 8.5 0",
     id: "hideShow",
     text: "Hide",
     width: "0.31",
   },
   {
-    position: "0 -0.67 -1.155",
+    position: "0 -0.67" + yOffset + " -1.155" + zOffset,
     rotation: "0 0 0",
     id: "playPause",
     text: "Play",
     width: "0.33",
   },
   {
-    position: "0.33 -0.67 -1.13",
+    position: "0.33 -0.67" + yOffset + " -1.13" + zOffset,
     rotation: "0 -8.5 0",
     id: "menu3",
     text: menu3Text,
     width: "0.31",
   },
   {
-    position: "0.64 -0.67 -1.063",
+    position: "0.64 -0.67" + yOffset + " -1.063" + zOffset,
     rotation: "0 -16.2 0",
     id: "settings",
     text: "Rooms",
     width: "0.3",
   },
   {
-    position: "-0.64 -0.67 -1.063",
+    position: "-0.64 -0.67" + yOffset + " -1.063" + zOffset,
     rotation: "0 16.2 0",
     id: "menu5",
     text: menu5Text,
     width: "0.3",
   },
   {
-    position: "0 -0.41 -0.4",
+    position: showPosition,
     rotation: "-45 0 45",
     id: "show",
     text: "",
