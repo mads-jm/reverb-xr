@@ -263,7 +263,7 @@ AFRAME.registerComponent("custom-camera", {
     //rig entity
     const rig = document.createElement("a-entity");
     rig.setAttribute("id", "rig");
-    rig.setAttribute("position", "0 1.6 0");
+    rig.setAttribute("position", "25 10 0");
     rig.setAttribute("movement-controls", "speed: 0.2");
     rig.setAttribute("thumbstick-logging", " ");
 
@@ -372,16 +372,16 @@ AFRAME.registerComponent("thumbstick-logging", {
     var moveSpeed = 0.1; // Adjust movement speed here
 
     // Update position based on thumbstick input
-    if (evt.detail.y > 0.1) {
+    if (evt.detail.y < 0.1) {
       position.z -= moveSpeed;
     } // Move forward
-    if (evt.detail.y < -0.1) {
+    if (evt.detail.y > -0.1) {
       position.z += moveSpeed;
     } // Move backwards
-    if (evt.detail.x < -0.1) {
+    if (evt.detail.x > -0.1) {
       position.x -= moveSpeed;
     } // Move left
-    if (evt.detail.x > 0.1) {
+    if (evt.detail.x < 0.1) {
       position.x += moveSpeed;
     } // Move right
 
