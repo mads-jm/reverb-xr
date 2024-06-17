@@ -260,17 +260,28 @@ AFRAME.registerComponent("point-light", {
 
 AFRAME.registerComponent("custom-camera", {
   init: function () {
+    // Create rig entity
+    const rig = document.createElement("a-entity");
+    rig.setAttribute("id", "rig");
+    rig.setAttribute("position", "25 10 0");
+    rig.setAttribute("movement-controls", "speed: 0.2");
+
     // Create camera entity
     const camera = document.createElement("a-camera");
-    // No flight in lobby pls :)
-    if (window.location.href.includes("stage-lobby.html")) {
-      camera.setAttribute("wasd-controls", "acceleration: 10; fly: false");
+    camera.setAttribute("id", "camera");
+
+    // Set WASD controls based on location
+    if (window.location.href.includes('stage-lobby.html')) {
+      camera.setAttribute('wasd-controls', 'acceleration: 10; fly: false');
     } else {
-      camera.setAttribute("wasd-controls", "acceleration: 100; fly: true");
-    }
+      camera.setAttribute('wasd-controls', 'acceleration: 100; fly: true');
+  
+  
+
     camera.setAttribute("look-controls", "enabled: true");
     camera.setAttribute("cursor", "rayOrigin: mouse");
 
+    // Append menu items to camera
     menuItems.forEach((item) => {
       const menuItem = document.createElement("a-entity");
       menuItem.setAttribute("position", item.position);
@@ -348,29 +359,38 @@ AFRAME.registerComponent("custom-camera", {
       camera.appendChild(curvedImage);
     });
 
-    // Append camera to the current entity
-    this.el.appendChild(camera);
-  },
-});
+    // Append camera to rig
+    rig.appendChild(camera);
 
-// Register a thumbstick logging component
-AFRAME.registerComponent("thumbstick-logging", {
-  init: function () {
-    this.el.addEventListener("thumbstickmoved", this.logThumbstick);
+    // Append rig to the scene
+    this.el.sceneEl.appendChild(rig);
+
+    // Add thumbstick event listener to rig
+    this.el.addEventListener("thumbstickmoved", this.handleThumbstick);
   },
 
-  logThumbstick: function (evt) {
+  handleThumbstick: function (evt) {
+    const rig = document.getElementById("rig");
+    if (!rig) return;
+
+    const moveSpeed = 0.05; // Adjust movement speed here
+    const position = rig.getAttribute("position");
+
     if (evt.detail.y > 0.95) {
-      console.log("DOWN");
+      position.z -= moveSpeed;
     }
     if (evt.detail.y < -0.95) {
-      console.log("UP");
+      position.z += moveSpeed;
     }
     if (evt.detail.x < -0.95) {
-      console.log("LEFT");
+      position.x -= moveSpeed;
     }
     if (evt.detail.x > 0.95) {
-      console.log("RIGHT");
+      position.x += moveSpeed;
     }
-  },
+
+    rig.setAttribute("position", position);
+  }
 });
+
+
