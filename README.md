@@ -105,6 +105,6 @@ Responsible for processing the audio input using the Web Audio API, including fe
 CS410 - Team SIMMA
 - Joseph Madigan
 - Emma Melkumian
-- Shayn Shahla
+- Shayan Shahla
 - Evan Ingalls
 - Brant Anderson
