@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Spotify Authentication</title>
+  <script>
+    console.log('Callback page loaded with hash:', window.location.hash);
+    
+    // Redirect back to the main page with the token in the URL hash
+    window.onload = function() {
+      const redirectUrl = window.location.origin + '/#' + window.location.hash.substring(1);
+      console.log('Redirecting to:', redirectUrl);
+      window.location.href = redirectUrl;
+    };
+  </script>
+</head>
+<body>
+  <p>Authenticating with Spotify...</p>
+</body>
+</html> 
