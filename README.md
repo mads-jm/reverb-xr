@@ -1,40 +1,53 @@
-# Reverb VR: Audio Visualizer Prototype
+# Reverb XR: Audio Visualizer
 
-Reverb VR is an audio visualizer prototype built using A-Frame and Web Audio API. This project demonstrates two different audio visualizations in separate scenes and lays the groundwork for more complex visualizations.
+Reverb XR is an immersive audio visualization experience built using A-Frame and Web Audio API. This project features multiple audio visualizations in separate scenes and provides a framework for creating complex, responsive audio-reactive environments.
 
-[Main Release](https://reverb-xr.vercel.app/)
-[Indev](https://reverb-xr-indev.vercel.app/)
-[Prototype](https://reverb-proto.vercel.app/)
+[Live Demo](https://reverb-xr.vercel.app/)
 
 ## Project Structure
 
-### html
+### HTML
 
-- `index.html`: Main entry point with options to choose audio input (microphone or file) and an iframe to load A-Frame scenes.
-- `aframe.html`: A-Frame scene containing the initial setup for a white room with interactive buttons to switch between visualizations.
-- `stage-bars.html`: A-Frame scene for the bar visualizer.
-- `stage-wave.html`: A-Frame scene for the waveform visualizer.
-- `stage-dualwave.html`: A-Frame scene for the dual waveform visualizer.
-  
+- `index.html`: Main entry point with audio input options (microphone, file, or Spotify) and an iframe to load A-Frame scenes.
+- `stages/home.html`: Main menu scene with visualizer selection options.
+- `stages/testing/`: Development and experimental visualization scenes.
+- `stages/old/`: Original prototype visualizations (for reference).
 
 ### JavaScript
 
-- `AudioProcessor.js`: Handles audio processing using Web Audio API.
-- `aframe-script.js`: Custom A-Frame components for main menu
-- `bars-script.js` : Handles logic and Data flow for bar visualization
-- `wave-script.js` : Handles logic and Data flow for wave visualization
-- `dualwave-script.js` : Handles logic and Data flow for dual wave visualization
+- `scripts/GPUAudioProcessor.js`: Handles audio processing using Web Audio API with GPU acceleration.
+- `scripts/SpotifyProcessor.js`: Handles Spotify integration and audio streaming.
+- `main.js`: Core application logic for audio processing and scene management.
+- `scripts/visualizer.js`: Core visualization components with shader-based rendering.
+- `camera.js`: Custom camera controls for VR/non-VR modes.
+
+## Features
+
+- Real-time audio visualization with multiple visualization modes
+- Input from microphone, audio files, or Spotify
+- WebXR support for VR headsets
+- GPU-accelerated audio processing
+- Custom shader-based visualizations
+- Adaptive quality settings for consistent performance
 
 ## File Descriptions
 
-TODO
+The codebase is organized to separate core audio processing from visualization rendering:
+
+- Audio processing components capture and analyze audio data
+- Visualization components render the processed data using various techniques
+- Custom A-Frame components handle scene interactivity and state management
+
+## Origin
+
+This project is a complete rewrite and evolution of the original Reverb VR prototype developed by CS410 Team SIMMA.
 
 ## Contributors
-```
-CS410 - Team SIMMA
-Joseph Madigan
-Emma Melkumian
-Shayn Shahla
-Evan Ingalls
-Brant Anderson
-```
+
+### V2 Development
+- Joseph Madigan
+
+### Original Prototype (CS410 - Team SIMMA)
+- Joseph Madigan
+- Emma Melkumian
+- Shayan Shahla

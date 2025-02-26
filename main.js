@@ -1,11 +1,21 @@
+/**
+ * Main application controller for audio visualization
+ * Handles UI interactions, audio source selection, and visualization data processing
+ */
 document.addEventListener('DOMContentLoaded', () => {
-  // Initialize with debug mode
+  // ====== INITIALIZATION ======
+  
+  /**
+   * Initialize the audio processor with configuration
+   * @type {GPUAudioProcessor}
+   */
   const audioProcessor = new GPUAudioProcessor({
     debugMode: true, // Enable debugging initially
     fftSize: 1024,   // Reduced size for better performance
     smoothingTimeConstant: 0.6 // Less smoothing for more responsive visuals
   });
 
+  // DOM element references
   const micOption = document.getElementById('mic-option');
   const fileOption = document.getElementById('file-option');
   const spotifyOption = document.getElementById('spotify-option');
@@ -20,53 +30,36 @@ document.addEventListener('DOMContentLoaded', () => {
   const spotifyLogin = document.getElementById('spotify-login');
   const nowPlaying = document.getElementById('now-playing');
 
-  // Lazy loading variables
+  // Lazy loading variables for Spotify
   let spotifyProcessor = null;
   let spotifySDKLoaded = false;
 
-  // Set up audio source option event listeners
+  // ====== AUDIO SOURCE SELECTION ======
+  
+  /**
+   * Handle microphone selection
+   */
   micOption.addEventListener('change', () => {
     if (micOption.checked) {
-      startMicButton.disabled = false;
-      startSystemAudioButton.disabled = true;
-      fileInput.disabled = true;
-      spotifyControls.style.display = 'none';
-      systemAudioContainer.style.display = 'none';
-      audioProcessor.stopCurrentSource();
-      
-      // Show the now playing container
-      document.querySelector('.now-playing-container').style.display = 'flex';
+      updateUIForMicrophoneMode();
     }
   });
 
+  /**
+   * Handle file input selection
+   */
   fileOption.addEventListener('change', () => {
     if (fileOption.checked) {
-      fileInput.disabled = false;
-      startMicButton.disabled = true;
-      startSystemAudioButton.disabled = true;
-      spotifyControls.style.display = 'none';
-      systemAudioContainer.style.display = 'none';
-      audioProcessor.stopCurrentSource();
-      
-      // Show the now playing container
-      document.querySelector('.now-playing-container').style.display = 'flex';
+      updateUIForFileMode();
     }
   });
 
+  /**
+   * Handle Spotify selection
+   */
   spotifyOption.addEventListener('change', () => {
     if (spotifyOption.checked) {
-      // Only load Spotify components when needed
-      loadSpotifyComponents();
-      showSpotifyControls();
-      // Show system audio option when Spotify is selected
-      systemAudioContainer.style.display = 'flex';
-      systemAudioOption.disabled = false;
-      startMicButton.disabled = true;
-      fileInput.disabled = true;
-      audioProcessor.stopCurrentSource();
-      
-      // Hide the now playing container
-      document.querySelector('.now-playing-container').style.display = 'none';
+      updateUIForSpotifyMode();
     } else {
       spotifyControls.style.display = 'none';
       systemAudioContainer.style.display = 'none';
@@ -76,31 +69,32 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
+  /**
+   * Handle system audio selection
+   */
   systemAudioOption.addEventListener('change', () => {
     if (systemAudioOption.checked) {
-      startSystemAudioButton.disabled = false;
-      startMicButton.disabled = true;
-      fileInput.disabled = true;
-      audioProcessor.stopCurrentSource();
+      updateUIForSystemAudioMode();
     }
   });
 
-  // Start microphone button
+  // ====== AUDIO CONTROL BUTTONS ======
+  
+  /**
+   * Handle microphone start button click
+   */
   startMicButton.addEventListener('click', () => {
     audioProcessor.initMicrophone();
     nowPlaying.textContent = 'Microphone';
     console.log("Microphone initialized");
   });
 
-  // Start system audio button
+  /**
+   * Handle system audio start button click
+   */
   startSystemAudioButton.addEventListener('click', async () => {
     try {
-      // Show instructions to the user
-      alert('Please play music on Spotify and make sure your microphone can capture system audio.\n\n' +
-            'On Windows: Enable "Stereo Mix" in sound settings\n' +
-            'On Mac: Use Soundflower or BlackHole\n' +
-            'On mobile: Place device near speakers');
-            
+      showSystemAudioInstructions();
       await audioProcessor.initMicrophone();
       nowPlaying.textContent = 'System Audio (via Mic)';
       console.log("System audio capture initialized");
@@ -110,7 +104,9 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
-  // File input handler
+  /**
+   * Handle file selection
+   */
   fileInput.addEventListener('change', (event) => {
     const file = event.target.files[0];
     if (file) {
@@ -120,6 +116,12 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
+  // ====== AUDIO DATA PROCESSING ======
+  
+  /**
+   * Continuously send audio data to A-Frame for visualization
+   * Called recursively with requestAnimationFrame
+   */
   function sendAudioDataToAFrame() {
     // Force the analyzer to update data by calling these methods
     const frequencyData = audioProcessor.getFrequencyDataForAPI();
@@ -140,7 +142,11 @@ document.addEventListener('DOMContentLoaded', () => {
     requestAnimationFrame(sendAudioDataToAFrame);
   }
   
-  // Helper to calculate data statistics
+  /**
+   * Calculate statistics for audio data arrays
+   * @param {Uint8Array} data - The audio data array
+   * @returns {Object} Object containing min, max, avg, and nonZeroPercent stats
+   */
   function calculateStats(data) {
     if (!data || data.length === 0) return { min: 0, max: 0, avg: 0 };
     
@@ -159,18 +165,81 @@ document.addEventListener('DOMContentLoaded', () => {
     };
   }
 
-  // Start sending data
-  sendAudioDataToAFrame();
+  // ====== UI MANAGEMENT HELPERS ======
   
-  // Disable debug mode after 10 seconds to avoid console spam
-  setTimeout(() => {
-    audioProcessor.setDebugMode(false);
-    console.log("Debug mode disabled to reduce console output");
-  }, 10000);
+  /**
+   * Update UI for microphone mode
+   */
+  function updateUIForMicrophoneMode() {
+    startMicButton.disabled = false;
+    startSystemAudioButton.disabled = true;
+    fileInput.disabled = true;
+    spotifyControls.style.display = 'none';
+    systemAudioContainer.style.display = 'none';
+    audioProcessor.stopCurrentSource();
+    
+    // Show the now playing container
+    document.querySelector('.now-playing-container').style.display = 'flex';
+  }
   
-  // Set up toggle controls
-  setupToggleControls();
+  /**
+   * Update UI for file input mode
+   */
+  function updateUIForFileMode() {
+    fileInput.disabled = false;
+    startMicButton.disabled = true;
+    startSystemAudioButton.disabled = true;
+    spotifyControls.style.display = 'none';
+    systemAudioContainer.style.display = 'none';
+    audioProcessor.stopCurrentSource();
+    
+    // Show the now playing container
+    document.querySelector('.now-playing-container').style.display = 'flex';
+  }
   
+  /**
+   * Update UI for Spotify mode
+   */
+  function updateUIForSpotifyMode() {
+    // Only load Spotify components when needed
+    loadSpotifyComponents();
+    showSpotifyControls();
+    // Show system audio option when Spotify is selected
+    systemAudioContainer.style.display = 'flex';
+    systemAudioOption.disabled = false;
+    startMicButton.disabled = true;
+    fileInput.disabled = true;
+    audioProcessor.stopCurrentSource();
+    
+    // Hide the now playing container
+    document.querySelector('.now-playing-container').style.display = 'none';
+  }
+  
+  /**
+   * Update UI for system audio mode
+   */
+  function updateUIForSystemAudioMode() {
+    startSystemAudioButton.disabled = false;
+    startMicButton.disabled = true;
+    fileInput.disabled = true;
+    audioProcessor.stopCurrentSource();
+  }
+  
+  /**
+   * Show instructions for system audio capture
+   */
+  function showSystemAudioInstructions() {
+    alert('Please play music on Spotify and make sure your microphone can capture system audio.\n\n' +
+          'On Windows: Enable "Stereo Mix" in sound settings\n' +
+          'On Mac: Use Soundflower or BlackHole\n' +
+          'On mobile: Place device near speakers');
+  }
+
+  // ====== VISUALIZATION CONTROLS ======
+  
+  /**
+   * Set up toggle controls for visualization elements
+   */
   function setupToggleControls() {
     // Function to send toggle commands to iframe
     function toggleElement(elementType, visible) {
@@ -189,17 +258,11 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  spotifyOption.addEventListener('change', () => {
-    if (spotifyOption.checked) {
-      // Only load Spotify components when needed
-      loadSpotifyComponents();
-      showSpotifyControls();
-      audioProcessor.stopCurrentSource();
-    } else {
-      spotifyControls.style.display = 'none';
-    }
-  });
+  // ====== SPOTIFY INTEGRATION ======
 
+  /**
+   * Load Spotify SDK and initialize components
+   */
   function loadSpotifyComponents() {
     // Only load the SDK once
     if (!spotifySDKLoaded) {
@@ -221,6 +284,9 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
+  /**
+   * Initialize the Spotify processor and UI elements
+   */
   function initializeSpotifyProcessor() {
     // Only create the processor if it doesn't exist
     if (!spotifyProcessor) {
@@ -263,6 +329,9 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
+  /**
+   * Set up event listeners for Spotify controls
+   */
   function setupSpotifyEventListeners() {
     console.log('Setting up Spotify event listeners');
     
@@ -308,6 +377,9 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
+  /**
+   * Handle Spotify login button click
+   */
   function spotifyLoginHandler() {
     console.log('Spotify login button clicked');
     if (spotifyProcessor) {
@@ -317,6 +389,9 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
+  /**
+   * Show Spotify control UI
+   */
   function showSpotifyControls() {
     // Hide other controls
     startMicButton.disabled = true;
@@ -326,6 +401,10 @@ document.addEventListener('DOMContentLoaded', () => {
     spotifyControls.style.display = 'block';
   }
 
+  /**
+   * Search for tracks on Spotify
+   * @returns {Promise<void>}
+   */
   async function searchSpotify() {
     if (!spotifyProcessor) return;
     
@@ -340,6 +419,10 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
+  /**
+   * Display Spotify search results
+   * @param {Array} tracks - Array of track objects from Spotify API
+   */
   function displaySearchResults(tracks) {
     const spotifyResults = document.getElementById('spotify-results');
     const spotifyTrackName = document.getElementById('spotify-track-name');
@@ -364,4 +447,18 @@ document.addEventListener('DOMContentLoaded', () => {
       spotifyResults.appendChild(trackElement);
     });
   }
+
+  // ====== APPLICATION STARTUP ======
+  
+  // Start sending data
+  sendAudioDataToAFrame();
+  
+  // Disable debug mode after 10 seconds to avoid console spam
+  setTimeout(() => {
+    audioProcessor.setDebugMode(false);
+    console.log("Debug mode disabled to reduce console output");
+  }, 10000);
+  
+  // Set up toggle controls
+  setupToggleControls();
 });
