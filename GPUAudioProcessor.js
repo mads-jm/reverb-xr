@@ -40,9 +40,11 @@ class GPUAudioProcessor {
       this.timeDomainDataTexture.needsUpdate = true;
     }
     
-    connectSource(source) {
+    connectSource(source, connectToDestination = true) {
       source.connect(this.analyser);
-      this.analyser.connect(this.audioCtx.destination);
+      if (connectToDestination) {
+        this.analyser.connect(this.audioCtx.destination);
+      }
     }
 
     disconnectSource(source) {
@@ -83,7 +85,7 @@ class GPUAudioProcessor {
             const source = this.audioCtx.createMediaStreamSource(stream);
             this.currentStream = stream;
             this.currentSource = source;
-            this.connectSource(source);
+            this.connectSource(source, false);
           })
           .catch(err => console.error('Error accessing microphone:', err));
       }
@@ -97,7 +99,7 @@ class GPUAudioProcessor {
             const source = this.audioCtx.createBufferSource();
             source.buffer = buffer;
             this.currentSource = source;
-            this.connectSource(source);
+            this.connectSource(source, true);
             source.start(0);
           })
           .catch(err => console.error('Error decoding audio data:', err));
