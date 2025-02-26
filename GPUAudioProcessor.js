@@ -184,4 +184,9 @@ class GPUAudioProcessor {
     setDebugMode(enabled) {
       this.debugMode = enabled;
     }
+
+    connectExternalAnalyser(analyser) {
+      this.analyser = analyser;
+      console.log('Connected external analyzer');
+    }
 }

@@ -5,11 +5,16 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Reverb XR Audio Visualizer</title>
   <link rel="stylesheet" href="style.css">
-  <!-- Load Three.js FIRST -->
+  
+  <!-- Load config first -->
+  <script src="config.js"></script>
+  
+  <!-- Then load your other scripts -->
   <script src="https://cdn.jsdelivr.net/npm/three@0.137.0/build/three.min.js"></script>
-  <!-- Load your scripts as regular scripts (not modules) -->
   <script src="GPUAudioProcessor.js?v=1"></script>
+  <script src="SpotifyProcessor.js?v=1"></script>
   <script src="main.js?v=1"></script>
+  <script src="https://sdk.scdn.co/spotify-player.js"></script>
 </head>
 <body>
   <iframe id="aframe-iframe" src="stages/home.html"></iframe>
@@ -40,6 +45,15 @@
             <label for="file-input" class="file-input-label" id="file-input-label">Choose file</label>
           </div>
         </div>
+        <div class="toggle-item">
+          <input type="radio" id="spotify-option" name="audio-source">
+          <label for="spotify-option">Spotify</label>
+        </div>
+        <div class="toggle-item" id="system-audio-container" style="display: none;">
+          <input type="radio" id="system-audio-option" name="audio-source">
+          <label for="system-audio-option">System Audio (via Mic)</label>
+          <button id="start-system-audio" disabled class="small-button">Start</button>
+        </div>
         <div class="now-playing-container">
           <span class="now-playing-label">Now Playing:</span>
           <span id="now-playing" class="now-playing-text">None</span>
@@ -69,6 +83,29 @@
           <label for="toggle-ground">Ground Plane</label>
         </div>
       </div>
+
+      <div id="spotify-controls" style="display: none;">
+        <button id="spotify-login" class="small-button">Login to Spotify</button>
+        
+        <div id="spotify-player-container" style="display: none;">
+          <div id="spotify-now-playing">
+            <div id="spotify-status">Not connected</div>
+            <img id="spotify-album-art" style="display: none; width: 60px; height: 60px; margin: 5px 0;">
+            <div id="spotify-track-name" class="now-playing-text">Not playing</div>
+            <div id="spotify-track-artist" class="now-playing-artist"></div>
+          </div>
+          
+          <div id="spotify-controls-buttons">
+            <button id="spotify-prev" class="control-button">⏮</button>
+            <button id="spotify-play-pause" class="control-button">⏯</button>
+            <button id="spotify-next" class="control-button">⏭</button>
+          </div>
+          
+          <div class="spotify-note">
+            <p>Start playing in your Spotify app, then control and visualize here!</p>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
   
@@ -92,6 +129,14 @@
     document.getElementById('start-mic').addEventListener('click', function() {
       document.getElementById('now-playing').textContent = 'Microphone';
     });
+
+    window.onSpotifyWebPlaybackSDKReady = () => {
+      // The SDK is ready to use
+      console.log('Spotify Web Playback SDK is ready');
+      if (window.initSpotifyPlayer) {
+        window.initSpotifyPlayer();
+      }
+    };
   </script>
 </body>
 </html>
