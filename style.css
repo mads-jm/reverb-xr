@@ -441,3 +441,21 @@ pre {
     font-size: 12px;
   }
 }
+
+/* URL input styling */
+.url-input-container {
+  display: flex;
+  margin-left: 10px;
+}
+
+#url-input {
+  flex-grow: 1;
+  padding: 5px;
+  border-radius: 4px;
+  border: 1px solid #ccc;
+  margin-right: 5px;
+}
+
+#demo-track-button {
+  margin-left: 5px;
+}

@@ -168,6 +168,34 @@ class GPUAudioProcessor {
     }
     
     /**
+     * Initializes audio from a URL (for demo or preset audio)
+     * Side-effects: Sets currentSource property and starts playback
+     * @param {string} url - The URL of the audio file to play
+     * @returns {Promise<void>} Promise that resolves when audio starts playing
+     */
+    initFromUrl(url) {
+      return fetch(url)
+        .then(response => {
+          if (!response.ok) {
+            throw new Error(`HTTP error! Status: ${response.status}`);
+          }
+          return response.arrayBuffer();
+        })
+        .then(arrayBuffer => this.audioCtx.decodeAudioData(arrayBuffer))
+        .then(buffer => {
+          const source = this.audioCtx.createBufferSource();
+          source.buffer = buffer;
+          this.currentSource = source;
+          this.connectSource(source, true);
+          source.start(0);
+          if (this.debugMode) {
+            console.log('Playing audio from URL:', url);
+          }
+        })
+        .catch(err => console.error('Error loading audio from URL:', err));
+    }
+    
+    /**
      * Stops any currently playing audio source
      * Side-effects: Sets currentSource and currentStream to null
      */

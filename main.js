@@ -18,12 +18,16 @@ document.addEventListener('DOMContentLoaded', () => {
   // DOM element references
   const micOption = document.getElementById('mic-option');
   const fileOption = document.getElementById('file-option');
+  const urlOption = document.getElementById('url-option');
   const spotifyOption = document.getElementById('spotify-option');
   const systemAudioOption = document.getElementById('system-audio-option');
   const systemAudioContainer = document.getElementById('system-audio-container');
   const startMicButton = document.getElementById('start-mic');
   const startSystemAudioButton = document.getElementById('start-system-audio');
   const fileInput = document.getElementById('file-input');
+  const urlInput = document.getElementById('url-input');
+  const playUrlButton = document.getElementById('play-url-button');
+  const demoTrackButton = document.getElementById('demo-track-button');
   const dataOutput = document.getElementById('data-output');
   const aframeIframe = document.getElementById('aframe-iframe');
   const spotifyControls = document.getElementById('spotify-controls');
@@ -33,6 +37,9 @@ document.addEventListener('DOMContentLoaded', () => {
   // Lazy loading variables for Spotify
   let spotifyProcessor = null;
   let spotifySDKLoaded = false;
+
+  // Demo track URL
+  const DEMO_TRACK_URL = 'https://cdn.pixabay.com/audio/2025/01/09/audio_ebb251db8d.mp3';
 
   // ====== AUDIO SOURCE SELECTION ======
   
@@ -51,6 +58,15 @@ document.addEventListener('DOMContentLoaded', () => {
   fileOption.addEventListener('change', () => {
     if (fileOption.checked) {
       updateUIForFileMode();
+    }
+  });
+
+  /**
+   * Handle URL input selection
+   */
+  urlOption.addEventListener('change', () => {
+    if (urlOption.checked) {
+      updateUIForUrlMode();
     }
   });
 
@@ -116,6 +132,41 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
+  /**
+   * Handle demo track button click
+   */
+  demoTrackButton.addEventListener('click', () => {
+    audioProcessor.stopCurrentSource();
+    audioProcessor.initFromUrl(DEMO_TRACK_URL)
+      .then(() => {
+        nowPlaying.textContent = 'Demo Track';
+        console.log("Demo track initialized");
+      })
+      .catch(error => {
+        console.error('Error playing demo track:', error);
+        dataOutput.textContent = 'Error: ' + error.message;
+      });
+  });
+
+  /**
+   * Handle URL play button click
+   */
+  playUrlButton.addEventListener('click', () => {
+    const url = urlInput.value.trim();
+    if (url) {
+      audioProcessor.stopCurrentSource();
+      audioProcessor.initFromUrl(url)
+        .then(() => {
+          nowPlaying.textContent = 'URL: ' + url.substring(0, 30) + (url.length > 30 ? '...' : '');
+          console.log("URL audio initialized:", url);
+        })
+        .catch(error => {
+          console.error('Error playing audio from URL:', error);
+          dataOutput.textContent = 'Error: ' + error.message;
+        });
+    }
+  });
+
   // ====== AUDIO DATA PROCESSING ======
   
   /**
@@ -174,6 +225,8 @@ document.addEventListener('DOMContentLoaded', () => {
     startMicButton.disabled = false;
     startSystemAudioButton.disabled = true;
     fileInput.disabled = true;
+    urlInput.disabled = true;
+    playUrlButton.disabled = true;
     spotifyControls.style.display = 'none';
     systemAudioContainer.style.display = 'none';
     audioProcessor.stopCurrentSource();
@@ -187,8 +240,27 @@ document.addEventListener('DOMContentLoaded', () => {
    */
   function updateUIForFileMode() {
     fileInput.disabled = false;
+    urlInput.disabled = true;
+    playUrlButton.disabled = true;
     startMicButton.disabled = true;
     startSystemAudioButton.disabled = true;
+    spotifyControls.style.display = 'none';
+    systemAudioContainer.style.display = 'none';
+    audioProcessor.stopCurrentSource();
+    
+    // Show the now playing container
+    document.querySelector('.now-playing-container').style.display = 'flex';
+  }
+  
+  /**
+   * Update UI for URL input mode
+   */
+  function updateUIForUrlMode() {
+    urlInput.disabled = false;
+    playUrlButton.disabled = false;
+    startMicButton.disabled = true;
+    startSystemAudioButton.disabled = true;
+    fileInput.disabled = true;
     spotifyControls.style.display = 'none';
     systemAudioContainer.style.display = 'none';
     audioProcessor.stopCurrentSource();
@@ -209,6 +281,8 @@ document.addEventListener('DOMContentLoaded', () => {
     systemAudioOption.disabled = false;
     startMicButton.disabled = true;
     fileInput.disabled = true;
+    urlInput.disabled = true;
+    playUrlButton.disabled = true;
     audioProcessor.stopCurrentSource();
     
     // Hide the now playing container
@@ -222,6 +296,8 @@ document.addEventListener('DOMContentLoaded', () => {
     startSystemAudioButton.disabled = false;
     startMicButton.disabled = true;
     fileInput.disabled = true;
+    urlInput.disabled = true;
+    playUrlButton.disabled = true;
     audioProcessor.stopCurrentSource();
   }
   
