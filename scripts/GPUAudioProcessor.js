@@ -313,4 +313,30 @@ class GPUAudioProcessor {
       this.analyser = analyser;
       console.log('Connected external analyzer');
     }
+
+    /**
+     * Pauses the current audio source
+     * Side-effects: Pauses playback if possible
+     */
+    pauseCurrentSource() {
+      if (this.audioCtx && this.audioCtx.state === 'running') {
+        this.audioCtx.suspend();
+        if (this.debugMode) {
+          console.log('Audio context suspended');
+        }
+      }
+    }
+    
+    /**
+     * Resumes the current audio source
+     * Side-effects: Resumes playback if possible
+     */
+    resumeCurrentSource() {
+      if (this.audioCtx && this.audioCtx.state === 'suspended') {
+        this.audioCtx.resume();
+        if (this.debugMode) {
+          console.log('Audio context resumed');
+        }
+      }
+    }
 }

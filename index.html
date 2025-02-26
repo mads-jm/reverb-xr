@@ -49,10 +49,7 @@
         <div class="toggle-item">
           <input type="radio" id="url-option" name="audio-source" value="url">
           <label for="url-option">Audio URL</label>
-          <div class="url-input-container">
-            <input type="text" id="url-input" placeholder="Enter audio URL" disabled>
-            <button id="play-url-button" disabled class="small-button">Play</button>
-          </div>
+          <button id="open-url-modal" class="small-button" disabled>Enter URL</button>
         </div>
         <div class="toggle-item">
           <input type="radio" id="spotify-option" name="audio-source">
@@ -147,5 +144,17 @@
       }
     };
   </script>
+  
+  <div id="url-modal" class="modal">
+    <div class="modal-content">
+      <span class="close-modal">&times;</span>
+      <h3>Enter Audio URL</h3>
+      <input type="text" id="url-input" placeholder="https://example.com/audio.mp3">
+      <div class="modal-buttons">
+        <button id="play-url-button" class="button">Play</button>
+        <button id="cancel-url-button" class="button">Cancel</button>
+      </div>
+    </div>
+  </div>
 </body>
 </html>

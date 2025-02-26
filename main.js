@@ -25,8 +25,12 @@ document.addEventListener('DOMContentLoaded', () => {
   const startMicButton = document.getElementById('start-mic');
   const startSystemAudioButton = document.getElementById('start-system-audio');
   const fileInput = document.getElementById('file-input');
+  const openUrlModalButton = document.getElementById('open-url-modal');
+  const urlModal = document.getElementById('url-modal');
   const urlInput = document.getElementById('url-input');
   const playUrlButton = document.getElementById('play-url-button');
+  const cancelUrlButton = document.getElementById('cancel-url-button');
+  const closeModalButton = document.querySelector('.close-modal');
   const demoTrackButton = document.getElementById('demo-track-button');
   const dataOutput = document.getElementById('data-output');
   const aframeIframe = document.getElementById('aframe-iframe');
@@ -40,6 +44,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Demo track URL
   const DEMO_TRACK_URL = 'https://cdn.pixabay.com/audio/2025/01/09/audio_ebb251db8d.mp3';
+  
+  // Current URL audio state
+  let currentUrlAudio = null;
+  let isUrlAudioPlaying = false;
 
   // ====== AUDIO SOURCE SELECTION ======
   
@@ -91,6 +99,37 @@ document.addEventListener('DOMContentLoaded', () => {
   systemAudioOption.addEventListener('change', () => {
     if (systemAudioOption.checked) {
       updateUIForSystemAudioMode();
+    }
+  });
+
+  /**
+   * Handle opening URL modal
+   */
+  openUrlModalButton.addEventListener('click', () => {
+    urlModal.style.display = 'block';
+    urlInput.focus();
+  });
+
+  /**
+   * Handle URL modal close button
+   */
+  closeModalButton.addEventListener('click', () => {
+    urlModal.style.display = 'none';
+  });
+
+  /**
+   * Handle URL modal cancel button
+   */
+  cancelUrlButton.addEventListener('click', () => {
+    urlModal.style.display = 'none';
+  });
+
+  /**
+   * Close the modal when clicking outside of it
+   */
+  window.addEventListener('click', (event) => {
+    if (event.target === urlModal) {
+      urlModal.style.display = 'none';
     }
   });
 
@@ -157,12 +196,19 @@ document.addEventListener('DOMContentLoaded', () => {
       audioProcessor.stopCurrentSource();
       audioProcessor.initFromUrl(url)
         .then(() => {
+          urlModal.style.display = 'none';
           nowPlaying.textContent = 'URL: ' + url.substring(0, 30) + (url.length > 30 ? '...' : '');
+          isUrlAudioPlaying = true;
+          updatePlayPauseButton();
           console.log("URL audio initialized:", url);
+          // Store the URL as current audio source
+          currentUrlAudio = url;
+          // Add play/pause control to the UI after successfully loading the URL
+          addPlayPauseControl();
         })
         .catch(error => {
           console.error('Error playing audio from URL:', error);
-          dataOutput.textContent = 'Error: ' + error.message;
+          alert('Error loading audio: ' + error.message);
         });
     }
   });
@@ -225,14 +271,19 @@ document.addEventListener('DOMContentLoaded', () => {
     startMicButton.disabled = false;
     startSystemAudioButton.disabled = true;
     fileInput.disabled = true;
-    urlInput.disabled = true;
-    playUrlButton.disabled = true;
+    openUrlModalButton.disabled = true;
     spotifyControls.style.display = 'none';
     systemAudioContainer.style.display = 'none';
     audioProcessor.stopCurrentSource();
     
     // Show the now playing container
     document.querySelector('.now-playing-container').style.display = 'flex';
+    
+    // Remove the play/pause control if it exists
+    const audioControls = document.querySelector('.audio-controls');
+    if (audioControls) {
+      audioControls.remove();
+    }
   }
   
   /**
@@ -240,8 +291,7 @@ document.addEventListener('DOMContentLoaded', () => {
    */
   function updateUIForFileMode() {
     fileInput.disabled = false;
-    urlInput.disabled = true;
-    playUrlButton.disabled = true;
+    openUrlModalButton.disabled = true;
     startMicButton.disabled = true;
     startSystemAudioButton.disabled = true;
     spotifyControls.style.display = 'none';
@@ -250,14 +300,19 @@ document.addEventListener('DOMContentLoaded', () => {
     
     // Show the now playing container
     document.querySelector('.now-playing-container').style.display = 'flex';
+    
+    // Remove the play/pause control if it exists
+    const audioControls = document.querySelector('.audio-controls');
+    if (audioControls) {
+      audioControls.remove();
+    }
   }
   
   /**
    * Update UI for URL input mode
    */
   function updateUIForUrlMode() {
-    urlInput.disabled = false;
-    playUrlButton.disabled = false;
+    openUrlModalButton.disabled = false;
     startMicButton.disabled = true;
     startSystemAudioButton.disabled = true;
     fileInput.disabled = true;
@@ -267,6 +322,11 @@ document.addEventListener('DOMContentLoaded', () => {
     
     // Show the now playing container
     document.querySelector('.now-playing-container').style.display = 'flex';
+    
+    // If we have a URL stored, add the play/pause control
+    if (currentUrlAudio) {
+      addPlayPauseControl();
+    }
   }
   
   /**
@@ -281,12 +341,17 @@ document.addEventListener('DOMContentLoaded', () => {
     systemAudioOption.disabled = false;
     startMicButton.disabled = true;
     fileInput.disabled = true;
-    urlInput.disabled = true;
-    playUrlButton.disabled = true;
+    openUrlModalButton.disabled = true;
     audioProcessor.stopCurrentSource();
     
     // Hide the now playing container
     document.querySelector('.now-playing-container').style.display = 'none';
+    
+    // Remove the play/pause control if it exists
+    const audioControls = document.querySelector('.audio-controls');
+    if (audioControls) {
+      audioControls.remove();
+    }
   }
   
   /**
@@ -296,9 +361,14 @@ document.addEventListener('DOMContentLoaded', () => {
     startSystemAudioButton.disabled = false;
     startMicButton.disabled = true;
     fileInput.disabled = true;
-    urlInput.disabled = true;
-    playUrlButton.disabled = true;
+    openUrlModalButton.disabled = true;
     audioProcessor.stopCurrentSource();
+    
+    // Remove the play/pause control if it exists
+    const audioControls = document.querySelector('.audio-controls');
+    if (audioControls) {
+      audioControls.remove();
+    }
   }
   
   /**
@@ -522,6 +592,56 @@ document.addEventListener('DOMContentLoaded', () => {
       
       spotifyResults.appendChild(trackElement);
     });
+  }
+
+  /**
+   * Add play/pause control to the UI
+   */
+  function addPlayPauseControl() {
+    // Check if control already exists
+    if (!document.querySelector('.audio-controls')) {
+      const nowPlayingContainer = document.querySelector('.now-playing-container');
+      
+      // Create audio controls container
+      const audioControls = document.createElement('div');
+      audioControls.className = 'audio-controls';
+      
+      // Create play/pause button
+      const playPauseButton = document.createElement('button');
+      playPauseButton.className = 'play-pause-button';
+      playPauseButton.innerHTML = '⏸️'; // Initially show pause since audio is playing
+      playPauseButton.addEventListener('click', togglePlayPause);
+      
+      // Add to container
+      audioControls.appendChild(playPauseButton);
+      nowPlayingContainer.appendChild(audioControls);
+    } else {
+      updatePlayPauseButton();
+    }
+  }
+  
+  /**
+   * Toggle play/pause for current audio
+   */
+  function togglePlayPause() {
+    if (isUrlAudioPlaying) {
+      audioProcessor.pauseCurrentSource();
+      isUrlAudioPlaying = false;
+    } else if (currentUrlAudio) {
+      audioProcessor.resumeCurrentSource();
+      isUrlAudioPlaying = true;
+    }
+    updatePlayPauseButton();
+  }
+  
+  /**
+   * Update the play/pause button appearance
+   */
+  function updatePlayPauseButton() {
+    const playPauseButton = document.querySelector('.play-pause-button');
+    if (playPauseButton) {
+      playPauseButton.innerHTML = isUrlAudioPlaying ? '⏸️' : '▶️';
+    }
   }
 
   // ====== APPLICATION STARTUP ======
