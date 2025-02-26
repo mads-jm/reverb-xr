@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Simple Waveform Visualization</title>
+    <script src="https://aframe.io/releases/1.3.0/aframe.min.js"></script>
+    <script src="https://cdn.rawgit.com/donmccurdy/aframe-extras/v6.1.0/dist/aframe-extras.min.js"></script>
+    <script src="../camera.js"></script>
+    
+    <script>
+        // Audio Processor with enhanced logging
+        AFRAME.registerComponent('audio-processor', {
+            init: function() {
+                this.frequencyData = new Uint8Array(128);
+                this.timeDomainData = new Uint8Array(128);
+                this.lastLogTime = 0;
+                console.log('Audio processor initialized and waiting for data');
+                
+                // Listen for messages from parent window
+                window.addEventListener('message', (event) => {
+                    // Check if message is from parent window
+                    if (event.source !== window.parent) return;
+                    
+                    // Process incoming audio data
+                    if (event.data.type === 'frequencyData') {
+                        this.frequencyData = new Uint8Array(event.data.data);
+                        this.logDataStats('frequency');
+                    } else if (event.data.type === 'timeDomainData') {
+                        this.timeDomainData = new Uint8Array(event.data.data);
+                        this.logDataStats('timeDomain');
+                    }
+                    
+                    // Signal that we have new data
+                    this.el.emit('audiodata-updated');
+                });
+            },
+            
+            logDataStats: function(type) {
+                // Only log every second to avoid flooding console
+                const now = Date.now();
+                if (now - this.lastLogTime < 1000) return;
+                
+                this.lastLogTime = now;
+                const data = type === 'frequency' ? this.frequencyData : this.timeDomainData;
+                
+                if (!data || data.length === 0) {
+                    console.warn(`No ${type} data available`);
+                    return;
+                }
+                
+                let min = 255, max = 0, sum = 0;
+                let nonZeroCount = 0;
+                
+                for (let i = 0; i < data.length; i++) {
+                    min = Math.min(min, data[i]);
+                    max = Math.max(max, data[i]);
+                    sum += data[i];
+                    if (data[i] > 0) nonZeroCount++;
+                }
+                
+                const avg = sum / data.length;
+                console.log(`${type} data stats:`, {
+                    min, 
+                    max, 
+                    avg: avg.toFixed(2),
+                    length: data.length,
+                    nonZeroValues: nonZeroCount,
+                    hasSignal: max > 10,
+                    firstFew: Array.from(data.slice(0, 5))
+                });
+            },
+            
+            getFrequencyData: function() {
+                return this.frequencyData;
+            },
+            
+            getTimeDomainData: function() {
+                return this.timeDomainData;
+            }
+        });
+        
+        // Circular Waveform Visualizer
+        AFRAME.registerComponent('waveform-circle', {
+            schema: {
+                radius: { type: 'number', default: 3 },
+                barCount: { type: 'number', default: 64 },
+                barWidth: { type: 'number', default: 0.05 },
+                barBaseHeight: { type: 'number', default: 0.1 },
+                barHeightScale: { type: 'number', default: 2 },
+                audioProcessorSelector: { type: 'selector', default: '#audio-processor' },
+                colorStart: { type: 'color', default: '#3399ff' },
+                colorEnd: { type: 'color', default: '#ff3366' },
+                emissiveIntensity: { type: 'number', default: 0.8 }
+            },
+            
+            init: function() {
+                // Create bars for visualization
+                this.bars = [];
+                this.createBars();
+                
+                // Set up audio data listener
+                if (this.data.audioProcessorSelector) {
+                    this.audioProcessor = this.data.audioProcessorSelector.components['audio-processor'];
+                    this.data.audioProcessorSelector.addEventListener('audiodata-updated', this.updateVisualization.bind(this));
+                }
+                
+                // Create fallback animation for when no audio is playing
+                this.animTime = 0;
+            },
+            
+            createBars: function() {
+                // Remove any existing bars
+                if (this.bars.length) {
+                    this.bars.forEach(bar => bar.parentNode.removeChild(bar));
+                    this.bars = [];
+                }
+                
+                // Create new bars in a circle
+                for (let i = 0; i < this.data.barCount; i++) {
+                    const angle = (i / this.data.barCount) * Math.PI * 2;
+                    const x = Math.sin(angle) * this.data.radius;
+                    const z = Math.cos(angle) * this.data.radius;
+                    
+                    // Create bar entity
+                    const bar = document.createElement('a-entity');
+                    bar.setAttribute('geometry', {
+                        primitive: 'box',
+                        width: this.data.barWidth,
+                        height: this.data.barBaseHeight,
+                        depth: this.data.barWidth
+                    });
+                    
+                    // Position and rotate the bar to face the center
+                    bar.setAttribute('position', { x, y: 0, z });
+                    bar.setAttribute('rotation', { x: 0, y: -angle * (180/Math.PI), z: 0 });
+                    
+                    // Apply material with color gradient based on position
+                    const t = i / this.data.barCount;
+                    const colorStart = new THREE.Color(this.data.colorStart);
+                    const colorEnd = new THREE.Color(this.data.colorEnd);
+                    const color = new THREE.Color().copy(colorStart).lerp(colorEnd, t);
+                    
+                    bar.setAttribute('material', {
+                        shader: 'standard',
+                        color: '#' + color.getHexString(),
+                        emissive: '#' + color.getHexString(),
+                        emissiveIntensity: this.data.emissiveIntensity,
+                        metalness: 0.7,
+                        roughness: 0.3
+                    });
+                    
+                    // Add to scene and store reference
+                    this.el.appendChild(bar);
+                    this.bars.push(bar);
+                }
+            },
+            
+            updateVisualization: function() {
+                if (!this.audioProcessor) return;
+                
+                // Get audio data - prefer time domain for waveform visualization
+                const timeData = this.audioProcessor.getTimeDomainData();
+                const freqData = this.audioProcessor.getFrequencyData();
+                
+                // Check if we have valid data
+                if (!timeData || timeData.length === 0) {
+                    // Use fallback animation if no audio data
+                    this.animateFallback();
+                    return;
+                }
+                
+                // Make sure our bar count doesn't exceed data length
+                const dataStep = Math.ceil(timeData.length / this.data.barCount);
+                
+                // Update each bar height based on audio data
+                for (let i = 0; i < this.bars.length; i++) {
+                    const dataIndex = (i * dataStep) % timeData.length;
+                    
+                    // Normalize time domain data from 0-255 to 0-1 range
+                    const timeValue = timeData[dataIndex] / 255;
+                    
+                    // Get frequency data for same position (for color)
+                    const freqValue = freqData && freqData.length ? freqData[dataIndex] / 255 : 0;
+                    
+                    // Calculate bar height based on time domain data
+                    // Center the waveform around 0.5
+                    const heightScale = this.data.barHeightScale * (timeValue - 0.5) + 0.5;
+                    const height = Math.max(this.data.barBaseHeight, this.data.barBaseHeight * heightScale);
+                    
+                    // Update bar height
+                    this.bars[i].setAttribute('geometry', 'height', height);
+                    
+                    // Center the bar vertically
+                    const y = height / 2;
+                    const position = this.bars[i].getAttribute('position');
+                    position.y = y;
+                    this.bars[i].setAttribute('position', position);
+                    
+                    // Update color based on frequency data
+                    const currentColor = new THREE.Color(this.data.colorStart).lerp(
+                        new THREE.Color(this.data.colorEnd), 
+                        0.5 + freqValue * 0.5
+                    );
+                    
+                    this.bars[i].setAttribute('material', {
+                        color: '#' + currentColor.getHexString(),
+                        emissive: '#' + currentColor.getHexString(),
+                        emissiveIntensity: this.data.emissiveIntensity * (0.5 + freqValue * 0.5)
+                    });
+                }
+            },
+            
+            animateFallback: function() {
+                // Simple animation for when no audio is playing
+                this.animTime += 0.01;
+                
+                for (let i = 0; i < this.bars.length; i++) {
+                    const angle = (i / this.data.barCount) * Math.PI * 2;
+                    const sinVal = (Math.sin(angle * 3 + this.animTime) + 1) / 2; // 0-1 range
+                    
+                    const height = this.data.barBaseHeight * (1 + sinVal * 3);
+                    
+                    // Update bar height
+                    this.bars[i].setAttribute('geometry', 'height', height);
+                    
+                    // Center the bar vertically
+                    const y = height / 2;
+                    const position = this.bars[i].getAttribute('position');
+                    position.y = y;
+                    this.bars[i].setAttribute('position', position);
+                }
+            },
+            
+            tick: function() {
+                // Update visualization every frame
+                this.updateVisualization();
+            }
+        });
+    </script>
+</head>
+
+<body>
+    <a-scene renderer="antialias: true; colorManagement: true;">
+        <!-- Camera -->       
+        <a-entity custom-camera position="0 1.6 0" rotation="0 0 0"></a-entity>
+        
+        <!-- Audio processor -->
+        <a-entity id="audio-processor" audio-processor></a-entity>
+        
+        <!-- Main visualization container -->
+        <a-entity id="visualization-container" position="0 1.6 -5">
+            <!-- Circular waveform -->
+            <a-entity 
+                id="waveform" 
+                waveform-circle="
+                    radius: 3; 
+                    barCount: 64; 
+                    barWidth: 0.05; 
+                    barBaseHeight: 0.1;
+                    barHeightScale: 2.5;
+                    colorStart: #00ddff;
+                    colorEnd: #ff00aa;
+                    emissiveIntensity: 0.9;
+                "
+                animation="property: rotation; from: 0 0 0; to: 0 360 0; dur: 80000; loop: true; easing: linear;">
+            </a-entity>
+            
+            <!-- Center element -->
+            <a-torus
+                position="0 0 0"
+                rotation="90 0 0"
+                radius="0.7"
+                radius-tubular="0.025"
+                segments-tubular="32"
+                segments-radial="6"
+                material="shader: standard; color: #ffffff; emissive: #ffffff; emissiveIntensity: 0.8; metalness: 0.8; roughness: 0.2;">
+            </a-torus>
+            
+            <!-- Center sphere -->
+            <a-sphere
+                position="0 0 0"
+                radius="0.4"
+                segments-height="12"
+                segments-width="24"
+                material="shader: standard; color: #ffffff; emissive: #aaccff; emissiveIntensity: 0.5; metalness: 0.9; roughness: 0.1;">
+            </a-sphere>
+        </a-entity>
+        
+        <!-- Background sphere -->
+        <a-sphere
+            position="0 1.6 -5"
+            radius="15"
+            segments-height="18"
+            segments-width="36"
+            material="shader: standard; color: #000015; side: back; metalness: 0.2; roughness: 0.8;"
+            animation="property: rotation; from: 0 0 0; to: 0 360 0; dur: 200000; loop: true; easing: linear;">
+            <!-- Stars/dots on background -->
+            <a-entity id="stars"></a-entity>
+        </a-sphere>
+        
+        <!-- Lights -->
+        <a-light type="ambient" color="#222244" intensity="0.2"></a-light>
+        <a-light type="point" position="0 1.6 -5" color="#ffffff" intensity="0.7" distance="15" decay="2"></a-light>
+        <a-light type="directional" position="5 5 0" color="#aaccff" intensity="0.3"></a-light>
+        <a-light type="directional" position="-5 5 0" color="#ffaacc" intensity="0.3"></a-light>
+    </a-scene>
+    
+    <script>
+        // Add stars to background
+        document.addEventListener('DOMContentLoaded', function() {
+            const starsContainer = document.querySelector('#stars');
+            
+            for (let i = 0; i < 300; i++) {
+                const star = document.createElement('a-entity');
+                
+                // Random position on sphere
+                const theta = Math.random() * Math.PI * 2;
+                const phi = Math.acos(2 * Math.random() - 1);
+                const r = 14.5; // Just inside the background sphere
+                
+                const x = r * Math.sin(phi) * Math.cos(theta);
+                const y = r * Math.sin(phi) * Math.sin(theta);
+                const z = r * Math.cos(phi);
+                
+                star.setAttribute('geometry', {
+                    primitive: 'sphere',
+                    radius: 0.01 + Math.random() * 0.04
+                });
+                
+                star.setAttribute('position', { x, y, z });
+                
+                // Random white-ish color
+                const brightness = 0.7 + Math.random() * 0.3;
+                const r_color = brightness;
+                const g_color = brightness * (0.8 + Math.random() * 0.2);
+                const b_color = brightness * (0.75 + Math.random() * 0.25);
+                
+                const color = new THREE.Color(r_color, g_color, b_color);
+                
+                star.setAttribute('material', {
+                    shader: 'standard',
+                    color: '#' + color.getHexString(),
+                    emissive: '#' + color.getHexString(),
+                    emissiveIntensity: 0.8,
+                    metalness: 0.5,
+                    roughness: 0.2
+                });
+                
+                starsContainer.appendChild(star);
+            }
+        });
+        
+        // Add console message to verify script execution
+        console.log('Waveform visualization initialized');
+    </script>
+    
+    <!-- Debug panel for audio data visualization -->
+    <div id="debug-panel" style="position: fixed; top: 10px; left: 10px; background: rgba(0,0,0,0.7); 
+                                 color: white; padding: 10px; font-family: monospace; z-index: 1000; 
+                                 border-radius: 5px; font-size: 12px;">
+        Audio Data: <span id="data-status">Waiting...</span><br>
+        Frequency Range: <span id="freq-range">0-0</span><br>
+        Waveform Range: <span id="wave-range">0-0</span><br>
+        <button id="toggle-debug" style="margin-top: 5px; background: #333; color: white; 
+                                        border: 1px solid #555; padding: 3px 8px; cursor: pointer;">
+            Hide Debug
+        </button>
+    </div>
+    
+    <script>
+        // Debug panel updater
+        const dataStatus = document.getElementById('data-status');
+        const freqRange = document.getElementById('freq-range');
+        const waveRange = document.getElementById('wave-range');
+        const toggleButton = document.getElementById('toggle-debug');
+        const debugPanel = document.getElementById('debug-panel');
+        
+        let lastDataTime = 0;
+        let debugVisible = true;
+        
+        // Setup debug panel toggle
+        toggleButton.addEventListener('click', () => {
+            debugVisible = !debugVisible;
+            debugPanel.style.height = debugVisible ? 'auto' : '20px';
+            debugPanel.style.overflow = debugVisible ? 'visible' : 'hidden';
+            toggleButton.textContent = debugVisible ? 'Hide Debug' : 'Show Debug';
+        });
+        
+        // Update debug panel on audio data update
+        document.querySelector('#audio-processor').addEventListener('audiodata-updated', function() {
+            // Mark data as received
+            lastDataTime = Date.now();
+            dataStatus.textContent = 'Receiving';
+            dataStatus.style.color = '#00ff00';
+            
+            // Get data statistics
+            const processor = this.components['audio-processor'];
+            const freqData = processor.getFrequencyData();
+            const waveData = processor.getTimeDomainData();
+            
+            if (freqData && freqData.length > 0) {
+                const freqMin = Math.min(...Array.from(freqData));
+                const freqMax = Math.max(...Array.from(freqData));
+                freqRange.textContent = `${freqMin}-${freqMax}`;
+            }
+            
+            if (waveData && waveData.length > 0) {
+                const waveMin = Math.min(...Array.from(waveData));
+                const waveMax = Math.max(...Array.from(waveData));
+                waveRange.textContent = `${waveMin}-${waveMax}`;
+            }
+        });
+        
+        // Check for data timeout
+        setInterval(() => {
+            if (Date.now() - lastDataTime > 2000) {
+                dataStatus.textContent = 'No Data';
+                dataStatus.style.color = '#ff0000';
+            }
+        }, 1000);
+    </script>
+</body>
+</html> 

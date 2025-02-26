@@ -3,23 +3,95 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Reverb VR Audio Visualizer</title>
+  <title>Reverb XR Audio Visualizer</title>
   <link rel="stylesheet" href="style.css">
-  <script src="AudioProcessor.js"></script>
-  <script src="main.js"></script>
+  <!-- Load Three.js FIRST -->
+  <script src="https://cdn.jsdelivr.net/npm/three@0.137.0/build/three.min.js"></script>
+  <!-- Load your scripts as regular scripts (not modules) -->
+  <script src="GPUAudioProcessor.js?v=1"></script>
+  <script src="main.js?v=1"></script>
 </head>
 <body>
-  <h1>Reverb VR: Audio Visualizer Prototype</h1>
-  <div>
-    <input type="radio" id="mic-option" name="audio-source" value="microphone">
-    <label for="mic-option">Use Microphone</label>
-    <button id="start-mic" disabled>Start Microphone</button>
-    <input type="radio" id="file-option" name="audio-source" value="file">   
-    <label for="file-option">Use Audio File</label>
-    <input type="file" id="file-input" accept="audio/*" disabled>
+  <iframe id="aframe-iframe" src="stages/home.html"></iframe>
+  
+  <div class="control-panel">
+    <div class="panel-header" id="panel-toggle">
+      <div class="header-text">
+        <h2>Reverb XR</h2>
+        <h3>Audio Visualizer</h3>
+        <p class="version-text">v2 by Joseph Madigan</p>
+      </div>
+      <span class="toggle-icon">▼</span>
+    </div>
+    
+    <div class="panel-content" id="panel-content">
+      <div class="control-group">
+        <h3>Audio Source</h3>
+        <div class="toggle-item">
+          <input type="radio" id="mic-option" name="audio-source" value="microphone">
+          <label for="mic-option">Microphone</label>
+          <button id="start-mic" disabled class="small-button">Start</button>
+        </div>
+        <div class="toggle-item">
+          <input type="radio" id="file-option" name="audio-source" value="file">   
+          <label for="file-option">Audio File</label>
+          <div class="file-input-container">
+            <input type="file" id="file-input" accept="audio/*" disabled>
+            <label for="file-input" class="file-input-label" id="file-input-label">Choose file</label>
+          </div>
+        </div>
+        <div class="now-playing-container">
+          <span class="now-playing-label">Now Playing:</span>
+          <span id="now-playing" class="now-playing-text">None</span>
+        </div>
+      </div>
+      
+      <div class="control-group">
+        <h3>Visualization Controls</h3>
+        <div class="toggle-item">
+          <input type="checkbox" id="toggle-waveform" class="toggle-control" data-element="waveform" checked>
+          <label for="toggle-waveform">Circular Waveform</label>
+        </div>
+        <div class="toggle-item">
+          <input type="checkbox" id="toggle-bars" class="toggle-control" data-element="bars" checked>
+          <label for="toggle-bars">Frequency Bars</label>
+        </div>
+        <div class="toggle-item">
+          <input type="checkbox" id="toggle-skybox" class="toggle-control" data-element="skybox" checked>
+          <label for="toggle-skybox">Skybox</label>
+        </div>
+        <div class="toggle-item">
+          <input type="checkbox" id="toggle-lights" class="toggle-control" data-element="lights" checked>
+          <label for="toggle-lights">Lights</label>
+        </div>
+        <div class="toggle-item">
+          <input type="checkbox" id="toggle-ground" class="toggle-control" data-element="ground" checked>
+          <label for="toggle-ground">Ground Plane</label>
+        </div>
+      </div>
+    </div>
   </div>
   
-  <!-- Aframe iframe container -->
-  <iframe id="aframe-iframe" src="aframe.html" style="width: 100%; height: 1080px;"></iframe>
+  <script>
+    // Panel toggle functionality
+    document.getElementById('panel-toggle').addEventListener('click', function() {
+      const panelContent = document.getElementById('panel-content');
+      const toggleIcon = document.querySelector('.toggle-icon');
+      
+      panelContent.classList.toggle('collapsed');
+      toggleIcon.textContent = panelContent.classList.contains('collapsed') ? '▲' : '▼';
+    });
+    
+    // File input display
+    document.getElementById('file-input').addEventListener('change', function() {
+      const fileName = this.files[0] ? this.files[0].name : 'None';
+      document.getElementById('now-playing').textContent = fileName;
+    });
+    
+    // Update now playing when microphone is started
+    document.getElementById('start-mic').addEventListener('click', function() {
+      document.getElementById('now-playing').textContent = 'Microphone';
+    });
+  </script>
 </body>
 </html>

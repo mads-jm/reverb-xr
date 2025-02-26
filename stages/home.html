@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.137.0/build/three.min.js"></script>
+    <script src="https://aframe.io/releases/1.3.0/aframe.min.js"></script>
+    <script src="https://cdn.rawgit.com/donmccurdy/aframe-extras/v6.1.0/dist/aframe-extras.min.js"></script>
+    <script src="../scripts/visualizer.js"></script>
+    <script src="../GPUAudioProcessor.js"></script>
+    <script src="../scripts/camera.js"></script>
+    <script>
+        // Register audio processor component to handle data from parent window
+        AFRAME.registerComponent('audio-processor', {
+            init: function() {
+                console.log('Audio processor initialized');
+                this.frequencyData = new Uint8Array(128);
+                this.timeDomainData = new Uint8Array(128);
+                this.el.emit('audio-processor-ready');
+                
+                // Listen for messages from parent window
+                window.addEventListener('message', this.handleMessage.bind(this));
+            },
+            
+            handleMessage: function(event) {
+                // Make sure message is from the parent window
+                if (event.source !== window.parent) return;
+                
+                // Process the received audio data
+                if (event.data.type === 'frequencyData' || event.data.type === 'timeDomainData') {
+                    this.updateData(event.data.type, event.data.data);
+                }
+            },
+            
+            updateData: function(type, data) {
+                if (type === 'frequencyData') {
+                    this.frequencyData = data;
+                } else if (type === 'timeDomainData') {
+                    this.timeDomainData = data;
+                }
+                // Emit an event that the visualizer can listen for
+                this.el.emit('audiodata-updated', {
+                    frequencyData: this.frequencyData,
+                    timeDomainData: this.timeDomainData
+                });
+            },
+            
+            getFrequencyData: function() {
+                return this.frequencyData;
+            },
+            
+            getTimeDomainData: function() {
+                return this.timeDomainData;
+            }
+        });
+
+        // Register circular waveform component
+        AFRAME.registerComponent('circular-waveform', {
+            schema: {
+                analyserNode: { type: 'selector' },
+                radius: { type: 'number', default: 5 },
+                height: { type: 'number', default: 2 },
+                color: { type: 'color', default: '#FFF' },
+                segments: { type: 'int', default: 128 }
+            },
+            
+            init: function() {
+                console.log('Circular waveform initialized');
+                this.analyserNode = this.data.analyserNode;
+                
+                // Create geometry
+                this.createGeometry();
+                
+                // Listen for audio data updates
+                this.analyserNode.addEventListener('audiodata-updated', this.updateWaveform.bind(this));
+            },
+            
+            createGeometry: function() {
+                // Create a circle of points
+                const segments = this.data.segments;
+                const radius = this.data.radius;
+                
+                // Create geometry
+                const geometry = new THREE.BufferGeometry();
+                
+                // Create positions array
+                const positions = new Float32Array(segments * 3);
+                const colors = new Float32Array(segments * 3);
+                
+                // Initialize positions in a circle
+                for (let i = 0; i < segments; i++) {
+                    const angle = (i / segments) * Math.PI * 2;
+                    const x = Math.cos(angle) * radius;
+                    const y = 0;
+                    const z = Math.sin(angle) * radius;
+                    
+                    positions[i * 3] = x;
+                    positions[i * 3 + 1] = y;
+                    positions[i * 3 + 2] = z;
+                    
+                    // Rainbow colors
+                    const hue = i / segments;
+                    const color = new THREE.Color().setHSL(hue, 1, 0.5);
+                    colors[i * 3] = color.r;
+                    colors[i * 3 + 1] = color.g;
+                    colors[i * 3 + 2] = color.b;
+                }
+                
+                geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+                geometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+                
+                // Create material
+                const material = new THREE.LineBasicMaterial({
+                    color: this.data.color,
+                    vertexColors: true,
+                    linewidth: 2
+                });
+                
+                // Create line
+                this.line = new THREE.LineLoop(geometry, material);
+                this.el.setObject3D('mesh', this.line);
+                
+                // Store reference to position attribute for updates
+                this.positions = geometry.attributes.position;
+            },
+            
+            updateWaveform: function(event) {
+                if (!this.positions) return;
+                
+                const timeDomainData = event.detail.timeDomainData;
+                const segments = this.data.segments;
+                const radius = this.data.radius;
+                const height = this.data.height;
+                
+                // Update positions based on audio data
+                for (let i = 0; i < segments; i++) {
+                    const dataIndex = Math.floor((i / segments) * timeDomainData.length);
+                    const value = timeDomainData[dataIndex] / 128.0 - 1.0; // Convert to -1 to 1 range
+                    
+                    const angle = (i / segments) * Math.PI * 2;
+                    const amplifiedValue = value * height;
+                    
+                    // Calculate new position
+                    const newRadius = radius + amplifiedValue;
+                    const x = Math.cos(angle) * newRadius;
+                    const y = amplifiedValue * 0.5; // Add some vertical movement
+                    const z = Math.sin(angle) * newRadius;
+                    
+                    // Update position
+                    this.positions.array[i * 3] = x;
+                    this.positions.array[i * 3 + 1] = y;
+                    this.positions.array[i * 3 + 2] = z;
+                }
+                
+                // Mark positions for update
+                this.positions.needsUpdate = true;
+            }
+        });
+
+        // Register frequency bars component
+        AFRAME.registerComponent('frequency-bars', {
+            schema: {
+                analyserNode: { type: 'selector' },
+                radius: { type: 'number', default: 8 },
+                height: { type: 'number', default: 3 },
+                color: { type: 'color', default: '#FFF' },
+                segments: { type: 'int', default: 64 },
+                smoothing: { type: 'number', default: 0.8 }
+            },
+            
+            init: function() {
+                console.log('Frequency bars initialized');
+                this.analyserNode = this.data.analyserNode;
+                this.averages = new Array(this.data.segments).fill(0);
+                
+                // Create geometry
+                this.createGeometry();
+                
+                // Listen for audio data updates
+                this.analyserNode.addEventListener('audiodata-updated', this.updateBars.bind(this));
+            },
+            
+            createGeometry: function() {
+                const segments = this.data.segments;
+                const radius = this.data.radius;
+                
+                // Create a group to hold all the bars
+                this.barGroup = new THREE.Group();
+                this.el.setObject3D('mesh', this.barGroup);
+                
+                // Create individual bars
+                this.bars = [];
+                
+                for (let i = 0; i < segments; i++) {
+                    const angle = (i / segments) * Math.PI * 2;
+                    const x = Math.cos(angle) * radius;
+                    const z = Math.sin(angle) * radius;
+                    
+                    // Create bar geometry
+                    const barWidth = 2 * Math.PI * radius / segments * 0.9; // 90% of available space
+                    const barDepth = 0.5;
+                    const geometry = new THREE.BoxGeometry(barWidth, 1, barDepth);
+                    
+                    // Create material with gradient color
+                    const hue = i / segments;
+                    const color = new THREE.Color().setHSL(hue, 1, 0.5);
+                    const material = new THREE.MeshStandardMaterial({
+                        color: color,
+                        metalness: 0.3,
+                        roughness: 0.7,
+                        emissive: color,
+                        emissiveIntensity: 0.3,
+                        transparent: true, // Make fully opaque
+                        opacity: 0.25
+                    });
+                    
+                    // Create mesh
+                    const bar = new THREE.Mesh(geometry, material);
+                    
+                    // Position the bar at the perimeter, on the ground
+                    bar.position.set(x, 0, z);
+                    
+                    // Rotate to face center
+                    bar.lookAt(0, 0, 0);
+                    
+                    // Set the pivot point to the bottom of the bar
+                    bar.geometry.translate(0, 0.5, 0);
+                    
+                    // Add to group
+                    this.barGroup.add(bar);
+                    this.bars.push(bar);
+                }
+            },
+            
+            updateBars: function(event) {
+                if (!this.bars || !this.bars.length) return;
+                
+                // Use time domain data (amplitude)
+                const timeDomainData = event.detail.timeDomainData;
+                const segments = this.data.segments;
+                const maxHeight = this.data.height;
+                const smoothing = this.data.smoothing;
+                
+                // Update each bar based on amplitude data
+                for (let i = 0; i < segments; i++) {
+                    // Map bar index to time domain data index
+                    const dataIndex = Math.floor((i / segments) * timeDomainData.length);
+                    
+                    // Get amplitude value (0-255) and normalize to 0-1
+                    const value = timeDomainData[dataIndex] / 255.0;
+                    
+                    // Apply smoothing for rolling average
+                    this.averages[i] = this.averages[i] * smoothing + value * (1 - smoothing);
+                    
+                    // Update bar height by scaling only the Y axis
+                    const height = this.averages[i] * maxHeight;
+                    this.bars[i].scale.y = Math.max(0.01, height); // Ensure minimum height
+                    
+                    // Update color intensity based on value
+                    const material = this.bars[i].material;
+                    material.emissiveIntensity = 0.3 + this.averages[i] * 0.7;
+                }
+            }
+        });
+        
+        // Add toggle handler component to scene
+        AFRAME.registerComponent('toggle-handler', {
+            init: function() {
+                // Listen for messages from parent window
+                window.addEventListener('message', this.handleToggleMessage.bind(this));
+                
+                // Store references to elements
+                this.elements = {
+                    waveform: document.querySelector('[circular-waveform]'),
+                    bars: document.querySelector('[frequency-bars]'),
+                    skybox: document.querySelector('a-sky'),
+                    lights: Array.from(document.querySelectorAll('a-light')),
+                    ground: document.querySelector('#ground-plane')
+                };
+                
+                console.log('Toggle handler initialized');
+            },
+            
+            handleToggleMessage: function(event) {
+                // Make sure message is from the parent window
+                if (event.source !== window.parent) return;
+                
+                // Process toggle commands
+                if (event.data.type === 'toggle') {
+                    const elementType = event.data.element;
+                    const visible = event.data.visible;
+                    
+                    console.log(`Toggle ${elementType}: ${visible}`);
+                    
+                    switch(elementType) {
+                        case 'waveform':
+                            this.toggleElement(this.elements.waveform, visible);
+                            break;
+                        case 'bars':
+                            this.toggleElement(this.elements.bars, visible);
+                            break;
+                        case 'skybox':
+                            this.toggleElement(this.elements.skybox, visible);
+                            break;
+                        case 'lights':
+                            this.elements.lights.forEach(light => this.toggleElement(light, visible));
+                            break;
+                        case 'ground':
+                            this.toggleElement(this.elements.ground, visible);
+                            break;
+                    }
+                }
+            },
+            
+            toggleElement: function(element, visible) {
+                if (!element) return;
+                
+                if (visible) {
+                    element.setAttribute('visible', true);
+                } else {
+                    element.setAttribute('visible', false);
+                }
+            }
+        });
+    </script>
+</head>
+
+<body>
+    <a-scene id="scene" renderer="antialias: true; colorManagement: true;" toggle-handler>
+        <!-- Assets -->
+        <a-assets>
+            <img id="skyTexture" src="https://cdn.aframe.io/a-painter/images/sky.jpg">
+        </a-assets>
+        
+        <!-- Camera -->       
+        <a-entity custom-camera position="0 0 0"></a-entity>
+        
+        <!-- Audio processor entity -->
+        <a-entity id="audio-processor" audio-processor></a-entity>
+        
+        <!-- Circular waveform visualization -->
+        <a-entity 
+            position="0 1.6 0"
+            circular-waveform="
+                analyserNode: #audio-processor;
+                radius: 10;
+                height: 3;
+                segments: 256;
+            "
+        ></a-entity>
+        
+        <!-- Frequency bars visualization -->
+        <a-entity 
+            position="0 0 0"
+            frequency-bars="
+                analyserNode: #audio-processor;
+                radius: 20;
+                height: 4;
+                segments: 64;
+                smoothing: 0.9;
+            "
+        ></a-entity>
+        
+        <!-- Environment -->
+        <a-sky src="#skyTexture" height="2048" radius="30" theta-length="90" width="2048" position="0 -2 0"></a-sky>
+        <a-light type="ambient" intensity="0.1"></a-light> 
+        <a-light type="directional" position="1 1 1" intensity="0.1"></a-light>
+        
+        <!-- Ground plane with reflection -->
+        <a-entity 
+            id="ground-plane"
+            geometry="primitive: plane; width: 100; height: 100" 
+            position="0 0 0" 
+            rotation="-90 0 0" 
+            material="shader: standard; color: #333; metalness: 0.3; roughness: 0.2; reflectivity: 0.5"
+        ></a-entity>
+    </a-scene>
+</body>
+</html> 

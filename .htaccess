@@ -1,0 +1,5 @@
+# Ensure correct MIME types for JavaScript modules
+<IfModule mod_mime.c>
+  AddType application/javascript .js
+  AddType application/javascript .mjs
+</IfModule> 
