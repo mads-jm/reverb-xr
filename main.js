@@ -32,6 +32,8 @@ document.addEventListener('DOMContentLoaded', () => {
   const cancelUrlButton = document.getElementById('cancel-url-button');
   const closeModalButton = document.querySelector('.close-modal');
   const demoTrackButton = document.getElementById('demo-track-button');
+  const playPauseButton = document.getElementById('play-pause-button');
+  const playbackControls = document.getElementById('playback-controls');
   const dataOutput = document.getElementById('data-output');
   const aframeIframe = document.getElementById('aframe-iframe');
   const spotifyControls = document.getElementById('spotify-controls');
@@ -42,13 +44,14 @@ document.addEventListener('DOMContentLoaded', () => {
   let spotifyProcessor = null;
   let spotifySDKLoaded = false;
 
+  // Track current audio state
+  let isAudioPlaying = false;
+  let currentAudioType = null; // 'demo', 'file', 'url', 'mic', etc.
+  let currentUrlAudio = null;
+
   // Demo track URL
   const DEMO_TRACK_URL = 'https://cdn.pixabay.com/audio/2025/01/09/audio_ebb251db8d.mp3';
   
-  // Current URL audio state
-  let currentUrlAudio = null;
-  let isUrlAudioPlaying = false;
-
   // ====== AUDIO SOURCE SELECTION ======
   
   /**
@@ -56,7 +59,7 @@ document.addEventListener('DOMContentLoaded', () => {
    */
   micOption.addEventListener('change', () => {
     if (micOption.checked) {
-      updateUIForMicrophoneMode();
+      switchAudioSource('mic');
     }
   });
 
@@ -65,7 +68,7 @@ document.addEventListener('DOMContentLoaded', () => {
    */
   fileOption.addEventListener('change', () => {
     if (fileOption.checked) {
-      updateUIForFileMode();
+      switchAudioSource('file');
     }
   });
 
@@ -74,7 +77,7 @@ document.addEventListener('DOMContentLoaded', () => {
    */
   urlOption.addEventListener('change', () => {
     if (urlOption.checked) {
-      updateUIForUrlMode();
+      switchAudioSource('url');
     }
   });
 
@@ -83,13 +86,7 @@ document.addEventListener('DOMContentLoaded', () => {
    */
   spotifyOption.addEventListener('change', () => {
     if (spotifyOption.checked) {
-      updateUIForSpotifyMode();
-    } else {
-      spotifyControls.style.display = 'none';
-      systemAudioContainer.style.display = 'none';
-      
-      // Show the now playing container again
-      document.querySelector('.now-playing-container').style.display = 'flex';
+      switchAudioSource('spotify');
     }
   });
 
@@ -98,7 +95,7 @@ document.addEventListener('DOMContentLoaded', () => {
    */
   systemAudioOption.addEventListener('change', () => {
     if (systemAudioOption.checked) {
-      updateUIForSystemAudioMode();
+      switchAudioSource('system');
     }
   });
 
@@ -141,6 +138,9 @@ document.addEventListener('DOMContentLoaded', () => {
   startMicButton.addEventListener('click', () => {
     audioProcessor.initMicrophone();
     nowPlaying.textContent = 'Microphone';
+    currentAudioType = 'mic';
+    // Microphone doesn't need play/pause control
+    removePlayPauseControl();
     console.log("Microphone initialized");
   });
 
@@ -152,22 +152,34 @@ document.addEventListener('DOMContentLoaded', () => {
       showSystemAudioInstructions();
       await audioProcessor.initMicrophone();
       nowPlaying.textContent = 'System Audio (via Mic)';
+      currentAudioType = 'system';
+      // System audio doesn't need play/pause control
+      removePlayPauseControl();
       console.log("System audio capture initialized");
     } catch (error) {
       console.error('Error starting system audio capture:', error);
-      dataOutput.textContent = 'Error: ' + error.message;
+      alert('Error: ' + error.message);
     }
   });
 
   /**
    * Handle file selection
    */
-  fileInput.addEventListener('change', (event) => {
-    const file = event.target.files[0];
+  fileInput.addEventListener('change', () => {
+    const file = fileInput.files[0];
     if (file) {
+      audioProcessor.stopCurrentSource();
       audioProcessor.initFile(file);
       nowPlaying.textContent = file.name;
-      console.log("Audio file initialized:", file.name);
+      
+      // Update audio state
+      isAudioPlaying = true;
+      currentAudioType = 'file';
+      
+      // Add play/pause control
+      addPlayPauseControl();
+      
+      console.log("File initialized:", file.name);
     }
   });
 
@@ -175,16 +187,7 @@ document.addEventListener('DOMContentLoaded', () => {
    * Handle demo track button click
    */
   demoTrackButton.addEventListener('click', () => {
-    audioProcessor.stopCurrentSource();
-    audioProcessor.initFromUrl(DEMO_TRACK_URL)
-      .then(() => {
-        nowPlaying.textContent = 'Demo Track';
-        console.log("Demo track initialized");
-      })
-      .catch(error => {
-        console.error('Error playing demo track:', error);
-        dataOutput.textContent = 'Error: ' + error.message;
-      });
+    switchAudioSource('demo');
   });
 
   /**
@@ -198,13 +201,16 @@ document.addEventListener('DOMContentLoaded', () => {
         .then(() => {
           urlModal.style.display = 'none';
           nowPlaying.textContent = 'URL: ' + url.substring(0, 30) + (url.length > 30 ? '...' : '');
-          isUrlAudioPlaying = true;
-          updatePlayPauseButton();
-          console.log("URL audio initialized:", url);
-          // Store the URL as current audio source
+          
+          // Update audio state
+          isAudioPlaying = true;
+          currentAudioType = 'url';
           currentUrlAudio = url;
-          // Add play/pause control to the UI after successfully loading the URL
+          
+          // Add play/pause control
           addPlayPauseControl();
+          
+          console.log("URL audio initialized:", url);
         })
         .catch(error => {
           console.error('Error playing audio from URL:', error);
@@ -279,11 +285,12 @@ document.addEventListener('DOMContentLoaded', () => {
     // Show the now playing container
     document.querySelector('.now-playing-container').style.display = 'flex';
     
-    // Remove the play/pause control if it exists
-    const audioControls = document.querySelector('.audio-controls');
-    if (audioControls) {
-      audioControls.remove();
-    }
+    // Microphone input doesn't use play/pause control
+    removePlayPauseControl();
+    
+    // Reset audio state
+    isAudioPlaying = false;
+    currentAudioType = null;
   }
   
   /**
@@ -296,16 +303,19 @@ document.addEventListener('DOMContentLoaded', () => {
     startSystemAudioButton.disabled = true;
     spotifyControls.style.display = 'none';
     systemAudioContainer.style.display = 'none';
-    audioProcessor.stopCurrentSource();
+    
+    // If audio is currently playing, stop it
+    if (isAudioPlaying) {
+      audioProcessor.stopCurrentSource();
+      isAudioPlaying = false;
+      currentAudioType = null;
+    }
     
     // Show the now playing container
     document.querySelector('.now-playing-container').style.display = 'flex';
     
-    // Remove the play/pause control if it exists
-    const audioControls = document.querySelector('.audio-controls');
-    if (audioControls) {
-      audioControls.remove();
-    }
+    // File mode starts with no file, so no play/pause control initially
+    removePlayPauseControl();
   }
   
   /**
@@ -318,14 +328,22 @@ document.addEventListener('DOMContentLoaded', () => {
     fileInput.disabled = true;
     spotifyControls.style.display = 'none';
     systemAudioContainer.style.display = 'none';
-    audioProcessor.stopCurrentSource();
+    
+    // If audio is currently playing, stop it
+    if (isAudioPlaying && currentAudioType !== 'url') {
+      audioProcessor.stopCurrentSource();
+      isAudioPlaying = false;
+    }
     
     // Show the now playing container
     document.querySelector('.now-playing-container').style.display = 'flex';
     
-    // If we have a URL stored, add the play/pause control
-    if (currentUrlAudio) {
+    // If we have a URL loaded and that was our previous source, restore the play/pause button
+    if (currentUrlAudio && currentAudioType === 'url') {
       addPlayPauseControl();
+    } else {
+      removePlayPauseControl();
+      currentAudioType = null;
     }
   }
   
@@ -336,22 +354,26 @@ document.addEventListener('DOMContentLoaded', () => {
     // Only load Spotify components when needed
     loadSpotifyComponents();
     showSpotifyControls();
+    
     // Show system audio option when Spotify is selected
     systemAudioContainer.style.display = 'flex';
     systemAudioOption.disabled = false;
     startMicButton.disabled = true;
     fileInput.disabled = true;
     openUrlModalButton.disabled = true;
-    audioProcessor.stopCurrentSource();
+    
+    // If audio is currently playing, stop it
+    if (isAudioPlaying) {
+      audioProcessor.stopCurrentSource();
+      isAudioPlaying = false;
+      currentAudioType = null;
+    }
     
     // Hide the now playing container
     document.querySelector('.now-playing-container').style.display = 'none';
     
-    // Remove the play/pause control if it exists
-    const audioControls = document.querySelector('.audio-controls');
-    if (audioControls) {
-      audioControls.remove();
-    }
+    // Spotify has its own controls
+    removePlayPauseControl();
   }
   
   /**
@@ -362,13 +384,16 @@ document.addEventListener('DOMContentLoaded', () => {
     startMicButton.disabled = true;
     fileInput.disabled = true;
     openUrlModalButton.disabled = true;
-    audioProcessor.stopCurrentSource();
     
-    // Remove the play/pause control if it exists
-    const audioControls = document.querySelector('.audio-controls');
-    if (audioControls) {
-      audioControls.remove();
+    // If audio is currently playing, stop it
+    if (isAudioPlaying) {
+      audioProcessor.stopCurrentSource();
+      isAudioPlaying = false;
+      currentAudioType = null;
     }
+    
+    // System audio doesn't need play/pause control
+    removePlayPauseControl();
   }
   
   /**
@@ -594,56 +619,6 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  /**
-   * Add play/pause control to the UI
-   */
-  function addPlayPauseControl() {
-    // Check if control already exists
-    if (!document.querySelector('.audio-controls')) {
-      const nowPlayingContainer = document.querySelector('.now-playing-container');
-      
-      // Create audio controls container
-      const audioControls = document.createElement('div');
-      audioControls.className = 'audio-controls';
-      
-      // Create play/pause button
-      const playPauseButton = document.createElement('button');
-      playPauseButton.className = 'play-pause-button';
-      playPauseButton.textContent = isUrlAudioPlaying ? '⏸' : '▶'; 
-      playPauseButton.addEventListener('click', togglePlayPause);
-      
-      // Add to container
-      audioControls.appendChild(playPauseButton);
-      nowPlayingContainer.appendChild(audioControls);
-    } else {
-      updatePlayPauseButton();
-    }
-  }
-  
-  /**
-   * Toggle play/pause for current audio
-   */
-  function togglePlayPause() {
-    if (isUrlAudioPlaying) {
-      audioProcessor.pauseCurrentSource();
-      isUrlAudioPlaying = false;
-    } else if (currentUrlAudio) {
-      audioProcessor.resumeCurrentSource();
-      isUrlAudioPlaying = true;
-    }
-    updatePlayPauseButton();
-  }
-  
-  /**
-   * Update the play/pause button appearance
-   */
-  function updatePlayPauseButton() {
-    const playPauseButton = document.querySelector('.play-pause-button');
-    if (playPauseButton) {
-      playPauseButton.textContent = isUrlAudioPlaying ? '⏸' : '▶';
-    }
-  }
-
   // ====== APPLICATION STARTUP ======
   
   // Start sending data
@@ -657,4 +632,209 @@ document.addEventListener('DOMContentLoaded', () => {
   
   // Set up toggle controls
   setupToggleControls();
+
+  // Set up event listener for play/pause button
+  playPauseButton.addEventListener('click', togglePlayPause);
+
+  /**
+   * Toggle play/pause for current audio
+   */
+  function togglePlayPause() {
+    console.log("Toggle play/pause clicked, current state:", isAudioPlaying);
+    
+    if (isAudioPlaying) {
+      audioProcessor.pauseCurrentSource();
+      isAudioPlaying = false;
+    } else {
+      audioProcessor.resumeCurrentSource();
+      isAudioPlaying = true;
+    }
+    
+    updatePlayPauseButton();
+  }
+  
+  /**
+   * Update the play/pause button appearance
+   */
+  function updatePlayPauseButton() {
+    if (playPauseButton) {
+      playPauseButton.textContent = isAudioPlaying ? '⏸' : '▶';
+      console.log("Updated play/pause button to:", playPauseButton.textContent);
+    }
+  }
+  
+  /**
+   * Add play/pause control to the UI
+   */
+  function addPlayPauseControl() {
+    // Show the playback controls
+    playbackControls.style.display = 'block';
+    
+    // Update button state
+    updatePlayPauseButton();
+  }
+  
+  /**
+   * Remove play/pause control from the UI
+   */
+  function removePlayPauseControl() {
+    playbackControls.style.display = 'none';
+  }
+
+  // Get reference to volume slider
+  const volumeSlider = document.getElementById('volume-slider');
+
+  /**
+   * Handle volume slider changes
+   */
+  volumeSlider.addEventListener('input', () => {
+    const volume = parseFloat(volumeSlider.value);
+    audioProcessor.setVolume(volume);
+    
+    // Update volume icon based on level
+    const volumeIcon = document.querySelector('.volume-icon');
+    if (volume === 0) {
+      volumeIcon.textContent = '🔇';
+    } else if (volume < 0.5) {
+      volumeIcon.textContent = '🔉';
+    } else {
+      volumeIcon.textContent = '🔊';
+    }
+    
+    console.log("Volume changed to:", volume);
+  });
+
+  /**
+   * Set initial volume on audio processor
+   */
+  audioProcessor.setVolume(1.0); // Set default volume
+
+  /**
+   * Switch to a new audio source, properly cleaning up the previous one
+   * @param {string} sourceType - Type of source to switch to ('mic', 'file', 'url', 'spotify', 'system', 'demo')
+   */
+  function switchAudioSource(sourceType) {
+    console.log(`Switching audio source to: ${sourceType}`);
+    
+    // Stop the current source first
+    audioProcessor.stopCurrentSource();
+    
+    // Reset audio state
+    isAudioPlaying = false;
+    
+    // Update current audio type
+    currentAudioType = sourceType;
+    
+    // Reset UI elements based on new source type
+    resetUIForSourceSwitch();
+    
+    // Apply source-specific UI updates
+    switch (sourceType) {
+      case 'mic':
+        updateUIForMicrophoneMode();
+        // Explicitly force reconnection with output disabled
+        audioProcessor.reconnectAnalyzer(false);
+        break;
+      case 'file':
+        updateUIForFileMode();
+        audioProcessor.reconnectAnalyzer(true);
+        break;
+      case 'url':
+        updateUIForUrlMode();
+        audioProcessor.reconnectAnalyzer(true);
+        break;
+      case 'spotify':
+        updateUIForSpotifyMode();
+        audioProcessor.reconnectAnalyzer(false);
+        break;
+      case 'system':
+        updateUIForSystemAudioMode();
+        audioProcessor.reconnectAnalyzer(true);
+        break;
+      case 'demo':
+        // Demo is a special case, we actually start playback immediately
+        playDemoTrack();
+        break;
+    }
+    
+    // Ensure volume is set correctly
+    const volume = parseFloat(volumeSlider.value);
+    audioProcessor.setVolume(volume);
+    
+    console.log(`Audio source switched to ${sourceType}`);
+  }
+
+  /**
+   * Reset all UI elements to a default state before switching sources
+   */
+  function resetUIForSourceSwitch() {
+    // Hide the playback controls by default
+    playbackControls.style.display = 'none';
+    
+    // Reset the now playing text
+    nowPlaying.textContent = 'None';
+    
+    // Ensure all input controls are disabled by default
+    startMicButton.disabled = true;
+    startSystemAudioButton.disabled = true;
+    fileInput.disabled = true;
+    openUrlModalButton.disabled = true;
+    
+    // Hide Spotify controls
+    spotifyControls.style.display = 'none';
+    
+    // Hide system audio container
+    systemAudioContainer.style.display = 'none';
+    
+    // Show the now playing container
+    document.querySelector('.now-playing-container').style.display = 'flex';
+  }
+
+  /**
+   * Play the demo track
+   */
+  function playDemoTrack() {
+    // Show that we're loading
+    nowPlaying.textContent = 'Loading Demo Track...';
+    
+    audioProcessor.initFromUrl(DEMO_TRACK_URL)
+      .then(() => {
+        nowPlaying.textContent = 'Demo Track';
+        
+        // Update audio state
+        isAudioPlaying = true;
+        currentAudioType = 'demo';
+        
+        // Add play/pause control
+        addPlayPauseControl();
+        
+        console.log("Demo track initialized");
+      })
+      .catch(error => {
+        console.error('Error playing demo track:', error);
+        alert('Error playing demo track: ' + error.message);
+        nowPlaying.textContent = 'Error: Demo Track Failed';
+      });
+  }
+
+  /**
+   * Restart the current audio source
+   * Useful when something breaks and you need to reset the audio system
+   */
+  function restartCurrentSource() {
+    // Only if we have an active audio type
+    if (currentAudioType) {
+      // Save the current type
+      const savedType = currentAudioType;
+      
+      // Stop everything
+      audioProcessor.stopCurrentSource();
+      
+      // Wait a tiny bit for the audio context to reset
+      setTimeout(() => {
+        // Restart with the same source type
+        switchAudioSource(savedType);
+      }, 100);
+    }
+  }
 });

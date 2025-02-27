@@ -212,17 +212,93 @@ h1, h2, h3, h4, h5, h6 {
   transform: scale(0.95);
 }
 
-/* Demo track container */
+/* Demo track button and playback controls */
 .demo-button-container {
   display: flex;
-  justify-content: center;
+  justify-content: space-between;
+  align-items: center;
   margin-bottom: 12px;
   padding-bottom: 8px;
   border-bottom: 1px dashed var(--border-color);
 }
 
 #demo-track-button {
-  width: 80%;
+  background-color: var(--accent-color);
+  border-color: var(--accent-color);
+  color: white;
+  padding: 6px 12px;
+  border-radius: 20px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: all 0.2s ease;
+  text-align: center;
+  border: 1px solid var(--accent-color);
+  flex-grow: 1;
+  margin-right: 10px;
+}
+
+#demo-track-button:hover {
+  background-color: var(--accent-hover);
+  box-shadow: 0 0 10px rgba(29, 185, 84, 0.5);
+  transform: scale(1.05);
+}
+
+#demo-track-button:active {
+  transform: scale(0.95);
+}
+
+/* Now playing section */
+.now-playing-container {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 10px;
+  padding: 5px;
+  background-color: rgba(0, 0, 0, 0.2);
+  border-radius: 4px;
+}
+
+.now-playing-label {
+  font-size: 12px;
+  color: #aaa;
+  margin-bottom: 3px;
+}
+
+.now-playing-text {
+  font-size: 14px;
+  font-weight: bold;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Playback controls */
+#playback-controls {
+  margin-bottom: var(--spacing-md);
+  width: 100%;
+}
+
+.controls-container {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  background-color: var(--control-bg);
+  border-radius: 20px;
+  overflow: hidden;
+}
+
+.play-pause-button {
+  margin: 0;
+  min-width: 36px;
+  border-radius: 20px 0 0 20px;
+}
+
+/* Volume control styling */
+.volume-control {
+  display: flex;
+  align-items: center;
+  padding: 0 8px;
+  flex-grow: 1;
+  height: 100%;
 }
 
 /* ====== INPUTS ====== */
@@ -261,29 +337,6 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 /* ====== NOW PLAYING ====== */
-.now-playing-container {
-  margin-top: 8px;
-  padding: 5px;
-  background-color: rgba(0, 0, 0, 0.3);
-  border-radius: 3px;
-  font-size: 12px;
-  display: flex;
-  align-items: center;
-}
-
-.now-playing-label {
-  font-weight: bold;
-  margin-right: 5px;
-  white-space: nowrap;
-}
-
-.now-playing-text {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  color: #4CAF50;
-}
-
 .audio-controls {
   display: flex;
   justify-content: center;
