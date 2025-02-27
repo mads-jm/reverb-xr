@@ -32,6 +32,22 @@
     <div class="panel-content" id="panel-content">
       <div class="control-group">
         <h3>Audio Source</h3>
+        <div class="now-playing-container">
+          <span class="now-playing-label">Now Playing:</span>
+          <span id="now-playing" class="now-playing-text">None</span>
+        </div>
+        <div id="playback-controls" style="display: none;">
+          <div class="controls-container">
+            <button id="play-pause-button" class="play-pause-button">⏸</button>
+            <div class="volume-control">
+              <span class="volume-icon">🔊</span>
+              <input type="range" id="volume-slider" min="0" max="1" step="0.01" value="1">
+            </div>
+          </div>
+        </div>
+        <div class="demo-button-container">
+          <button id="demo-track-button" class="control-button">Play Demo Track</button>
+        </div>
         <div class="toggle-item">
           <input type="radio" id="mic-option" name="audio-source" value="microphone">
           <label for="mic-option">Microphone</label>
@@ -46,6 +62,11 @@
           </div>
         </div>
         <div class="toggle-item">
+          <input type="radio" id="url-option" name="audio-source" value="url">
+          <label for="url-option">Audio URL</label>
+          <button id="open-url-modal" class="small-button" disabled>Enter URL</button>
+        </div>
+        <div class="toggle-item">
           <input type="radio" id="spotify-option" name="audio-source">
           <label for="spotify-option">Spotify</label>
         </div>
@@ -53,10 +74,6 @@
           <input type="radio" id="system-audio-option" name="audio-source">
           <label for="system-audio-option">System Audio (via Mic)</label>
           <button id="start-system-audio" disabled class="small-button">Start</button>
-        </div>
-        <div class="now-playing-container">
-          <span class="now-playing-label">Now Playing:</span>
-          <span id="now-playing" class="now-playing-text">None</span>
         </div>
       </div>
       
@@ -138,5 +155,17 @@
       }
     };
   </script>
+  
+  <div id="url-modal" class="modal">
+    <div class="modal-content">
+      <span class="close-modal">&times;</span>
+      <h3>Enter Audio URL</h3>
+      <input type="text" id="url-input" placeholder="https://example.com/audio.mp3">
+      <div class="modal-buttons">
+        <button id="play-url-button" class="button">Play</button>
+        <button id="cancel-url-button" class="button">Cancel</button>
+      </div>
+    </div>
+  </div>
 </body>
 </html>

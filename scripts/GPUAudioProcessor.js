@@ -63,13 +63,32 @@ class GPUAudioProcessor {
     
     /**
      * Connects an audio source to the analyzer
-     * @param {AudioNode} source - Web Audio API source node
-     * @param {boolean} connectToDestination - Whether to connect to audio output
+     * @param {AudioNode} source - The audio source to connect
+     * @param {boolean} connectToOutput - Whether to connect to audio output
      */
-    connectSource(source, connectToDestination = true) {
+    connectSource(source, connectToOutput = true) {
+      // First connect to the analyzer
       source.connect(this.analyser);
-      if (connectToDestination) {
-        this.analyser.connect(this.audioCtx.destination);
+      
+      // If connecting to output, check if we have a gain node
+      if (connectToOutput) {
+        if (this.gainNode) {
+          // Connect through the gain node for volume control
+          this.analyser.connect(this.gainNode);
+          this.gainNode.connect(this.audioCtx.destination);
+        } else {
+          // Connect directly if no gain node exists
+          this.analyser.connect(this.audioCtx.destination);
+        }
+        this.outputConnected = true;
+      } else {
+        this.outputConnected = false;
+      }
+      
+      this.outputNode = this.analyser;
+      
+      if (this.debugMode) {
+        console.log('Source connected:', source, 'Output connected:', this.outputConnected);
       }
     }
 
@@ -168,19 +187,79 @@ class GPUAudioProcessor {
     }
     
     /**
-     * Stops any currently playing audio source
+     * Initializes audio from a URL (for demo or preset audio)
+     * Side-effects: Sets currentSource property and starts playback
+     * @param {string} url - The URL of the audio file to play
+     * @returns {Promise<void>} Promise that resolves when audio starts playing
+     */
+    initFromUrl(url) {
+      return fetch(url)
+        .then(response => {
+          if (!response.ok) {
+            throw new Error(`HTTP error! Status: ${response.status}`);
+          }
+          return response.arrayBuffer();
+        })
+        .then(arrayBuffer => this.audioCtx.decodeAudioData(arrayBuffer))
+        .then(buffer => {
+          const source = this.audioCtx.createBufferSource();
+          source.buffer = buffer;
+          this.currentSource = source;
+          this.connectSource(source, true);
+          source.start(0);
+          if (this.debugMode) {
+            console.log('Playing audio from URL:', url);
+          }
+        })
+        .catch(err => console.error('Error loading audio from URL:', err));
+    }
+    
+    /**
+     * Stops any currently playing audio source and resets connections
      * Side-effects: Sets currentSource and currentStream to null
      */
     stopCurrentSource() {
+      // Stop any active audio source
       if (this.currentSource) {
-        this.currentSource.stop && this.currentSource.stop(0);
-        this.disconnectSource(this.currentSource);
+        // For buffer source nodes that have a stop method
+        if (typeof this.currentSource.stop === 'function') {
+          try {
+            this.currentSource.stop(0);
+          } catch (e) {
+            console.log('Source already stopped');
+          }
+        }
+        
+        // Disconnect the source from the analyzer
+        try {
+          this.disconnectSource(this.currentSource);
+        } catch (e) {
+          console.log('Source already disconnected');
+        }
+        
         this.currentSource = null;
       }
       
+      // Stop any active media stream
       if (this.currentStream) {
         this.currentStream.getTracks().forEach(track => track.stop());
         this.currentStream = null;
+      }
+      
+      // Reset analyzer connections
+      try {
+        this.analyser.disconnect();
+      } catch (e) {
+        console.log('Analyzer already disconnected');
+      }
+      
+      this.outputConnected = false;
+      
+      // DON'T automatically reconnect analyzer to output
+      // This is what was causing the loopback with mic mode
+      
+      if (this.debugMode) {
+        console.log('Audio source stopped and connections reset');
       }
     }
     
@@ -284,5 +363,150 @@ class GPUAudioProcessor {
     connectExternalAnalyser(analyser) {
       this.analyser = analyser;
       console.log('Connected external analyzer');
+    }
+
+    /**
+     * Pauses the current audio source
+     * Side-effects: Pauses playback if possible
+     */
+    pauseCurrentSource() {
+      if (this.audioCtx && this.audioCtx.state === 'running') {
+        this.audioCtx.suspend();
+        if (this.debugMode) {
+          console.log('Audio context suspended');
+        }
+      }
+    }
+    
+    /**
+     * Resumes the current audio source
+     * Side-effects: Resumes playback if possible
+     */
+    resumeCurrentSource() {
+      if (this.audioCtx && this.audioCtx.state === 'suspended') {
+        this.audioCtx.resume();
+        if (this.debugMode) {
+          console.log('Audio context resumed');
+        }
+      }
+    }
+
+    /**
+     * Sets the volume of the audio output
+     * @param {number} volume - Volume level between 0 and 1
+     */
+    setVolume(volume) {
+      if (!this.gainNode) {
+        // Create a gain node if it doesn't exist
+        this.gainNode = this.audioCtx.createGain();
+        
+        // Insert the gain node between the current output and the destination
+        if (this.outputNode) {
+          this.outputNode.disconnect();
+          this.outputNode.connect(this.gainNode);
+          this.gainNode.connect(this.audioCtx.destination);
+        }
+      }
+      
+      // Set the volume
+      this.gainNode.gain.value = volume;
+      
+      // Store the current volume value
+      this.volume = volume;
+      
+      if (this.debugMode) {
+        console.log('Volume set to:', volume);
+      }
+    }
+
+    /**
+     * Ensures the audio context is in the running state
+     * @returns {Promise<void>} Promise that resolves when the context is running
+     */
+    async ensureAudioContext() {
+      // If the context is suspended, try to resume it
+      if (this.audioCtx.state === 'suspended') {
+        try {
+          await this.audioCtx.resume();
+          if (this.debugMode) {
+            console.log('Audio context resumed');
+          }
+        } catch (err) {
+          console.error('Error resuming audio context:', err);
+        }
+      }
+      
+      // If the context is closed, create a new one
+      if (this.audioCtx.state === 'closed') {
+        this.audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        this.setupAnalyser();
+        if (this.debugMode) {
+          console.log('Created new audio context');
+        }
+      }
+    }
+
+    /**
+     * Set up the analyzer node with current settings
+     */
+    setupAnalyser() {
+      // Create a new analyzer
+      this.analyser = this.audioCtx.createAnalyser();
+      
+      // Configure it with our current settings
+      this.analyser.fftSize = this.fftSize || 2048;
+      this.analyser.smoothingTimeConstant = this.smoothingTimeConstant || 0.8;
+      
+      // Update our data buffers
+      this.frequencyBinCount = this.analyser.frequencyBinCount;
+      this.frequencyData = new Float32Array(this.frequencyBinCount);
+      this.timeDomainData = new Float32Array(this.frequencyBinCount);
+      
+      // Create fresh data textures
+      if (this.frequencyDataTexture) {
+        this.frequencyDataTexture.dispose();
+      }
+      if (this.timeDomainDataTexture) {
+        this.timeDomainDataTexture.dispose();
+      }
+      
+      this.frequencyDataTexture = this.createDataTexture(this.frequencyData);
+      this.timeDomainDataTexture = this.createDataTexture(this.timeDomainData);
+      
+      // If we have a gain node, connect the analyzer to it
+      if (this.gainNode) {
+        this.analyser.connect(this.gainNode);
+        this.gainNode.connect(this.audioCtx.destination);
+      }
+    }
+
+    /**
+     * Ensures proper reconnection when switching audio sources
+     * @param {boolean} connectToOutput - Whether to connect analyzer to output
+     */
+    reconnectAnalyzer(connectToOutput = true) {
+      try {
+        // First disconnect everything
+        this.analyser.disconnect();
+        
+        // Then reconnect based on parameter
+        if (connectToOutput) {
+          if (this.gainNode) {
+            this.analyser.connect(this.gainNode);
+            this.gainNode.connect(this.audioCtx.destination);
+          } else {
+            this.analyser.connect(this.audioCtx.destination);
+          }
+          this.outputConnected = true;
+        } else {
+          this.outputConnected = false;
+        }
+        
+        if (this.debugMode) {
+          console.log('Analyzer reconnected, output connected:', this.outputConnected);
+        }
+      } catch (e) {
+        console.error('Error reconnecting analyzer:', e);
+      }
     }
 }
