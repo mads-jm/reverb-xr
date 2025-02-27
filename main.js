@@ -609,7 +609,7 @@ document.addEventListener('DOMContentLoaded', () => {
       // Create play/pause button
       const playPauseButton = document.createElement('button');
       playPauseButton.className = 'play-pause-button';
-      playPauseButton.innerHTML = '⏸️'; // Initially show pause since audio is playing
+      playPauseButton.textContent = isUrlAudioPlaying ? '⏸' : '▶'; 
       playPauseButton.addEventListener('click', togglePlayPause);
       
       // Add to container
@@ -640,7 +640,7 @@ document.addEventListener('DOMContentLoaded', () => {
   function updatePlayPauseButton() {
     const playPauseButton = document.querySelector('.play-pause-button');
     if (playPauseButton) {
-      playPauseButton.innerHTML = isUrlAudioPlaying ? '⏸️' : '▶️';
+      playPauseButton.textContent = isUrlAudioPlaying ? '⏸' : '▶';
     }
   }
 
