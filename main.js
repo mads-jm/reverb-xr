@@ -355,9 +355,18 @@ document.addEventListener('DOMContentLoaded', () => {
     loadSpotifyComponents();
     showSpotifyControls();
     
-    // Show system audio option when Spotify is selected
+    // Show system audio option when Spotify is selected but hide the radio button
     systemAudioContainer.style.display = 'flex';
-    systemAudioOption.disabled = false;
+    systemAudioOption.style.display = 'none'; // Hide the radio button
+    systemAudioOption.disabled = true; // Disable it to prevent interactions
+    startSystemAudioButton.disabled = false; // Enable the start button
+    
+    // Make the label text clearer since there's no radio button
+    const systemAudioLabel = document.querySelector('label[for="system-audio-option"]');
+    if (systemAudioLabel) {
+      systemAudioLabel.textContent = "Capture System Audio:";
+    }
+    
     startMicButton.disabled = true;
     fileInput.disabled = true;
     openUrlModalButton.disabled = true;
@@ -785,6 +794,15 @@ document.addEventListener('DOMContentLoaded', () => {
     
     // Hide system audio container
     systemAudioContainer.style.display = 'none';
+    
+    // Show all radio buttons by default (we'll hide specific ones later if needed)
+    systemAudioOption.style.display = 'inline-block';
+    
+    // Reset any custom label text
+    const systemAudioLabel = document.querySelector('label[for="system-audio-option"]');
+    if (systemAudioLabel) {
+      systemAudioLabel.textContent = "System Audio (via Mic)";
+    }
     
     // Show the now playing container
     document.querySelector('.now-playing-container').style.display = 'flex';
