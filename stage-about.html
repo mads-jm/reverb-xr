@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <script src="https://aframe.io/releases/1.3.0/aframe.min.js"></script>
+    <script src="https://cdn.rawgit.com/donmccurdy/aframe-extras/v6.1.0/dist/aframe-extras.min.js"></script>
+    <script src="scripts/components.js"></script>
+    <script src="scripts/aframe-menu-script.js"></script>
+  </head>
+
+  <body>
+    <!-- White Room Scene -->
+    <a-scene
+      id="scene"
+      keyboard-shortcuts="enterVR: false"
+      renderer="antialias: true;
+                   colorManagement: true;
+                   sortObjects: true;
+                   physicallyCorrectLights: true;
+                   maxCanvasWidth: 1920;
+                   maxCanvasHeight: 1920;"
+    >
+      <!-- Point lights -->
+      <a-light
+        type="point"
+        intensity="2"
+        color="white"
+        position="0 3 -2"
+        castShadow="true"
+      ></a-light>
+      <a-light
+        type="point"
+        intensity="2"
+        color="white"
+        position="0 3 2"
+        castShadow="true"
+      ></a-light>
+      <a-light
+        type="point"
+        intensity="1"
+        color="white"
+        position="2 3 0"
+        castShadow="true"
+      ></a-light>
+      <a-light
+        type="point"
+        intensity="1"
+        color="white"
+        position="-2 3 0"
+        castShadow="true"
+      ></a-light>
+
+      <!-- Walls -->
+      <!-- front -->
+      <a-box
+        position="0 2.5 -5"
+        color="white"
+        rotation="0 90 180"
+        width="0.2"
+        height="5"
+        depth="10"
+        material="shader: phong; roughness: 1;"
+        shadow="receive: true"
+      ></a-box>
+      <a-entity
+        gltf-model="url(/panel.gltf)"
+        position="0 2.5 -5"
+        scale="2 2 2"
+      ></a-entity>
+
+      <!-- back -->
+      <a-box
+        position="0 2.5 5"
+        color="white"
+        rotation="0 90 180"
+        width="0.2"
+        height="5"
+        depth="10"
+        material="shader: phong; roughness: 1;"
+        shadow="receive: true"
+      ></a-box>
+      <a-entity
+        gltf-model="url(/panel.gltf)"
+        position="0 2.5 5"
+        scale="2 2 2"
+      ></a-entity>
+
+      <!-- left -->
+      <a-box
+        position="-5 2.5 0"
+        color="white"
+        width="0.2"
+        height="5"
+        depth="10"
+        material="shader: phong; roughness: 1;"
+        shadow="receive: true"
+      ></a-box>
+      <a-entity
+        gltf-model="url(/panel.gltf)"
+        position="-5 2.5 0"
+        rotation="0 90 180"
+        scale="2 2 2"
+      ></a-entity>
+
+      <!-- right -->
+      <a-box
+        position="5 2.5 0"
+        color="white"
+        width="0.2"
+        height="5"
+        depth="10"
+        material="shader: phong; roughness: 1;"
+        shadow="receive: true"
+      ></a-box>
+      <a-entity
+        gltf-model="url(/panel.gltf)"
+        position="5 2.5 0"
+        rotation="0 90 180"
+        scale="2 2 2"
+      ></a-entity>
+
+      <!-- Floor -->
+      <a-plane
+        position="0 0 0"
+        rotation="-90 0 0"
+        width="10"
+        height="10"
+        color="white"
+        material="shader: phong"
+        shadow="receive: true"
+      ></a-plane>
+
+      <!-- Ceiling -->
+      <a-plane
+        position="0 5 0"
+        rotation="90 0 0"
+        width="10"
+        height="10"
+        color="white"
+      ></a-plane>
+
+      <!-- menu -->
+      <a-box
+        position="0 2.5 -4.9"
+        color="white"
+        rotation="0 90 180"
+        width="0.2"
+        height="3"
+        depth="5"
+        material="shader: phong; roughness: 1;"
+        shadow="receive: true"
+      ></a-box>
+
+      <!-- menu buttons and text-->
+      <a-entity position="0 2.5 -4.8">
+        <!-- Title -->
+        <a-text
+          value="REVERB VR"
+          position="0 1 0"
+          width="15"
+          height="15"
+          align="center"
+          color="black"
+        ></a-text>
+
+        <a-text
+          value="Reverb VR is all about creating incredible virtual reality experiences. We noticed that some existing VR products, like Cosmic Sugar VR, don't have the cool audio features we think are important. Another competitor, Microdose VR, is great but needs a really powerful computer to run smoothly. 
+            Our goal with Reverb VR is to fix this by providing awesome audio-visual experiences that anyone can enjoy, whether you're using a regular web browser or diving into VR."
+          position="0 -0.3 0.1"
+          align="center"
+          color="black"
+          scale="0.6 0.6 1"
+        ></a-text>
+
+        <!-- back Button -->
+        <a-entity id="backButton" position="-1.9 -1 0">
+          <a-box width="1" height=".4" depth="0.2" color="7D7B7B"></a-box>
+          <a-text
+            value="BACK"
+            position="0 0 0.1"
+            align="center"
+            color="white"
+            scale="0.7 0.7 1"
+          ></a-text>
+        </a-entity>
+      </a-entity>
+
+      <!-- Camera -->
+      <a-entity custom-camera></a-entity>
+      <!-- <a-camera>
+				<a-cursor
+					id="cursor"
+					animation__click="property: scale; from: 0.1 0.1 0.1; to: 0.5 0.5 0.5; easing: easeInCubic; dur: 150; startEvents: click"
+					animation__clickreset="property: scale; to: 0.1 0.1 0.1; dur: 1; startEvents: animationcomplete__click"
+					animation__fusing="property: scale; from: 1 1 1; to: 0.5 0.5 0.5; easing: easeInCubic; dur: 150; startEvents: fusing"
+				>
+				</a-cursor>
+			</a-camera> -->
+    </a-scene>
+
+    <script>
+      AFRAME.registerComponent("button-interaction", {
+        init: function () {
+          var el = this.el;
+
+          el.addEventListener("mouseenter", function () {
+            el.querySelector("a-box").setAttribute("color", "white");
+          });
+
+          el.addEventListener("mouseleave", function () {
+            el.querySelector("a-box").setAttribute("color", "7D7B7B");
+          });
+
+          el.addEventListener("click", function () {
+            el.setAttribute("animation", {
+              property: "scale",
+              to: "1.1 1.1 1.1",
+              dur: 300,
+              easing: "easeInCubic",
+            });
+            el.addEventListener("animationcomplete", function () {
+              el.setAttribute("animation", {
+                property: "scale",
+                to: "1 1 1",
+                dur: 200,
+                easing: "easeOutCubic",
+              });
+            });
+            switch (el.id) {
+              case "backButton":
+                window.location.href = "stage-lobby.html";
+                break;
+            }
+          });
+        },
+      });
+
+      // Apply the component to the buttons
+      document
+        .querySelector("#backButton")
+        .setAttribute("button-interaction", "");
+    </script>
+  </body>
+</html>

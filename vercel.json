@@ -1,10 +1,33 @@
 {
     "version": 2,
-    "buildCommand": "echo \"window.APP_CONFIG = { SPOTIFY_CLIENT_ID: '$SPOTIFY_CLIENT_ID' };\" > config.js",
-    "outputDirectory": ".",
+    "builds": [
+      {
+        "src": "package.json",
+        "use": "@vercel/static-build",
+        "config": {
+          "distDir": "dist"
+        }
+      }
+    ],
     "routes": [
-      { "src": "/callback.html", "dest": "/callback.html" },
-      { "src": "/stages/(.*)", "dest": "/stages/$1" },
-      { "src": "/(.*)", "dest": "/$1" }
+      { 
+        "src": "/scripts/(.*)", 
+        "headers": { "content-type": "application/javascript" },
+        "dest": "/scripts/$1" 
+      },
+      { 
+        "src": "/stages/scripts/(.*)", 
+        "headers": { "content-type": "application/javascript" },
+        "dest": "/scripts/$1" 
+      },
+      {
+        "src": "/stages/(.*)",
+        "dest": "/stages/$1"
+      },
+      {
+        "src": "/(.*)",
+        "dest": "/$1"
+      },
+      { "src": "/callback.html", "dest": "/callback.html" }
     ]
   }

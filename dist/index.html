@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Reverb XR Audio Visualizer</title>
+  <link
+		rel="stylesheet"
+		href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400&display=swap"
+	/>
+  <style>
+		.jetbrains-mono {
+			font-family: 'JetBrains Mono', monospace;
+			font-optical-sizing: auto;
+			font-weight: 400;
+			font-style: normal;
+		}
+	</style>
+  <!-- Three.js is now imported via webpack -->
+  <script src="https://cdn.jsdelivr.net/npm/three@0.137.0/build/three.min.js"></script>
+  <!-- Spotify SDK is now handled by webpack -->
+<script defer src="/main.bundle.js"></script></head>
+<body>
+  <!-- The iframe src will be set dynamically using the path resolver -->
+  <iframe id="aframe-iframe" src="about:blank" allow="autoplay"></iframe>
+  
+  <div class="control-panel">
+    <div class="panel-header" id="panel-toggle">
+      <div class="header-text">
+        <h2 class="jetbrains-mono">Reverb XR</h2>
+        <h3 class="jetbrains-mono">Audio Visualizer</h3>
+        <p class="version-text jetbrains-mono">v2 by Joseph Madigan</p>
+      </div>
+      <span class="toggle-icon">▼</span>
+    </div>
+    
+    <div class="panel-content" id="panel-content">
+      <div class="control-group">
+        <h3>Audio Source</h3>
+        <div class="now-playing-container">
+          <span class="now-playing-label">Now Playing:</span>
+          <span id="now-playing" class="now-playing-text">None</span>
+        </div>
+        <div id="playback-controls" style="display: none;">
+          <div class="controls-container">
+            <button id="play-pause-button" class="play-pause-button">⏸</button>
+            <div class="volume-control">
+              <span class="volume-icon">🔊</span>
+              <input type="range" id="volume-slider" min="0" max="100" step="1" value="100">
+            </div>
+          </div>
+        </div>
+        <div class="demo-button-container">
+          <button id="demo-track-button" class="control-button">Play Demo Track</button>
+        </div>
+        <div class="toggle-item">
+          <input type="radio" id="mic-option" name="audio-source" value="microphone">
+          <label for="mic-option">Microphone</label>
+          <button id="start-mic" disabled class="small-button">Start</button>
+        </div>
+        <div class="toggle-item">
+          <input type="radio" id="file-option" name="audio-source" value="file">   
+          <label for="file-option">Audio File</label>
+          <div class="file-input-container">
+            <input type="file" id="file-input" accept="audio/*" disabled>
+            <label for="file-input" class="file-input-label" id="file-input-label">Choose file</label>
+          </div>
+        </div>
+        <div class="toggle-item">
+          <input type="radio" id="url-option" name="audio-source" value="url">
+          <label for="url-option">Audio URL</label>
+          <button id="open-url-modal" class="small-button" disabled>Enter URL</button>
+        </div>
+        <div class="toggle-item">
+          <input type="radio" id="spotify-option" name="audio-source">
+          <label for="spotify-option">Spotify</label>
+        </div>
+        <div class="toggle-item" id="system-audio-container" style="display: none;">
+          <input type="radio" id="system-audio-option" name="audio-source">
+          <label for="system-audio-option">System Audio (via Mic)</label>
+          <button id="start-system-audio" disabled class="small-button">Start</button>
+        </div>
+      </div>
+
+      <div id="spotify-controls" style="display: none;">
+        <button id="spotify-login" class="small-button">Login to Spotify</button>
+        
+        <div id="spotify-player-container" style="display: none;">
+          <div id="spotify-now-playing">
+            <div id="spotify-status">Not connected</div>
+            <img id="spotify-album-art" style="display: none; width: 60px; height: 60px; margin: 5px 0;">
+            <div id="spotify-track-name" class="now-playing-text">Not playing</div>
+            <div id="spotify-track-artist" class="now-playing-artist"></div>
+          </div>
+          
+          <div id="spotify-controls-buttons">
+            <button id="spotify-prev" class="control-button">⏮</button>
+            <button id="spotify-play-pause" class="control-button">⏯</button>
+            <button id="spotify-next" class="control-button">⏭</button>
+          </div>
+          
+          <div class="spotify-note">
+            <p>Start playing in your Spotify app, then control and visualize here!</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <div id="url-modal" class="modal">
+    <div class="modal-content">
+      <span class="close-modal">&times;</span>
+      <h3>Enter Audio URL</h3>
+      <input type="text" id="url-input" placeholder="https://example.com/audio.mp3">
+      <div class="modal-buttons">
+        <button id="play-url-button" class="button">Play</button>
+        <button id="cancel-url-button" class="button">Cancel</button>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Visualization & Environment Controls Panel -->
+  <div class="viz-control-panel">
+    <div class="panel-header" id="viz-toggle">
+      <div class="header-text">
+        <h3 class="jetbrains-mono">Visualization & Environment</h3>
+      </div>
+      <span class="toggle-icon">▼</span>
+    </div>
+    
+    <div class="viz-panel-content" id="viz-content">
+      <div class="control-group">
+        <h3>Visualizations</h3>
+        <div class="toggle-item">
+          <input type="checkbox" id="toggle-waveform" class="toggle-control" data-element="waveform" checked>
+          <label for="toggle-waveform">Circular Waveform</label>
+        </div>
+        <div class="toggle-item">
+          <input type="checkbox" id="toggle-bars" class="toggle-control" data-element="bars" checked>
+          <label for="toggle-bars">Frequency Bars</label>
+        </div>
+        <div class="toggle-item">
+          <input type="checkbox" id="toggle-wave3" class="toggle-control" data-element="wave3" checked>
+          <label for="toggle-wave3">Vertical Wave3</label>
+        </div>
+      </div>
+      
+      <div class="control-group">
+        <h3>Environment</h3>
+        <div class="toggle-item">
+          <input type="checkbox" id="toggle-skybox" class="toggle-control" data-element="skybox" checked>
+          <label for="toggle-skybox">Skybox</label>
+        </div>
+        <div class="toggle-item">
+          <input type="checkbox" id="toggle-lights" class="toggle-control" data-element="lights" checked>
+          <label for="toggle-lights">Lights</label>
+        </div>
+        <div class="toggle-item">
+          <input type="checkbox" id="toggle-ground" class="toggle-control" data-element="ground" checked>
+          <label for="toggle-ground">Ground Plane</label>
+        </div>
+      </div>
+    </div>
+  </div>
+</body>
+</html> 

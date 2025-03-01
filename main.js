@@ -1,8 +1,19 @@
+// First import the path resolver
+import { resolvePath } from './scripts/utils/pathResolver.js';
+
+// Then import other modules using the resolver (but keep relative paths in the import statements)
+import { GPUAudioProcessor } from './scripts/audio/GPUAudioProcessor.js';
+import { AudioProcessor } from './scripts/audio/AudioProcessor.js';
+import { SpotifyProcessor } from './scripts/audio/SpotifyProcessor.js';
+
 /**
  * Main application controller for audio visualization
  * Handles UI interactions, audio source selection, and visualization data processing
  */
 document.addEventListener('DOMContentLoaded', () => {
+  // Make path resolver globally available
+  window.resolvePath = resolvePath;
+  
   // ====== INITIALIZATION ======
   
   /**
@@ -135,13 +146,25 @@ document.addEventListener('DOMContentLoaded', () => {
   /**
    * Handle microphone start button click
    */
-  startMicButton.addEventListener('click', () => {
-    audioProcessor.initMicrophone();
-    nowPlaying.textContent = 'Microphone';
-    currentAudioType = 'mic';
-    // Microphone doesn't need play/pause control
-    removePlayPauseControl();
-    console.log("Microphone initialized");
+  startMicButton.addEventListener('click', async () => {
+    try {
+      await audioProcessor.initMicrophone();
+      nowPlaying.textContent = 'Microphone (Visualization Only)';
+      currentAudioType = 'mic';
+      // Microphone doesn't need play/pause control
+      removePlayPauseControl();
+      console.log("Microphone initialized for visualization only");
+      
+      // Optionally alert the user that the microphone is for visualization only
+      if (!localStorage.getItem('micAlertShown')) {
+        alert('Microphone is used for visualization only. Audio output is muted to prevent feedback.');
+        localStorage.setItem('micAlertShown', 'true');
+      }
+    } catch (error) {
+      console.error('Error initializing microphone:', error);
+      nowPlaying.textContent = 'Microphone error';
+      alert('Could not access microphone: ' + error.message);
+    }
   });
 
   /**
@@ -151,13 +174,17 @@ document.addEventListener('DOMContentLoaded', () => {
     try {
       showSystemAudioInstructions();
       await audioProcessor.initMicrophone();
-      nowPlaying.textContent = 'System Audio (via Mic)';
+      nowPlaying.textContent = 'System Audio (Visualization Only)';
       currentAudioType = 'system';
       // System audio doesn't need play/pause control
       removePlayPauseControl();
-      console.log("System audio capture initialized");
+      console.log("System audio capture initialized for visualization only");
+      
+      // Make it clear that this is for visualization only
+      alert('System audio capture is enabled for visualization only. The audio from your system will not be played back through the browser to prevent feedback.');
     } catch (error) {
       console.error('Error starting system audio capture:', error);
+      nowPlaying.textContent = 'System Audio error';
       alert('Error: ' + error.message);
     }
   });
@@ -165,11 +192,15 @@ document.addEventListener('DOMContentLoaded', () => {
   /**
    * Handle file selection
    */
-  fileInput.addEventListener('change', () => {
+  fileInput.addEventListener('change', async () => {
     const file = fileInput.files[0];
     if (file) {
-      audioProcessor.stopCurrentSource();
-      audioProcessor.initFile(file);
+      // Stop previous source first
+      if (audioProcessor.isActive) {
+        audioProcessor.stop();
+      }
+      
+      await audioProcessor.initFile(file);
       nowPlaying.textContent = file.name;
       
       // Update audio state
@@ -193,29 +224,38 @@ document.addEventListener('DOMContentLoaded', () => {
   /**
    * Handle URL play button click
    */
-  playUrlButton.addEventListener('click', () => {
+  playUrlButton.addEventListener('click', async () => {
     const url = urlInput.value.trim();
     if (url) {
-      audioProcessor.stopCurrentSource();
-      audioProcessor.initFromUrl(url)
-        .then(() => {
-          urlModal.style.display = 'none';
-          nowPlaying.textContent = 'URL: ' + url.substring(0, 30) + (url.length > 30 ? '...' : '');
-          
-          // Update audio state
-          isAudioPlaying = true;
-          currentAudioType = 'url';
-          currentUrlAudio = url;
-          
-          // Add play/pause control
-          addPlayPauseControl();
-          
-          console.log("URL audio initialized:", url);
-        })
-        .catch(error => {
-          console.error('Error playing audio from URL:', error);
-          alert('Error loading audio: ' + error.message);
-        });
+      // Stop previous source first
+      if (audioProcessor.isActive) {
+        audioProcessor.stop();
+      }
+      
+      try {
+        // For URL audio, we need to create a File object from the URL
+        const response = await fetch(url);
+        const arrayBuffer = await response.arrayBuffer();
+        const blob = new Blob([arrayBuffer], { type: response.headers.get('content-type') });
+        const file = new File([blob], url.split('/').pop(), { type: blob.type });
+        
+        await audioProcessor.initFile(file);
+        urlModal.style.display = 'none';
+        nowPlaying.textContent = 'URL: ' + url.substring(0, 30) + (url.length > 30 ? '...' : '');
+        
+        // Update audio state
+        isAudioPlaying = true;
+        currentAudioType = 'url';
+        currentUrlAudio = url;
+        
+        // Add play/pause control
+        addPlayPauseControl();
+        
+        console.log("URL audio initialized:", url);
+      } catch (error) {
+        console.error('Error playing audio from URL:', error);
+        alert('Error loading audio: ' + error.message);
+      }
     }
   });
 
@@ -280,7 +320,11 @@ document.addEventListener('DOMContentLoaded', () => {
     openUrlModalButton.disabled = true;
     spotifyControls.style.display = 'none';
     systemAudioContainer.style.display = 'none';
-    audioProcessor.stopCurrentSource();
+    
+    // Stop any currently active audio
+    if (audioProcessor.isActive) {
+      audioProcessor.stop();
+    }
     
     // Show the now playing container
     document.querySelector('.now-playing-container').style.display = 'flex';
@@ -305,8 +349,8 @@ document.addEventListener('DOMContentLoaded', () => {
     systemAudioContainer.style.display = 'none';
     
     // If audio is currently playing, stop it
-    if (isAudioPlaying) {
-      audioProcessor.stopCurrentSource();
+    if (audioProcessor.isActive) {
+      audioProcessor.stop();
       isAudioPlaying = false;
       currentAudioType = null;
     }
@@ -329,9 +373,9 @@ document.addEventListener('DOMContentLoaded', () => {
     spotifyControls.style.display = 'none';
     systemAudioContainer.style.display = 'none';
     
-    // If audio is currently playing, stop it
-    if (isAudioPlaying && currentAudioType !== 'url') {
-      audioProcessor.stopCurrentSource();
+    // If audio is currently playing and not URL, stop it
+    if (audioProcessor.isActive && currentAudioType !== 'url') {
+      audioProcessor.stop();
       isAudioPlaying = false;
     }
     
@@ -372,8 +416,8 @@ document.addEventListener('DOMContentLoaded', () => {
     openUrlModalButton.disabled = true;
     
     // If audio is currently playing, stop it
-    if (isAudioPlaying) {
-      audioProcessor.stopCurrentSource();
+    if (audioProcessor.isActive) {
+      audioProcessor.stop();
       isAudioPlaying = false;
       currentAudioType = null;
     }
@@ -395,8 +439,8 @@ document.addEventListener('DOMContentLoaded', () => {
     openUrlModalButton.disabled = true;
     
     // If audio is currently playing, stop it
-    if (isAudioPlaying) {
-      audioProcessor.stopCurrentSource();
+    if (audioProcessor.isActive) {
+      audioProcessor.stop();
       isAudioPlaying = false;
       currentAudioType = null;
     }
@@ -470,21 +514,16 @@ document.addEventListener('DOMContentLoaded', () => {
   function initializeSpotifyProcessor() {
     // Only create the processor if it doesn't exist
     if (!spotifyProcessor) {
-      // Create the processor directly
-      spotifyProcessor = new SpotifyProcessor(audioProcessor);
+      // Get the singleton instance
+      spotifyProcessor = SpotifyProcessor.getInstance();
       
       // Get references to DOM elements
       const spotifyLogin = document.getElementById('spotify-login');
       const spotifyPlayerContainer = document.getElementById('spotify-player-container');
       
       // Check if elements exist before trying to access them
-      if (!spotifyLogin) {
-        console.error('Element with ID "spotify-login" not found in the DOM');
-        return;
-      }
-      
-      if (!spotifyPlayerContainer) {
-        console.error('Element with ID "spotify-player-container" not found in the DOM');
+      if (!spotifyLogin || !spotifyPlayerContainer) {
+        console.error('Spotify UI elements not found in the DOM');
         return;
       }
       
@@ -492,6 +531,9 @@ document.addEventListener('DOMContentLoaded', () => {
       if (spotifyProcessor.checkAuth()) {
         spotifyLogin.style.display = 'none';
         spotifyPlayerContainer.style.display = 'block';
+        
+        // Connect to Spotify (initializes audio context)
+        spotifyProcessor.connectToSpotify();
       } else {
         spotifyLogin.style.display = 'block';
         spotifyPlayerContainer.style.display = 'none';
@@ -652,10 +694,10 @@ document.addEventListener('DOMContentLoaded', () => {
     console.log("Toggle play/pause clicked, current state:", isAudioPlaying);
     
     if (isAudioPlaying) {
-      audioProcessor.pauseCurrentSource();
+      audioProcessor.pause();
       isAudioPlaying = false;
     } else {
-      audioProcessor.resumeCurrentSource();
+      audioProcessor.play();
       isAudioPlaying = true;
     }
     
@@ -697,7 +739,11 @@ document.addEventListener('DOMContentLoaded', () => {
    * Handle volume slider changes
    */
   volumeSlider.addEventListener('input', () => {
-    const volume = parseFloat(volumeSlider.value);
+    // Get volume from slider (0-100) and normalize to 0-1
+    const rawVolume = parseFloat(volumeSlider.value);
+    const volume = rawVolume / 100;
+    
+    // Set volume on audio processor (which sets volume on its internal gain node)
     audioProcessor.setVolume(volume);
     
     // Update volume icon based on level
@@ -710,7 +756,7 @@ document.addEventListener('DOMContentLoaded', () => {
       volumeIcon.textContent = '🔊';
     }
     
-    console.log("Volume changed to:", volume);
+    console.log("Volume changed to:", volume, "(raw slider value:", rawVolume, ")");
   });
 
   /**
@@ -726,7 +772,9 @@ document.addEventListener('DOMContentLoaded', () => {
     console.log(`Switching audio source to: ${sourceType}`);
     
     // Stop the current source first
-    audioProcessor.stopCurrentSource();
+    if (audioProcessor.isActive) {
+      audioProcessor.stop();
+    }
     
     // Reset audio state
     isAudioPlaying = false;
@@ -741,24 +789,18 @@ document.addEventListener('DOMContentLoaded', () => {
     switch (sourceType) {
       case 'mic':
         updateUIForMicrophoneMode();
-        // Explicitly force reconnection with output disabled
-        audioProcessor.reconnectAnalyzer(false);
         break;
       case 'file':
         updateUIForFileMode();
-        audioProcessor.reconnectAnalyzer(true);
         break;
       case 'url':
         updateUIForUrlMode();
-        audioProcessor.reconnectAnalyzer(true);
         break;
       case 'spotify':
         updateUIForSpotifyMode();
-        audioProcessor.reconnectAnalyzer(false);
         break;
       case 'system':
         updateUIForSystemAudioMode();
-        audioProcessor.reconnectAnalyzer(true);
         break;
       case 'demo':
         // Demo is a special case, we actually start playback immediately
@@ -811,28 +853,33 @@ document.addEventListener('DOMContentLoaded', () => {
   /**
    * Play the demo track
    */
-  function playDemoTrack() {
+  async function playDemoTrack() {
     // Show that we're loading
     nowPlaying.textContent = 'Loading Demo Track...';
     
-    audioProcessor.initFromUrl(DEMO_TRACK_URL)
-      .then(() => {
-        nowPlaying.textContent = 'Demo Track';
-        
-        // Update audio state
-        isAudioPlaying = true;
-        currentAudioType = 'demo';
-        
-        // Add play/pause control
-        addPlayPauseControl();
-        
-        console.log("Demo track initialized");
-      })
-      .catch(error => {
-        console.error('Error playing demo track:', error);
-        alert('Error playing demo track: ' + error.message);
-        nowPlaying.textContent = 'Error: Demo Track Failed';
-      });
+    try {
+      // For demo track, fetch the file and create a File object
+      const response = await fetch(DEMO_TRACK_URL);
+      const arrayBuffer = await response.arrayBuffer();
+      const blob = new Blob([arrayBuffer], { type: response.headers.get('content-type') });
+      const file = new File([blob], 'demo-track.mp3', { type: 'audio/mpeg' });
+      
+      await audioProcessor.initFile(file);
+      nowPlaying.textContent = 'Demo Track';
+      
+      // Update audio state
+      isAudioPlaying = true;
+      currentAudioType = 'demo';
+      
+      // Add play/pause control
+      addPlayPauseControl();
+      
+      console.log("Demo track initialized");
+    } catch (error) {
+      console.error('Error playing demo track:', error);
+      alert('Error playing demo track: ' + error.message);
+      nowPlaying.textContent = 'Error: Demo Track Failed';
+    }
   }
 
   /**
@@ -846,7 +893,9 @@ document.addEventListener('DOMContentLoaded', () => {
       const savedType = currentAudioType;
       
       // Stop everything
-      audioProcessor.stopCurrentSource();
+      if (audioProcessor.isActive) {
+        audioProcessor.stop();
+      }
       
       // Wait a tiny bit for the audio context to reset
       setTimeout(() => {
