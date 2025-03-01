@@ -11,7 +11,7 @@ Reverb XR is an immersive audio visualization experience built using A-Frame and
 - `index.html`: Main entry point with audio input options (microphone, file, or Spotify) and an iframe to load A-Frame scenes.
 - `stages/home.html`: Main menu scene with visualizer selection options.
 - `stages/testing/`: Development and experimental visualization scenes.
-- `stages/old/`: Original prototype visualizations (for reference).
+- `stages/old/`: Original prototype visualizations (for reference)..
 
 ### JavaScript Files
 
