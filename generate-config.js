@@ -1,4 +1,4 @@
-const fs = require('fs');
+import fs from 'fs';
 
 // Create a config object with your environment variables
 const config = {
