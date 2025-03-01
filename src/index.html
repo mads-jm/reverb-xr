@@ -162,5 +162,35 @@
       </div>
     </div>
   </div>
+
+  <!-- Add script for dropdown menu toggle functionality -->
+  <script>
+    // Panel toggle functionality
+    document.addEventListener('DOMContentLoaded', function() {
+      // Main control panel toggle
+      const panelToggle = document.getElementById('panel-toggle');
+      const panelContent = document.getElementById('panel-content');
+      const toggleIcon = document.querySelector('.toggle-icon');
+      
+      if (panelToggle && panelContent && toggleIcon) {
+        panelToggle.addEventListener('click', function() {
+          panelContent.classList.toggle('collapsed');
+          toggleIcon.textContent = panelContent.classList.contains('collapsed') ? '▲' : '▼';
+        });
+      }
+
+      // Visualization panel toggle
+      const vizToggle = document.getElementById('viz-toggle');
+      const vizContent = document.getElementById('viz-content');
+      const vizToggleIcon = vizToggle ? vizToggle.querySelector('.toggle-icon') : null;
+      
+      if (vizToggle && vizContent && vizToggleIcon) {
+        vizToggle.addEventListener('click', function() {
+          vizContent.classList.toggle('collapsed');
+          vizToggleIcon.textContent = vizContent.classList.contains('collapsed') ? '▲' : '▼';
+        });
+      }
+    });
+  </script>
 </body>
 </html> 
