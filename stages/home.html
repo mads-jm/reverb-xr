@@ -6,13 +6,18 @@
     <script src="https://unpkg.com/aframe-extras@6.1.0/dist/aframe-extras.min.js"></script>
     <!-- Regular scripts - these don't use import/export -->
     <script src="/scripts/camera.js"></script>
-    <script src="/scripts/visualizers/visualizer.js"></script>
-    <script src="/scripts/visualizers/wave3-script.js"></script>
-    <!-- Import GPUAudioProcessor as a module -->
     <script type="module">
+        // First ensure both visualizer scripts are fully loaded
+        import '/scripts/visualizers/visualizer.js';
+        import '/scripts/visualizers/wave3-script.js';
+        
+        // Then import the audio processors
         import { GPUAudioProcessor } from '/scripts/audio/GPUAudioProcessor.js';
         import { AudioProcessor } from '/scripts/audio/AudioProcessor.js';
         
+        // Track when visualizers are loaded
+        window.visualizersLoaded = true;
+        console.log('Visualizer modules loaded');
         
         // Initialize the GPU audio processor when the page loads
         window.addEventListener('DOMContentLoaded', async () => {
@@ -108,6 +113,37 @@
                 timeDomainData: type === 'frequencyData' ? 
                     window.gpuAudioProcessor.getTimeDomainDataForAPI() : data
             });
+        }
+
+        // Add this to better handle initialization
+        document.addEventListener('DOMContentLoaded', () => {
+            // Check if A-Frame is loaded
+            if (AFRAME.scenes.length) {
+                initializeVisualizers();
+            } else {
+                // Wait for A-Frame to initialize
+                document.querySelector('a-scene').addEventListener('loaded', initializeVisualizers);
+            }
+        });
+        
+        function initializeVisualizers() {
+            console.log('Initializing visualizers');
+            
+            // Ensure the wave3 component is properly initialized
+            const wave3Entity = document.getElementById('wave3-visualizer');
+            if (wave3Entity) {
+                // Store the component data
+                const componentData = wave3Entity.getAttribute('wave3-visualizer');
+                
+                // Remove the component
+                wave3Entity.removeAttribute('wave3-visualizer');
+                
+                // Add it back after a short delay
+                setTimeout(() => {
+                    wave3Entity.setAttribute('wave3-visualizer', componentData);
+                    console.log('Wave3 visualizer re-initialized');
+                }, 500);
+            }
         }
     </script>
     <script>
@@ -506,25 +542,6 @@
                 colorEnd: #3232ff;
             ">
         </a-entity>
-        <script>
-            document.querySelector('a-scene').addEventListener('loaded', function () {
-                console.log('A-Frame scene fully loaded');
-                
-                // Force refresh the wave3 visualizer
-                const wave3Entity = document.getElementById('wave3-visualizer');
-                if (wave3Entity) {
-                    // Remove and re-add the component to force initialization
-                    const componentData = wave3Entity.getAttribute('wave3-visualizer');
-                    wave3Entity.removeAttribute('wave3-visualizer');
-                    
-                    // Wait a frame to ensure removal is processed
-                    setTimeout(() => {
-                        wave3Entity.setAttribute('wave3-visualizer', componentData);
-                        console.log('Wave3 visualizer component reinitialized');
-                    }, 100);
-                }
-            });
-        </script>
         
         <!-- Circular waveform visualizer -->
         <a-entity 
