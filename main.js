@@ -1,3 +1,6 @@
+import { GPUAudioProcessor } from './audio/GPUAudioProcessor.js';
+import { AudioProcessor } from './audio/AudioProcessor.js';
+
 /**
  * Main application controller for audio visualization
  * Handles UI interactions, audio source selection, and visualization data processing

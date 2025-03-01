@@ -1,9 +1,8 @@
-
 /**
  * AudioProcessor - Basic audio analysis class 
  * Handles audio input sources and provides frequency/time domain data
  */
-class AudioProcessor {
+class StatelessAudioProcessor {
   /**
    * Create a new AudioProcessor
    */
