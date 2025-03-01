@@ -20,6 +20,23 @@
   <!-- Load config first -->
   <script src="config.js"></script>
   
+  <!-- Load the path resolver -->
+  <script type="module">
+    import { resolvePath } from './scripts/utils/pathResolver.js';
+    window.resolvePath = resolvePath;
+    
+    // Set up dynamic script loading after path resolver is available
+    function loadDynamicScripts() {
+      const iframe = document.getElementById('aframe-iframe');
+      if (iframe) {
+        iframe.src = window.resolvePath('stages/home.html');
+      }
+    }
+    
+    // Run after the DOM is loaded
+    document.addEventListener('DOMContentLoaded', loadDynamicScripts);
+  </script>
+  
   <script src="https://cdn.jsdelivr.net/npm/three@0.137.0/build/three.min.js"></script>
   <!-- load modules in correct dependency order -->
   <script type="module" src="scripts/audio/InitializedState.js?v=1"></script>
@@ -30,7 +47,8 @@
   <script src="https://sdk.scdn.co/spotify-player.js"></script>
 </head>
 <body>
-  <iframe id="aframe-iframe" src="stages/home.html" allow="autoplay"></iframe>
+  <!-- The iframe src will be set dynamically using the path resolver -->
+  <iframe id="aframe-iframe" src="about:blank" allow="autoplay"></iframe>
   
   <div class="control-panel">
     <div class="panel-header" id="panel-toggle">

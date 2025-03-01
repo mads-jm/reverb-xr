@@ -1,3 +1,7 @@
+// First import the path resolver
+import { resolvePath } from './scripts/utils/pathResolver.js';
+
+// Then import other modules using the resolver (but keep relative paths in the import statements)
 import { GPUAudioProcessor } from './scripts/audio/GPUAudioProcessor.js';
 import { AudioProcessor } from './scripts/audio/AudioProcessor.js';
 import { SpotifyProcessor } from './scripts/audio/SpotifyProcessor.js';
@@ -7,6 +11,9 @@ import { SpotifyProcessor } from './scripts/audio/SpotifyProcessor.js';
  * Handles UI interactions, audio source selection, and visualization data processing
  */
 document.addEventListener('DOMContentLoaded', () => {
+  // Make path resolver globally available
+  window.resolvePath = resolvePath;
+  
   // ====== INITIALIZATION ======
   
   /**
