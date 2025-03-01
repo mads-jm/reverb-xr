@@ -6,18 +6,20 @@
     <script src="https://unpkg.com/aframe-extras@6.1.0/dist/aframe-extras.min.js"></script>
     <!-- Regular scripts - these don't use import/export -->
     <script src="/scripts/camera.js"></script>
+
+    <!-- CHANGE: Load visualizer scripts with regular script tags instead of ES module imports -->
+    <script src="/scripts/visualizers/visualizer.js"></script>
+    <script src="/scripts/visualizers/wave3-script.js"></script>
+
+    <!-- Separate module script for the audio processors -->
     <script type="module">
-        // First ensure both visualizer scripts are fully loaded
-        import '/scripts/visualizers/visualizer.js';
-        import '/scripts/visualizers/wave3-script.js';
-        
-        // Then import the audio processors
+        // Import just the audio processors as modules
         import { GPUAudioProcessor } from '/scripts/audio/GPUAudioProcessor.js';
         import { AudioProcessor } from '/scripts/audio/AudioProcessor.js';
         
         // Track when visualizers are loaded
         window.visualizersLoaded = true;
-        console.log('Visualizer modules loaded');
+        console.log('Visualizer scripts loaded');
         
         // Initialize the GPU audio processor when the page loads
         window.addEventListener('DOMContentLoaded', async () => {
