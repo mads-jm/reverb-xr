@@ -1,5 +1,29 @@
 {
+  "name": "reverb",
+  "version": "0.1.1",
+  "description": "3D/WebXR Audio visualization",
+  "type": "module",
+  "main": "index.html",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mads-jm/reverb-xr.git"
+  },
+  "scripts": {
+    
+  },
+  "devDependencies": {
+  },
+  "directories": {
+    "test": "test"
+  },
   "dependencies": {
     "dotenv": "^16.4.7"
-  }
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/BC-CS410-S24/software-engineering-project-team-simm/issues"
+  },
+  "homepage": "https://github.com/BC-CS410-S24/software-engineering-project-team-simm#readme"
 }

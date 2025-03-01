@@ -13,7 +13,7 @@ Reverb XR is an immersive audio visualization experience built using A-Frame and
 - `stages/testing/`: Development and experimental visualization scenes.
 - `stages/old/`: Original prototype visualizations (for reference).
 
-### JavaScript
+### JavaScript Files
 
 - `scripts/GPUAudioProcessor.js`: Handles audio processing using Web Audio API with GPU acceleration.
 - `scripts/SpotifyProcessor.js`: Handles Spotify integration and audio streaming.

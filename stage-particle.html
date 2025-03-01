@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Particle Stage</title>
+    <meta name="description" content="Particle Stage" />
+    <script src="https://aframe.io/releases/1.2.0/aframe.min.js"></script>
+    <script src="./scripts/stage-particle-script.js"></script>
+    <script src="./scripts/components.js"></script>
+    <script src="scripts/aframe-menu-script.js"></script>
+  </head>
+  <body>
+    <a-scene 
+      id="scene"
+      keyboard-shortcuts="enterVR: false"
+      renderer="antialias: true;
+                   colorManagement: true;
+                   sortObjects: true;
+                   physicallyCorrectLights: true;
+                   maxCanvasWidth: 1920;
+                   maxCanvasHeight: 1920;"
+      >
+      <a-entity custom-camera></a-entity>
+      <a-entity
+        id="particle-disk"
+        position="0 1.25 -10"
+        rotation="45 90 180"
+      ></a-entity>
+      <a-sphere id="central-sphere" radius="2" position="0 1.25 -10"></a-sphere>
+    </a-scene>
+  </body>
+</html>

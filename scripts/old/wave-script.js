@@ -1,43 +1,48 @@
-document.addEventListener('DOMContentLoaded', () => {
-  const visualizerPlane = document.getElementById('visualizer-plane');
-  const visualizerCanvas = document.getElementById('visualizer-canvas');
-  const visualizerCtx = visualizerCanvas.getContext('2d');
+document.addEventListener("DOMContentLoaded", () => {
+  const visualizerPlane = document.getElementById("visualizer-plane");
+  const visualizerCanvas = document.getElementById("visualizer-canvas");
+  const visualizerCtx = visualizerCanvas.getContext("2d");
 
-  console.log('Canvas and context initialized');
-  console.log('Visualizer Canvas:', visualizerCanvas);
-  console.log('Visualizer Context:', visualizerCtx);
+  console.log("Canvas and context initialized");
+  console.log("Visualizer Canvas:", visualizerCanvas);
+  console.log("Visualizer Context:", visualizerCtx);
 
-  visualizerPlane.setAttribute('live-canvas', 'src: #visualizer-canvas');
+  visualizerPlane.setAttribute("live-canvas", "src: #visualizer-canvas");
 
   function waitForComponentInitialization(callback) {
-    if (visualizerPlane.components['live-canvas']) {
+    if (visualizerPlane.components["live-canvas"]) {
       callback();
     } else {
       setTimeout(() => waitForComponentInitialization(callback), 100);
     }
   }
 
-  window.addEventListener('message', (event) => {
-    if (event.data.type === 'timeDomainData') {
-      console.log('Time Domain data received:', event.data.data);
+  window.addEventListener("message", (event) => {
+    if (event.data.type === "timeDomainData") {
+      console.log("Time Domain data received:", event.data.data);
       updateTimeDomainData(event.data.data);
     }
   });
 
   function updateTimeDomainData(timeDomainData) {
-    console.log('Updating Time Domain data');
-    
-    visualizerCtx.clearRect(0, 0, visualizerCanvas.width, visualizerCanvas.height);
+    console.log("Updating Time Domain data");
+
+    visualizerCtx.clearRect(
+      0,
+      0,
+      visualizerCanvas.width,
+      visualizerCanvas.height
+    );
 
     visualizerCtx.lineWidth = 2;
     visualizerCtx.beginPath();
 
-    const sliceWidth = visualizerCanvas.width * 1.0 / timeDomainData.length;
+    const sliceWidth = (visualizerCanvas.width * 1.0) / timeDomainData.length;
     let x = 0;
 
     for (let i = 0; i < timeDomainData.length; i++) {
       const v = timeDomainData[i] / 128.0;
-      const y = v * visualizerCanvas.height / 2;
+      const y = (v * visualizerCanvas.height) / 2;
 
       const hue = v;
       const [r, g, b] = hsvToRgb(hue);
@@ -55,15 +60,16 @@ document.addEventListener('DOMContentLoaded', () => {
     visualizerCtx.lineTo(visualizerCanvas.width, visualizerCanvas.height / 2);
     visualizerCtx.stroke();
 
-    console.log('Canvas updated with time data');
+    console.log("Canvas updated with time data");
     const texture = new THREE.CanvasTexture(visualizerCanvas);
     texture.needsUpdate = true;
-    document.querySelector('#visualizer-plane').getObject3D('mesh').material.map = texture;
+    document
+      .querySelector("#visualizer-plane")
+      .getObject3D("mesh").material.map = texture;
     waitForComponentInitialization(() => {
-      visualizerPlane.components['live-canvas'].updateTexture();
-      mirroredVisualizerPlane.components['live-canvas'].updateTexture();
+      visualizerPlane.components["live-canvas"].updateTexture();
+      mirroredVisualizerPlane.components["live-canvas"].updateTexture();
     });
-
   }
 
   function hsvToRgb(h) {
@@ -75,22 +81,22 @@ document.addEventListener('DOMContentLoaded', () => {
 
     switch (i % 6) {
       case 0:
-        r = 1, g = t, b = 0;
+        (r = 1), (g = t), (b = 0);
         break;
       case 1:
-        r = q, g = 1, b = 0;
+        (r = q), (g = 1), (b = 0);
         break;
       case 2:
-        r = 0, g = 1, b = t;
+        (r = 0), (g = 1), (b = t);
         break;
       case 3:
-        r = 0, g = q, b = 1;
+        (r = 0), (g = q), (b = 1);
         break;
       case 4:
-        r = t, g = 0, b = 1;
+        (r = t), (g = 0), (b = 1);
         break;
       case 5:
-        r = 1, g = 0, b = q;
+        (r = 1), (g = 0), (b = q);
         break;
     }
 
