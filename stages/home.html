@@ -12,8 +12,6 @@
     <script type="module">
         import { GPUAudioProcessor } from '/scripts/audio/GPUAudioProcessor.js';
         import { AudioProcessor } from '/scripts/audio/AudioProcessor.js';
-        // Import the GPU boxwave component
-        import '/scripts/visualizers/gpu-boxwave.js';
         
         // Initialize the GPU audio processor when the page loads
         window.addEventListener('DOMContentLoaded', async () => {
@@ -379,7 +377,6 @@
                 setTimeout(() => {
                     // Store references to elements
                     this.elements = {
-                        boxwaves: Array.from(document.querySelectorAll('[gpu-boxwave]')),
                         wave3: document.querySelector('[wave3-visualizer]'),
                         waveform: document.querySelector('[circular-waveform]'),
                         bars: document.querySelector('[frequency-bars]'),
@@ -390,7 +387,6 @@
                     
                     // Log found elements for debugging
                     console.log('Toggle handler initialized with elements:', {
-                        boxwaves: this.elements.boxwaves.length,
                         wave3: !!this.elements.wave3,
                         waveform: !!this.elements.waveform,
                         bars: !!this.elements.bars,
@@ -430,14 +426,6 @@
                         break;
                     case 'bars':
                         this.toggleElement(this.elements.bars, visible);
-                        break;
-                    case 'boxwave':
-                        // Toggle all boxwave entities
-                        if (this.elements.boxwaves) {
-                            this.elements.boxwaves.forEach(boxwave => 
-                                this.toggleElement(boxwave, visible)
-                            );
-                        }
                         break;
                     case 'wave3':
                         this.toggleElement(this.elements.wave3, visible);
@@ -514,20 +502,6 @@
                 colorStart: #ff3232;
                 colorMiddle: #32ffff;
                 colorEnd: #3232ff;
-            ">
-        </a-entity>
-        
-        <!-- GPU BoxWave visualizers -->
-        <a-entity 
-            position="-6 1.6 -4" 
-            gpu-boxwave="
-                analyserNode: #audio-processor;
-                width: 8;
-                height: 3;
-                depth: 0.1;
-                mirror: true;
-                startColor: #ff0000;
-                endColor: #0000ff;
             ">
         </a-entity>
         
