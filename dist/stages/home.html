@@ -10,7 +10,8 @@
         window.isProduction = window.location.hostname !== 'localhost';
         
         // Adjust script base path based on environment
-        const scriptBase = window.isProduction ? '/scripts/' : '../scripts/';
+        // Updated to use a more reliable path for production
+        const scriptBase = window.isProduction ? '/src/scripts/' : '../scripts/';
         
         // Log environment information
         console.log(`Running in ${window.isProduction ? 'production' : 'development'} mode`);
@@ -19,7 +20,13 @@
         // Create script element with appropriate path
         const wave3Script = document.createElement('script');
         wave3Script.src = scriptBase + 'visualizers/wave3-script.js';
-        wave3Script.onerror = (e) => console.error('Failed to load wave3-script.js', e);
+        wave3Script.onerror = (e) => {
+            console.error('Failed to load wave3-script.js', e);
+            // Fallback to alternative path if the first attempt fails
+            const fallbackPath = '/scripts/visualizers/wave3-script.js';
+            console.log(`Attempting fallback path: ${fallbackPath}`);
+            wave3Script.src = fallbackPath;
+        };
         document.head.appendChild(wave3Script);
     </script>
     <!-- Camera script will be loaded dynamically to ensure proper path resolution -->
@@ -113,61 +120,267 @@
         
         // Build paths based on environment
         const pathPrefix = window.isProduction ? '' : '../';
-        const modulePath = window.isProduction ? '/scripts/' : '../scripts/';
+        const modulePath = window.isProduction ? '/src/scripts/' : '../scripts/';
         
         try {
-            // Use environment-appropriate paths
-            const modulesLoaded = Promise.all([
+            console.log('Starting dynamic imports');
+            
+            // Use Promise.all to ensure all modules are loaded before proceeding
+            Promise.all([
                 import(`${modulePath}utils/pathResolver.js`).then(module => {
                     resolvePath = module.resolvePath;
                     console.log('PathResolver loaded successfully');
+                    return module;
                 }).catch(err => console.error('Failed to load pathResolver:', err)),
                 
                 import(`${modulePath}audio/GPUAudioProcessor.js`).then(module => {
                     GPUAudioProcessor = module.GPUAudioProcessor;
                     console.log('GPUAudioProcessor loaded successfully');
+                    return module;
                 }).catch(err => console.error('Failed to load GPUAudioProcessor:', err)),
                 
                 import(`${modulePath}audio/AudioProcessor.js`).then(module => {
                     AudioProcessor = module.AudioProcessor;
                     console.log('AudioProcessor loaded successfully');
+                    return module;
                 }).catch(err => console.error('Failed to load AudioProcessor:', err))
-            ]);
+            ]).then(modules => {
+                console.log('All modules loaded successfully');
+                
+                // Now initialize the GPU audio processor now that it's defined
+                initializeAudioProcessor();
+                
+                // Set up communication with parent window
+                window.addEventListener('message', handleMessage);
+                
+                // Signal to parent that we're ready
+                window.parent.postMessage({ type: 'visualizer-ready' }, '*');
+            }).catch(error => {
+                console.error('Error loading modules:', error);
+                
+                // Attempt to fallback to traditional script loading
+                console.log('Attempting fallback script loading method...');
+                loadFallbackScripts();
+            });
             
             console.log('Dynamic imports initiated');
-            
-            // Ensure we don't proceed until all modules are loaded
-            modulesLoaded.then(() => {
-                console.log('All modules loaded successfully');
-            });
         } catch (error) {
             console.error('Error setting up dynamic imports:', error);
+            
+            // Attempt fallback loading method
+            loadFallbackScripts();
+        }
+        
+        // Fallback script loading method
+        function loadFallbackScripts() {
+            const scriptUrls = [
+                '/src/scripts/utils/pathResolver.js',
+                '/src/scripts/audio/AudioProcessor.js',
+                '/src/scripts/audio/GPUAudioProcessor.js'
+            ];
+            
+            Promise.all(scriptUrls.map(url => {
+                return new Promise((resolve, reject) => {
+                    const script = document.createElement('script');
+                    script.src = url;
+                    script.type = 'text/javascript';
+                    script.onload = resolve;
+                    script.onerror = (e) => {
+                        console.error(`Failed to load ${url}`, e);
+                        // Try another path format
+                        const altUrl = url.replace('/src/scripts/', '/scripts/');
+                        console.log(`Trying alternative URL: ${altUrl}`);
+                        script.src = altUrl;
+                        script.onerror = reject;
+                    };
+                    document.head.appendChild(script);
+                });
+            })).then(() => {
+                console.log('Fallback scripts loaded');
+                // Try to initialize with mock data after a delay to ensure scripts are processed
+                setTimeout(() => {
+                    initializeAudioProcessor();
+                }, 1000);
+            }).catch(err => {
+                console.error('Error loading fallback scripts:', err);
+            });
+        }
+        
+        // Initialize the audio processor after modules are loaded
+        function initializeAudioProcessor() {
+            if (typeof GPUAudioProcessor === 'undefined') {
+                console.error('GPUAudioProcessor is still not defined. Cannot initialize.');
+                
+                // Create a basic mock if needed
+                window.gpuAudioProcessor = createBasicMockProcessor();
+                console.log('Created basic mock processor');
+                return;
+            }
+            
+            try {
+                // Create a global reference to the processor
+                window.gpuAudioProcessor = new GPUAudioProcessor({
+                    fftSize: 2048,
+                    smoothingTimeConstant: 0.8,
+                    debugMode: true
+                });
+                
+                // Check if initMockData exists before calling it
+                if (typeof window.gpuAudioProcessor.initMockData === 'function') {
+                    window.gpuAudioProcessor.initMockData().then(() => {
+                        console.log('GPUAudioProcessor initialized with mock data');
+                    }).catch(err => {
+                        console.error('Error initializing mock data:', err);
+                        // Create fallback mock data
+                        createMockData();
+                    });
+                } else {
+                    console.warn('initMockData method not found on GPUAudioProcessor, creating mock data manually');
+                    createMockData();
+                }
+                
+                console.log('GPUAudioProcessor initialized');
+            } catch (error) {
+                console.error('Error initializing GPUAudioProcessor:', error);
+                
+                // Create a basic mock if needed
+                window.gpuAudioProcessor = createBasicMockProcessor();
+            }
+        }
+        
+        // Create mock frequency and time domain data for visualization
+        function createMockData() {
+            if (!window.gpuAudioProcessor) return;
+            
+            console.log('Creating manual mock data');
+            
+            // Create flat data (silent)
+            const frequencyDataSize = 1024;
+            const timeDomainDataSize = 1024;
+            
+            const frequencyData = new Float32Array(frequencyDataSize);
+            const timeDomainData = new Float32Array(timeDomainDataSize);
+            
+            // Set all values to silence to prevent static noise
+            // For frequency data, -100 dB (minimum)
+            frequencyData.fill(-100.0);
+            
+            // For time domain data, 0 (center line, no amplitude)
+            timeDomainData.fill(0.0);
+            
+            // Attach these to the processor
+            if (!window.gpuAudioProcessor.getFrequencyData) {
+                window.gpuAudioProcessor.getFrequencyData = () => frequencyData;
+            } else {
+                const actualFrequencyData = window.gpuAudioProcessor.getFrequencyData();
+                if (actualFrequencyData && actualFrequencyData.fill) {
+                    actualFrequencyData.fill(-100.0);
+                }
+            }
+            
+            if (!window.gpuAudioProcessor.getTimeDomainData) {
+                window.gpuAudioProcessor.getTimeDomainData = () => timeDomainData;
+            } else {
+                const actualTimeDomainData = window.gpuAudioProcessor.getTimeDomainData();
+                if (actualTimeDomainData && actualTimeDomainData.fill) {
+                    actualTimeDomainData.fill(0.0);
+                }
+            }
+            
+            // Add a method to get time domain data for API compatibility
+            if (!window.gpuAudioProcessor.getTimeDomainDataForAPI) {
+                window.gpuAudioProcessor.getTimeDomainDataForAPI = () => {
+                    const apiData = new Uint8Array(timeDomainDataSize);
+                    apiData.fill(128); // 128 is the center line (silent)
+                    return apiData;
+                };
+            }
+            
+            // Add an updateTextureData method if it doesn't exist
+            if (!window.gpuAudioProcessor.updateTextureData) {
+                window.gpuAudioProcessor.updateTextureData = () => {
+                    console.log('Mock updateTextureData called');
+                };
+            }
+            
+            console.log('Manual mock data created successfully');
+        }
+        
+        // Create a basic mock processor when real one fails
+        function createBasicMockProcessor() {
+            console.log('Creating basic mock processor');
+            
+            const frequencyDataSize = 1024;
+            const timeDomainDataSize = 1024;
+            
+            const frequencyData = new Float32Array(frequencyDataSize);
+            const timeDomainData = new Float32Array(timeDomainDataSize);
+            
+            // Set all values to silence
+            frequencyData.fill(-100.0);
+            timeDomainData.fill(0.0);
+            
+            return {
+                getFrequencyData: () => frequencyData,
+                getTimeDomainData: () => timeDomainData,
+                getTimeDomainDataForAPI: () => {
+                    const apiData = new Uint8Array(timeDomainDataSize);
+                    apiData.fill(128); // 128 is the center line (silent)
+                    return apiData;
+                },
+                updateTextureData: () => {
+                    // console.log('Mock updateTextureData called');
+                },
+                initMockData: () => Promise.resolve(),
+                stop: () => console.log('Mock stop called')
+            };
         }
         
         // Track when visualizers are loaded
         window.visualizersLoaded = true;
         console.log('Visualizer scripts loaded');
         
-        // Initialize the GPU audio processor when the page loads
-        window.addEventListener('DOMContentLoaded', async () => {
-            // Create a global reference to the processor
-            window.gpuAudioProcessor = new GPUAudioProcessor({
-                fftSize: 2048,
-                smoothingTimeConstant: 0.8,
-                debugMode: true
-            });
+        // Add toggleElement function globally
+        function toggleElement(elementType, visible) {
+            console.log(`Toggle ${elementType}: ${visible}`);
             
-            // Initialize the audio processor with mock data for testing
-            await window.gpuAudioProcessor.initMockData();
-            
-            console.log('GPUAudioProcessor initialized');
-            
-            // Set up communication with parent window
-            window.addEventListener('message', handleMessage);
-            
-            // Signal to parent that we're ready
-            window.parent.postMessage({ type: 'visualizer-ready' }, '*');
-        });
+            try {
+                const elements = {
+                    wave3: document.querySelector('[wave3-visualizer]'),
+                    waveform: document.querySelector('[circular-waveform]'),
+                    bars: document.querySelector('[frequency-bars]'),
+                    skybox: document.querySelector('a-sky'),
+                    lights: Array.from(document.querySelectorAll('a-light')),
+                    ground: document.querySelector('#ground-plane')
+                };
+                
+                const element = elements[elementType];
+                
+                if (!element) {
+                    console.warn(`Element ${elementType} not found`);
+                    return;
+                }
+                
+                if (Array.isArray(element)) {
+                    // Handle arrays of elements (e.g. lights)
+                    element.forEach(el => {
+                        if (el) {
+                            el.setAttribute('visible', visible);
+                        }
+                    });
+                } else {
+                    // Handle single elements
+                    element.setAttribute('visible', visible);
+                }
+                
+                console.log(`Set visibility of ${elementType} to ${visible}`);
+            } catch (error) {
+                console.error(`Error toggling ${elementType}:`, error);
+            }
+        }
+        
+        // Make toggleElement globally available
+        window.toggleElement = toggleElement;
         
         // Handle messages from parent window
         function handleMessage(event) {
@@ -190,15 +403,26 @@
                     // Parent is telling us to initialize audio
                     if (window.gpuAudioProcessor) {
                         // Stop any current processing
-                        window.gpuAudioProcessor.stop();
+                        if (typeof window.gpuAudioProcessor.stop === 'function') {
+                            window.gpuAudioProcessor.stop();
+                        }
                         
                         // Tell the processor entity to use the GPU processor
                         const processorEntity = document.getElementById('audio-processor');
-                        processorEntity.gpuAudioProcessor = window.gpuAudioProcessor;
-                        
-                        // Emit event that the processor is ready
-                        processorEntity.emit('audio-processor-ready');
+                        if (processorEntity) {
+                            processorEntity.gpuAudioProcessor = window.gpuAudioProcessor;
+                            
+                            // Emit event that the processor is ready
+                            processorEntity.emit('audio-processor-ready');
+                        }
                     }
+                    break;
+                
+                case 'toggle':
+                    // Handle toggle message via the toggle handler
+                    const elementType = message.element;
+                    const visible = message.visible;
+                    toggleElement(elementType, visible);
                     break;
             }
         }
@@ -207,41 +431,85 @@
         function updateProcessorData(type, data) {
             if (!window.gpuAudioProcessor) return;
             
-            // Map the data to the appropriate texture in the GPU processor
-            if (type === 'frequencyData') {
-                // Convert Uint8Array to Float32Array for GPU processing
-                const floatData = new Float32Array(data.length);
-                for (let i = 0; i < data.length; i++) {
-                    // Convert from 0-255 to -100-0 dB range
-                    floatData[i] = (data[i] / 255.0 * 100.0) - 100.0;
+            try {
+                // Map the data to the appropriate texture in the GPU processor
+                if (type === 'frequencyData') {
+                    // Make sure data exists and has the correct type
+                    if (!data || !data.length) {
+                        console.warn('Invalid frequency data received');
+                        return;
+                    }
+                    
+                    // Convert Uint8Array to Float32Array for GPU processing
+                    const floatData = new Float32Array(data.length);
+                    for (let i = 0; i < data.length; i++) {
+                        // Convert from 0-255 to -100-0 dB range
+                        // Add value validation to prevent NaN or extreme values
+                        const value = data[i];
+                        if (isNaN(value) || value < 0 || value > 255) {
+                            floatData[i] = -100.0; // Default to silence for invalid values
+                        } else {
+                            floatData[i] = (value / 255.0 * 100.0) - 100.0;
+                        }
+                    }
+                    
+                    // Update frequency data in GPU processor
+                    const frequencyData = window.gpuAudioProcessor.getFrequencyData();
+                    if (frequencyData && frequencyData.set) {
+                        frequencyData.set(floatData);
+                    }
+                } else if (type === 'timeDomainData') {
+                    // Make sure data exists and has the correct type
+                    if (!data || !data.length) {
+                        console.warn('Invalid time domain data received');
+                        return;
+                    }
+                    
+                    // Convert Uint8Array to Float32Array for GPU processing
+                    const floatData = new Float32Array(data.length);
+                    for (let i = 0; i < data.length; i++) {
+                        // Convert from 0-255 to -1.0-1.0 range
+                        // Add value validation to prevent NaN or extreme values
+                        const value = data[i];
+                        if (isNaN(value) || value < 0 || value > 255) {
+                            floatData[i] = 0.0; // Default to center line for invalid values
+                        } else {
+                            floatData[i] = (value / 128.0) - 1.0;
+                        }
+                    }
+                    
+                    // Update time domain data in GPU processor
+                    const timeDomainData = window.gpuAudioProcessor.getTimeDomainData();
+                    if (timeDomainData && timeDomainData.set) {
+                        timeDomainData.set(floatData);
+                    }
                 }
                 
-                // Update frequency data in GPU processor
-                const frequencyData = window.gpuAudioProcessor.getFrequencyData();
-                frequencyData.set(floatData);
-            } else if (type === 'timeDomainData') {
-                // Convert Uint8Array to Float32Array for GPU processing
-                const floatData = new Float32Array(data.length);
-                for (let i = 0; i < data.length; i++) {
-                    // Convert from 0-255 to -1.0-1.0 range
-                    floatData[i] = (data[i] / 128.0) - 1.0;
+                // Force update on the textures if the method exists
+                if (typeof window.gpuAudioProcessor.updateTextureData === 'function') {
+                    window.gpuAudioProcessor.updateTextureData();
                 }
                 
-                // Update time domain data in GPU processor
-                const timeDomainData = window.gpuAudioProcessor.getTimeDomainData();
-                timeDomainData.set(floatData);
+                // Also update the audio-processor entity for components that use the old system
+                const processorEntity = document.getElementById('audio-processor');
+                if (processorEntity) {
+                    let timeDomainDataForEvent = data;
+                    
+                    // If we need to generate time domain data and we have a method for it
+                    if (type === 'frequencyData' && typeof window.gpuAudioProcessor.getTimeDomainDataForAPI === 'function') {
+                        timeDomainDataForEvent = window.gpuAudioProcessor.getTimeDomainDataForAPI();
+                    }
+                    
+                    // Emit the update event with the data
+                    processorEntity.emit('audiodata-updated', {
+                        frequencyData: type === 'frequencyData' ? data : new Uint8Array(data.length).fill(0),
+                        timeDomainData: type === 'timeDomainData' ? data : timeDomainDataForEvent
+                    });
+                }
+            } catch (error) {
+                console.error('Error updating processor data:', error);
+                // Don't rethrow to prevent breaking the visualization loop
             }
-            
-            // Force update on the textures
-            window.gpuAudioProcessor.updateTextureData();
-            
-            // Also update the audio-processor entity for components that use the old system
-            const processorEntity = document.getElementById('audio-processor');
-            processorEntity.emit('audiodata-updated', {
-                frequencyData: data,
-                timeDomainData: type === 'frequencyData' ? 
-                    window.gpuAudioProcessor.getTimeDomainDataForAPI() : data
-            });
         }
 
         // Add this to better handle initialization
