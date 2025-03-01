@@ -473,6 +473,7 @@
                 console.log(`Set visibility of ${element.id || element.tagName} to ${visible}`);
             }
         });
+
     </script>
 </head>
 
@@ -505,6 +506,25 @@
                 colorEnd: #3232ff;
             ">
         </a-entity>
+        <script>
+            document.querySelector('a-scene').addEventListener('loaded', function () {
+                console.log('A-Frame scene fully loaded');
+                
+                // Force refresh the wave3 visualizer
+                const wave3Entity = document.getElementById('wave3-visualizer');
+                if (wave3Entity) {
+                    // Remove and re-add the component to force initialization
+                    const componentData = wave3Entity.getAttribute('wave3-visualizer');
+                    wave3Entity.removeAttribute('wave3-visualizer');
+                    
+                    // Wait a frame to ensure removal is processed
+                    setTimeout(() => {
+                        wave3Entity.setAttribute('wave3-visualizer', componentData);
+                        console.log('Wave3 visualizer component reinitialized');
+                    }, 100);
+                }
+            });
+        </script>
         
         <!-- Circular waveform visualizer -->
         <a-entity 
