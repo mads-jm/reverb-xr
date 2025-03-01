@@ -140,12 +140,24 @@ document.addEventListener('DOMContentLoaded', () => {
    * Handle microphone start button click
    */
   startMicButton.addEventListener('click', async () => {
-    await audioProcessor.initMicrophone();
-    nowPlaying.textContent = 'Microphone';
-    currentAudioType = 'mic';
-    // Microphone doesn't need play/pause control
-    removePlayPauseControl();
-    console.log("Microphone initialized");
+    try {
+      await audioProcessor.initMicrophone();
+      nowPlaying.textContent = 'Microphone (Visualization Only)';
+      currentAudioType = 'mic';
+      // Microphone doesn't need play/pause control
+      removePlayPauseControl();
+      console.log("Microphone initialized for visualization only");
+      
+      // Optionally alert the user that the microphone is for visualization only
+      if (!localStorage.getItem('micAlertShown')) {
+        alert('Microphone is used for visualization only. Audio output is muted to prevent feedback.');
+        localStorage.setItem('micAlertShown', 'true');
+      }
+    } catch (error) {
+      console.error('Error initializing microphone:', error);
+      nowPlaying.textContent = 'Microphone error';
+      alert('Could not access microphone: ' + error.message);
+    }
   });
 
   /**
@@ -155,13 +167,17 @@ document.addEventListener('DOMContentLoaded', () => {
     try {
       showSystemAudioInstructions();
       await audioProcessor.initMicrophone();
-      nowPlaying.textContent = 'System Audio (via Mic)';
+      nowPlaying.textContent = 'System Audio (Visualization Only)';
       currentAudioType = 'system';
       // System audio doesn't need play/pause control
       removePlayPauseControl();
-      console.log("System audio capture initialized");
+      console.log("System audio capture initialized for visualization only");
+      
+      // Make it clear that this is for visualization only
+      alert('System audio capture is enabled for visualization only. The audio from your system will not be played back through the browser to prevent feedback.');
     } catch (error) {
       console.error('Error starting system audio capture:', error);
+      nowPlaying.textContent = 'System Audio error';
       alert('Error: ' + error.message);
     }
   });
@@ -716,7 +732,11 @@ document.addEventListener('DOMContentLoaded', () => {
    * Handle volume slider changes
    */
   volumeSlider.addEventListener('input', () => {
-    const volume = parseFloat(volumeSlider.value);
+    // Get volume from slider (0-100) and normalize to 0-1
+    const rawVolume = parseFloat(volumeSlider.value);
+    const volume = rawVolume / 100;
+    
+    // Set volume on audio processor (which sets volume on its internal gain node)
     audioProcessor.setVolume(volume);
     
     // Update volume icon based on level
@@ -729,7 +749,7 @@ document.addEventListener('DOMContentLoaded', () => {
       volumeIcon.textContent = '🔊';
     }
     
-    console.log("Volume changed to:", volume);
+    console.log("Volume changed to:", volume, "(raw slider value:", rawVolume, ")");
   });
 
   /**

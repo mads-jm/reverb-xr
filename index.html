@@ -20,12 +20,13 @@
   <!-- Load config first -->
   <script src="config.js"></script>
   
-  <!-- Then load your other scripts -->
   <script src="https://cdn.jsdelivr.net/npm/three@0.137.0/build/three.min.js"></script>
-  <script src="scripts/audio/AudioProcessor.js?v=1"></script>
-  <script src="scripts/audio/GPUAudioProcessor.js?v=1"></script>
-  <script src="scripts/audio/SpotifyProcessor.js?v=1"></script>
-  <script src="main.js?v=1"></script>
+  <!-- load modules in correct dependency order -->
+  <script type="module" src="scripts/audio/InitializedState.js?v=1"></script>
+  <script type="module" src="scripts/audio/AudioProcessor.js?v=1"></script>
+  <script type="module" src="scripts/audio/GPUAudioProcessor.js?v=1"></script>
+  <script type="module" src="scripts/audio/SpotifyProcessor.js?v=1"></script>
+  <script type="module" src="main.js?v=1"></script>
   <script src="https://sdk.scdn.co/spotify-player.js"></script>
 </head>
 <body>
@@ -53,7 +54,7 @@
             <button id="play-pause-button" class="play-pause-button">⏸</button>
             <div class="volume-control">
               <span class="volume-icon">🔊</span>
-              <input type="range" id="volume-slider" min="0" max="1" step="0.01" value="1">
+              <input type="range" id="volume-slider" min="0" max="100" step="1" value="100">
             </div>
           </div>
         </div>
@@ -86,30 +87,6 @@
           <input type="radio" id="system-audio-option" name="audio-source">
           <label for="system-audio-option">System Audio (via Mic)</label>
           <button id="start-system-audio" disabled class="small-button">Start</button>
-        </div>
-      </div>
-      
-      <div class="control-group">
-        <h3>Visualization Controls</h3>
-        <div class="toggle-item">
-          <input type="checkbox" id="toggle-waveform" class="toggle-control" data-element="waveform" checked>
-          <label for="toggle-waveform">Circular Waveform</label>
-        </div>
-        <div class="toggle-item">
-          <input type="checkbox" id="toggle-bars" class="toggle-control" data-element="bars" checked>
-          <label for="toggle-bars">Frequency Bars</label>
-        </div>
-        <div class="toggle-item">
-          <input type="checkbox" id="toggle-skybox" class="toggle-control" data-element="skybox" checked>
-          <label for="toggle-skybox">Skybox</label>
-        </div>
-        <div class="toggle-item">
-          <input type="checkbox" id="toggle-lights" class="toggle-control" data-element="lights" checked>
-          <label for="toggle-lights">Lights</label>
-        </div>
-        <div class="toggle-item">
-          <input type="checkbox" id="toggle-ground" class="toggle-control" data-element="ground" checked>
-          <label for="toggle-ground">Ground Plane</label>
         </div>
       </div>
 
@@ -166,6 +143,18 @@
         window.initSpotifyPlayer();
       }
     };
+    
+    // Visualization controls toggle functionality
+    document.addEventListener('DOMContentLoaded', function() {
+      const vizToggleBtn = document.getElementById('viz-toggle');
+      const vizContent = document.getElementById('viz-content');
+      const vizToggleIcon = document.querySelector('.viz-toggle-icon');
+      
+      vizToggleBtn.addEventListener('click', function() {
+        vizContent.classList.toggle('collapsed');
+        vizToggleIcon.textContent = vizContent.classList.contains('collapsed') ? '▲' : '▼';
+      });
+    });
   </script>
   
   <div id="url-modal" class="modal">
@@ -176,6 +165,48 @@
       <div class="modal-buttons">
         <button id="play-url-button" class="button">Play</button>
         <button id="cancel-url-button" class="button">Cancel</button>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Visualization & Environment Controls Panel -->
+  <div class="viz-control-panel">
+    <div class="viz-panel-header" id="viz-toggle">
+      <h3 class="jetbrains-mono">Visualization & Environment</h3>
+      <span class="viz-toggle-icon">▼</span>
+    </div>
+    
+    <div class="viz-panel-content" id="viz-content">
+      <div class="control-group">
+        <h3>Visualizations</h3>
+        <div class="toggle-item">
+          <input type="checkbox" id="toggle-waveform" class="toggle-control" data-element="waveform" checked>
+          <label for="toggle-waveform">Circular Waveform</label>
+        </div>
+        <div class="toggle-item">
+          <input type="checkbox" id="toggle-bars" class="toggle-control" data-element="bars" checked>
+          <label for="toggle-bars">Frequency Bars</label>
+        </div>
+        <div class="toggle-item">
+          <input type="checkbox" id="toggle-wave3" class="toggle-control" data-element="wave3" checked>
+          <label for="toggle-wave3">Vertical Wave3</label>
+        </div>
+      </div>
+      
+      <div class="control-group">
+        <h3>Environment</h3>
+        <div class="toggle-item">
+          <input type="checkbox" id="toggle-skybox" class="toggle-control" data-element="skybox" checked>
+          <label for="toggle-skybox">Skybox</label>
+        </div>
+        <div class="toggle-item">
+          <input type="checkbox" id="toggle-lights" class="toggle-control" data-element="lights" checked>
+          <label for="toggle-lights">Lights</label>
+        </div>
+        <div class="toggle-item">
+          <input type="checkbox" id="toggle-ground" class="toggle-control" data-element="ground" checked>
+          <label for="toggle-ground">Ground Plane</label>
+        </div>
       </div>
     </div>
   </div>

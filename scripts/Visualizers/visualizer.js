@@ -1,5 +1,9 @@
 // scripts/visualizer.js
 
+/**
+ * Audio visualizer component for A-Frame
+ * Processes audio data and displays it as visual effects
+ */
 AFRAME.registerComponent('audio-visualizer', {
     schema: {
       analyserNode: { type: 'selector' },
@@ -360,13 +364,64 @@ AFRAME.registerComponent('audio-visualizer', {
         varying vec2 vUv;
         uniform sampler2D audioData;
         uniform float time;
+        uniform int colorScheme;
+        uniform float dataLength;
+        
+        // Function to convert HSL to RGB
+        vec3 hsl2rgb(in vec3 hsl) {
+          vec3 rgb = clamp(abs(mod(hsl.x*6.0+vec3(0.0,4.0,2.0),6.0)-3.0)-1.0, 0.0, 1.0);
+          return hsl.z + hsl.y * (rgb-0.5)*(1.0-abs(2.0*hsl.z-1.0));
+        }
+        
+        // Get a color based on the scheme and value
+        vec3 getColor(float value, float position) {
+          if (colorScheme == 0) { // Rainbow
+            return hsl2rgb(vec3(position, 0.8, 0.5));
+          } else if (colorScheme == 1) { // Spectrum
+            return hsl2rgb(vec3(value * 0.8, 0.8, 0.5));
+          } else if (colorScheme == 2) { // Heatmap
+            return hsl2rgb(vec3(0.0 + (1.0 - value) * 0.15, 0.8, value * 0.8));
+          } else if (colorScheme == 3) { // Grayscale
+            return vec3(value);
+          } else { // White
+            return vec3(1.0);
+          }
+        }
         
         void main() {
-          // Simple visualization - just use UV coordinates for color
-          vec3 color = vec3(vUv.x, 0.5, vUv.y);
+          // Calculate the position in the audio data array
+          float index = vUv.x * dataLength;
           
-          // Add time-based effect
-          color.r += sin(time * 2.0) * 0.2;
+          // Map the UV to a position in the texture
+          vec2 audioPos = vec2(index / dataLength, 0.5);
+          
+          // Get audio data value, mapping from -100.0 - 0.0 dB range to 0.0 - 1.0
+          float audioValue = (texture2D(audioData, audioPos).r + 100.0) / 100.0;
+          
+          // Normalize to ensure it's in 0-1 range
+          audioValue = clamp(audioValue, 0.0, 1.0);
+          
+          // Height threshold based on v coordinate
+          float threshold = 1.0 - vUv.y;
+          
+          // Set color based on whether we're above the threshold
+          vec3 color;
+          if (audioValue > threshold) {
+            // Get brighter color based on distance above threshold
+            float intensity = (audioValue - threshold) / (1.0 - threshold);
+            color = getColor(audioValue, vUv.x);
+            
+            // Add time-based pulse
+            float pulse = sin(time * 3.0 + vUv.x * 10.0) * 0.05 + 0.95;
+            color *= pulse;
+          } else {
+            // Darker color below threshold
+            color = getColor(audioValue, vUv.x) * 0.2;
+          }
+          
+          // Add time-based shimmer
+          float shimmer = sin(time * 2.0 + vUv.x * 20.0) * 0.03 + 0.97;
+          color *= shimmer;
           
           gl_FragColor = vec4(color, 1.0);
         }
@@ -378,13 +433,67 @@ AFRAME.registerComponent('audio-visualizer', {
         varying vec2 vUv;
         uniform sampler2D audioData;
         uniform float time;
+        uniform int colorScheme;
+        uniform float dataLength;
+        
+        // Function to convert HSL to RGB
+        vec3 hsl2rgb(in vec3 hsl) {
+          vec3 rgb = clamp(abs(mod(hsl.x*6.0+vec3(0.0,4.0,2.0),6.0)-3.0)-1.0, 0.0, 1.0);
+          return hsl.z + hsl.y * (rgb-0.5)*(1.0-abs(2.0*hsl.z-1.0));
+        }
+        
+        // Get a color based on the scheme and value
+        vec3 getColor(float value, float position) {
+          if (colorScheme == 0) { // Rainbow
+            return hsl2rgb(vec3(position, 0.8, 0.5));
+          } else if (colorScheme == 1) { // Spectrum
+            return hsl2rgb(vec3(value * 0.8 + 0.1, 0.8, 0.5));
+          } else if (colorScheme == 2) { // Heatmap
+            return hsl2rgb(vec3(0.0 + (1.0 - value) * 0.15, 0.8, value * 0.5 + 0.3));
+          } else if (colorScheme == 3) { // Grayscale
+            return vec3(value);
+          } else { // White
+            return vec3(1.0);
+          }
+        }
         
         void main() {
-          // Simple visualization - just use UV coordinates for color
-          vec3 color = vec3(vUv.y, vUv.x, 0.5);
+          // Calculate the position in the audio data array
+          float index = vUv.x * dataLength;
           
-          // Add time-based effect
-          color.b += cos(time * 2.0) * 0.2;
+          // Map the UV to a position in the texture
+          vec2 audioPos = vec2(index / dataLength, 0.5);
+          
+          // Get audio data value (typically -1.0 to 1.0)
+          float audioValue = texture2D(audioData, audioPos).r;
+          
+          // Calculate distance from the waveform
+          float centerLine = 0.5;
+          float waveAmplitude = audioValue * 0.4; // Scale the amplitude
+          float waveY = centerLine + waveAmplitude;
+          float distFromWave = abs(vUv.y - waveY);
+          
+          // Create a glow effect around the wave
+          float glow = 0.02 / (distFromWave + 0.02);
+          
+          // Base color on position and audio value
+          vec3 color = getColor(abs(audioValue), vUv.x);
+          
+          // Apply glow and fade with distance
+          color = color * glow;
+          
+          // Add time-based motion
+          float timeEffect = sin(time * 2.0 + vUv.x * 10.0) * 0.05;
+          
+          // Add a subtle background
+          float backgroundIntensity = 0.05;
+          vec3 backgroundColor = getColor(abs(sin(vUv.x * 3.14159 + time)), vUv.x) * backgroundIntensity;
+          
+          // Combine colors
+          color = max(color, backgroundColor);
+          
+          // Apply time-based shimmer
+          color *= 0.95 + sin(time * 3.0 + vUv.x * 20.0) * 0.05;
           
           gl_FragColor = vec4(color, 1.0);
         }

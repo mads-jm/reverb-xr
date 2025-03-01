@@ -1,3 +1,9 @@
+// scripts/camera.js
+// Camera component for A-Frame visualization scenes
+
+/**
+ * Custom camera component with cursor and flight controls
+ */
 AFRAME.registerComponent('custom-camera', {
   init: function () {
     // Create camera entity
