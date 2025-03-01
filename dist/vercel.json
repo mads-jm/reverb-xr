@@ -27,7 +27,7 @@
       {
         "src": "/(.*)",
         "dest": "/$1"
-      },
-      { "src": "/callback.html", "dest": "/callback.html" }
+      }
+      { "src": "/callback.html", "dest": "/callback.html" },
     ]
   }

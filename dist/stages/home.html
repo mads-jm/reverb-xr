@@ -4,15 +4,25 @@
     <!-- A-Frame already includes Three.js, so we don't need to load it separately -->
     <script src="https://aframe.io/releases/1.3.0/aframe.min.js"></script>
     <script src="https://unpkg.com/aframe-extras@6.1.0/dist/aframe-extras.min.js"></script>
-    
-    <!-- First load the path resolver -->
-    <script type="module">
-        // Import the path resolver
-        import { resolvePath } from '../scripts/utils/pathResolver.js';
+    <!-- Directly include critical visualizer components to prevent loading issues -->
+    <script>
+        // Detect if we're in production or development - make this global
+        window.isProduction = window.location.hostname !== 'localhost';
         
-        // Make it globally available
-        window.resolvePath = resolvePath;
+        // Adjust script base path based on environment
+        const scriptBase = window.isProduction ? '/scripts/' : '../scripts/';
+        
+        // Log environment information
+        console.log(`Running in ${window.isProduction ? 'production' : 'development'} mode`);
+        console.log(`Using script base path: ${scriptBase}`);
+        
+        // Create script element with appropriate path
+        const wave3Script = document.createElement('script');
+        wave3Script.src = scriptBase + 'visualizers/wave3-script.js';
+        wave3Script.onerror = (e) => console.error('Failed to load wave3-script.js', e);
+        document.head.appendChild(wave3Script);
     </script>
+    <!-- Camera script will be loaded dynamically to ensure proper path resolution -->
     
     <!-- Regular scripts - these don't use import/export -->
     <script>
@@ -20,39 +30,73 @@
         function loadScript(path) {
             return new Promise((resolve, reject) => {
                 const script = document.createElement('script');
-                // Use relative paths with ../
-                script.src = typeof window.resolvePath === 'function' 
-                    ? window.resolvePath(path) 
-                    : `../${path.startsWith('/') ? path.substring(1) : path}`;
+                // Fix path resolution for iframe/webpack context
+                // When in /stages/home.html, we need to go up one level for script paths
+                let scriptSrc = path;
+                
+                // Use the global isProduction
+                // const isProduction = window.location.hostname !== 'localhost';
+                
+                if (path.startsWith('/')) {
+                    // Use absolute path from root - this is what we want
+                    scriptSrc = path;
+                } else if (path.startsWith('./')) {
+                    // Handle relative paths from current page correctly
+                    const baseUrl = window.location.pathname.substring(0, window.location.pathname.lastIndexOf('/'));
+                    scriptSrc = baseUrl + path.substring(1);
+                } else if (path.startsWith('../') && window.isProduction) {
+                    // Convert relative paths to absolute in production
+                    scriptSrc = '/' + path.substring(3);
+                }
+                
+                // For debugging
+                console.log('Loading script from:', scriptSrc);
+                
+                script.src = scriptSrc;
                 script.onload = resolve;
-                script.onerror = reject;
+                script.onerror = (e) => {
+                    console.error('Failed to load script:', scriptSrc, e);
+                    reject(e);
+                };
                 document.head.appendChild(script);
             });
         }
         
         // Load scripts after path resolver is ready
         document.addEventListener('DOMContentLoaded', async () => {
+            // Output debug info about A-Frame component registry
+            console.log('A-Frame loaded, available components:', Object.keys(AFRAME.components));
+            
             // Load in sequence to respect dependencies
             try {
-                await loadScript('scripts/camera.js');
+                // When the page is served at /stages/home.html, we need to go up a level
+                // Don't use leading slash as it depends on where the page is served from
+                await loadScript('../scripts/camera.js');
                 console.log('Camera script loaded');
                 
-                await loadScript('scripts/visualizers/visualizer.js');
+                await loadScript('../scripts/visualizers/visualizer.js');
                 console.log('Visualizer base script loaded');
                 
-                await loadScript('scripts/visualizers/wave3-script.js');
-                console.log('Wave3 script loaded');
+                // wave3-script.js is already loaded via direct script tag, no need to load again
+                // await loadScript('../scripts/visualizers/wave3-script.js');
+                console.log('Wave3 script already loaded via direct script tag');
                 
                 // Now that the wave3 script is loaded, we can register the component
                 if (window.registerWave3Visualizer) {
-                    const registered = window.registerWave3Visualizer();
-                    console.log('Wave3 visualizer component registration ' + (registered ? 'successful' : 'failed'));
+                    try {
+                        const registered = window.registerWave3Visualizer();
+                        console.log('Wave3 visualizer component registration ' + (registered ? 'successful' : 'failed'));
+                    } catch (err) {
+                        console.error('Error registering Wave3 visualizer:', err);
+                    }
                 } else {
-                    console.error('registerWave3Visualizer function not found!');
+                    console.error('registerWave3Visualizer function not found! Check that scripts loaded in the correct order.');
                 }
                 
                 // Initialize visualizers once all scripts are loaded
-                initializeVisualizers();
+                if (window.initializeVisualizers) {
+                    window.initializeVisualizers();
+                }
             } catch (error) {
                 console.error('Error loading scripts:', error);
             }
@@ -61,10 +105,44 @@
 
     <!-- Separate module script for the audio processors -->
     <script type="module">
-        // Import the path resolver and audio processors as modules
-        import { resolvePath } from '../scripts/utils/pathResolver.js';
-        import { GPUAudioProcessor } from '../scripts/audio/GPUAudioProcessor.js';
-        import { AudioProcessor } from '../scripts/audio/AudioProcessor.js';
+        // Import the path resolver and audio processors as modules with webpack compatible paths
+        let resolvePath, GPUAudioProcessor, AudioProcessor;
+        
+        // Use the global isProduction variable
+        // const isProduction = window.location.hostname !== 'localhost';
+        
+        // Build paths based on environment
+        const pathPrefix = window.isProduction ? '' : '../';
+        const modulePath = window.isProduction ? '/scripts/' : '../scripts/';
+        
+        try {
+            // Use environment-appropriate paths
+            const modulesLoaded = Promise.all([
+                import(`${modulePath}utils/pathResolver.js`).then(module => {
+                    resolvePath = module.resolvePath;
+                    console.log('PathResolver loaded successfully');
+                }).catch(err => console.error('Failed to load pathResolver:', err)),
+                
+                import(`${modulePath}audio/GPUAudioProcessor.js`).then(module => {
+                    GPUAudioProcessor = module.GPUAudioProcessor;
+                    console.log('GPUAudioProcessor loaded successfully');
+                }).catch(err => console.error('Failed to load GPUAudioProcessor:', err)),
+                
+                import(`${modulePath}audio/AudioProcessor.js`).then(module => {
+                    AudioProcessor = module.AudioProcessor;
+                    console.log('AudioProcessor loaded successfully');
+                }).catch(err => console.error('Failed to load AudioProcessor:', err))
+            ]);
+            
+            console.log('Dynamic imports initiated');
+            
+            // Ensure we don't proceed until all modules are loaded
+            modulesLoaded.then(() => {
+                console.log('All modules loaded successfully');
+            });
+        } catch (error) {
+            console.error('Error setting up dynamic imports:', error);
+        }
         
         // Track when visualizers are loaded
         window.visualizersLoaded = true;
@@ -179,40 +257,62 @@
         
         function initializeVisualizers() {
             console.log('Initializing visualizers');
+            console.log('Current A-Frame components:', Object.keys(AFRAME.components));
+            console.log('Wave3 component registered:', AFRAME.components['wave3-visualizer'] ? 'Yes' : 'No');
             
             // Try to ensure the wave3 component is properly registered before initializing
             if (!AFRAME.components['wave3-visualizer'] && window.registerWave3Visualizer) {
-                window.registerWave3Visualizer();
+                console.log('Attempting to register wave3-visualizer component again...');
+                try {
+                    window.registerWave3Visualizer();
+                    console.log('Registration result:', AFRAME.components['wave3-visualizer'] ? 'Success' : 'Failed');
+                } catch (err) {
+                    console.error('Error during manual registration:', err);
+                }
             }
             
-            // Initialize with a small delay to ensure everything is ready
-            setTimeout(() => {
-                // Ensure the wave3 component is properly initialized
-                const wave3Entity = document.getElementById('wave3-visualizer');
-                if (wave3Entity) {
-                    if (AFRAME.components['wave3-visualizer']) {
-                        try {
-                            // Store the component data 
-                            const componentData = wave3Entity.getAttribute('wave3-visualizer');
+            // Check if the component is already initialized and working
+            const wave3Entity = document.getElementById('wave3-visualizer');
+            if (wave3Entity && AFRAME.components['wave3-visualizer']) {
+                console.log('Wave3 visualizer component is already registered and initialized');
+                // Force a refresh of the component's data without removing it
+                try {
+                    // Get the current component data
+                    const componentData = wave3Entity.getAttribute('wave3-visualizer');
+                    console.log('Current wave3 visualizer data:', componentData);
+                    
+                    // Update some property to trigger a refresh (if needed)
+                    // For example, slightly adjust a numeric value
+                    if (typeof componentData === 'object') {
+                        // Create a copy of the data with a small modification
+                        const refreshedData = Object.assign({}, componentData);
+                        if (refreshedData.height) {
+                            // Store original height
+                            const originalHeight = refreshedData.height;
+                            // Temporarily change height to force refresh
+                            refreshedData.height = originalHeight * 1.001;
+                            wave3Entity.setAttribute('wave3-visualizer', refreshedData);
                             
-                            // Remove the component
-                            wave3Entity.removeAttribute('wave3-visualizer');
-                            
-                            // Add it back after a short delay
+                            // Restore original height after a short delay
                             setTimeout(() => {
-                                wave3Entity.setAttribute('wave3-visualizer', componentData);
-                                console.log('Wave3 visualizer re-initialized');
-                            }, 300);
-                        } catch (error) {
-                            console.error('Error re-initializing wave3 visualizer:', error);
+                                refreshedData.height = originalHeight;
+                                wave3Entity.setAttribute('wave3-visualizer', refreshedData);
+                                console.log('Wave3 visualizer refreshed');
+                            }, 100);
                         }
-                    } else {
-                        console.error('Wave3 visualizer component not registered!');
                     }
-                } else {
-                    console.warn('Wave3 visualizer entity not found in the DOM');
+                } catch (error) {
+                    console.error('Error refreshing wave3 visualizer:', error);
                 }
-            }, 500);
+            } else if (wave3Entity) {
+                console.warn('Wave3 visualizer entity exists but component is not registered properly');
+                // Try registering again
+                if (window.registerWave3Visualizer) {
+                    window.registerWave3Visualizer();
+                }
+            } else {
+                console.warn('Wave3 visualizer entity not found in the DOM');
+            }
         }
     </script>
     <script>
@@ -579,6 +679,68 @@
             }
         });
 
+        // Ensure the component is registered when the page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('DOM loaded, registering wave3 visualizer component');
+            
+            // First, try to register the component
+            if (window.registerWave3Visualizer) {
+                try {
+                    const result = window.registerWave3Visualizer();
+                    console.log('Initial Wave3 visualizer registration:', result ? 'successful' : 'failed');
+                } catch (err) {
+                    console.error('Error during initial Wave3 visualizer registration:', err);
+                }
+            } else {
+                console.error('registerWave3Visualizer not found in global scope. Script may not have loaded correctly.');
+            }
+            
+            // Wait for the A-Frame scene to be loaded before checking component
+            const scene = document.querySelector('a-scene');
+            if (scene) {
+                if (scene.hasLoaded) {
+                    console.log('Scene already loaded');
+                    ensureWave3Visualizer();
+                } else {
+                    console.log('Waiting for scene to load');
+                    scene.addEventListener('loaded', ensureWave3Visualizer);
+                }
+            } else {
+                console.error('No A-Frame scene found in the document');
+            }
+            
+            // Function to ensure wave3 visualizer is properly initialized
+            function ensureWave3Visualizer() {
+                console.log('Ensuring wave3 visualizer is initialized after scene load');
+                
+                // Check if the component is registered
+                if (!AFRAME.components['wave3-visualizer'] && window.registerWave3Visualizer) {
+                    console.log('Registering wave3-visualizer after scene load');
+                    window.registerWave3Visualizer();
+                }
+                
+                // Get the wave3 entity
+                const wave3Entity = document.getElementById('wave3-visualizer');
+                if (wave3Entity) {
+                    console.log('Found wave3 entity in DOM');
+                    
+                    // Make sure it has the component
+                    if (!wave3Entity.components['wave3-visualizer'] && AFRAME.components['wave3-visualizer']) {
+                        console.log('Adding wave3-visualizer component to entity');
+                        
+                        // Get the original attributes from the HTML
+                        const componentData = wave3Entity.getAttribute('wave3-visualizer');
+                        console.log('Component data:', componentData);
+                        
+                        // Re-add the component
+                        wave3Entity.setAttribute('wave3-visualizer', componentData);
+                    }
+                } else {
+                    console.warn('Wave3 visualizer entity not found in the DOM');
+                }
+            }
+        });
+
     </script>
 </head>
 
@@ -650,5 +812,5 @@
             material="shader: standard; color: #333; metalness: 0.3; roughness: 0.2; reflectivity: 0.5"
         ></a-entity>
     </a-scene>
-</body>
+<script src="/home.bundle.js"></script></body>
 </html> 
