@@ -58,6 +58,7 @@ export class GPUAudioProcessor extends AudioProcessor {
      * Side-effects: Updates frequencyData, timeDomainData, and their textures
      */
     updateTextureData() {
+      // Get fresh data
       this.analyser.getFloatFrequencyData(this.frequencyData);
       this.analyser.getFloatTimeDomainData(this.timeDomainData);
       
@@ -278,19 +279,43 @@ export class GPUAudioProcessor extends AudioProcessor {
      * @param {number} volume - Volume level between 0 and 1
      */
     setVolume(volume) {
-      // Get the current state to see if it has a gainNode
+      // Get the current state
       const currentState = this.state;
       
+      // Use a more moderate scaling curve - square root for more audible range at low volumes
+      // This makes lower volume settings more usable while still providing good control
+      const scaledVolume = Math.sqrt(volume);
+      
+      // Store the current volume value for reference
+      this.volume = volume;
+      
+      // Call the state's setVolume method if available
+      if (currentState && typeof currentState.setVolume === 'function') {
+        // The state will handle all volume implementation
+        // Pass the original volume, not the scaled volume, to avoid double-scaling
+        currentState.setVolume(volume);
+        
+        // Log for debugging
+        console.log('Volume set via state method:', volume, 'Scaled volume (not used):', scaledVolume);
+        
+        // We've delegated volume control to the state, so no need to also do it here
+        // This prevents double-application of volume changes
+        return;
+      }
+      
+      // Fallback: If state doesn't have a setVolume method, handle it here
       if (currentState && currentState.gainNode) {
         // If the state has a gain node, use it
-        currentState.gainNode.gain.value = volume;
+        currentState.gainNode.gain.value = volume === 0 ? 0 : Math.max(0.0001, scaledVolume);
+        console.log('Volume set directly on state gain node:', volume, 'Applied gain:', currentState.gainNode.gain.value);
       } else if (this.gainNode) {
         // Use our local gain node as fallback
-        this.gainNode.gain.value = volume;
+        this.gainNode.gain.value = volume === 0 ? 0 : Math.max(0.0001, scaledVolume);
+        console.log('Volume set on processor gain node:', volume, 'Applied gain:', this.gainNode.gain.value);
       } else {
         // Create a gain node if none exists
         this.gainNode = this.audioContext.createGain();
-        this.gainNode.gain.value = volume;
+        this.gainNode.gain.value = volume === 0 ? 0 : Math.max(0.0001, scaledVolume);
         
         // Connect through the state system if possible
         if (this.analyser) {
@@ -298,17 +323,16 @@ export class GPUAudioProcessor extends AudioProcessor {
             this.analyser.disconnect();
             this.analyser.connect(this.gainNode);
             this.gainNode.connect(this.audioContext.destination);
+            console.log('Created new gain node and set up connections');
           } catch (e) {
             console.error('Error setting up gain node:', e);
           }
         }
+        console.log('Created new gain node with volume:', volume, 'Applied gain:', this.gainNode.gain.value);
       }
       
-      // Store the current volume value
-      this.volume = volume;
-      
       if (this.debugMode) {
-        console.log('Volume set to:', volume);
+        console.log('Volume set to:', volume, 'Scaled volume:', scaledVolume);
       }
     }
 
@@ -438,6 +462,21 @@ export class GPUAudioProcessor extends AudioProcessor {
       this._normalizeTimeDomainData(this.timeDomainData, uint8Array);
       
       return uint8Array;
+    }
+
+    /**
+     * Helper function to normalize frequency data from dB (-100 to 0) to 0-255 range
+     * @param {Float32Array} sourceData - Raw frequency data (typically -100 to 0 dB)
+     * @param {Uint8Array} targetArray - Target array for normalized values
+     * @private
+     */
+    _normalizeFrequencyData(sourceData, targetArray) {
+      for (let i = 0; i < this.frequencyBinCount; i++) {
+        // Frequency data is typically in -100 to 0 dB range
+        // Map to 0-255 range, where -100dB = 0 and 0dB = 255
+        const normalizedValue = (sourceData[i] + 100) / 100;
+        targetArray[i] = Math.floor(Math.max(0, Math.min(255, normalizedValue * 255)));
+      }
     }
 
     /**

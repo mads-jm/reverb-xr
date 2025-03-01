@@ -13,16 +13,16 @@ export class FileState extends InitializedState {
 	constructor(audioContext, analyser, audioBuffer) {
 		super(audioContext, analyser);
 		this.audioBuffer = audioBuffer;
-		this.gainNode = audioContext.createGain();
 		this.source = audioContext.createBufferSource();
 		this.source.buffer = audioBuffer;
+		
+		// source -> analyser -> gainNode -> destination
 		this.source.connect(this.analyser);
-		this.analyser.connect(this.audioContext.destination);
-		this.gainNode.connect(this.audioContext.destination);
+		
 		this.source.start(0);
 		this.startTime = this.audioContext.currentTime;
 		this.isPlaying = true;
-		console.log('playback started');
+		console.log('File playback started');
 	}
 
 	/**
@@ -58,13 +58,39 @@ export class FileState extends InitializedState {
 		if (!this.isPlaying && this.audioBuffer) {
 			this.source = this.audioContext.createBufferSource();
 			this.source.buffer = this.audioBuffer;
+			
+			// IMPORTANT: This was the key issue - when resuming playback, we were only
+			// connecting source->analyser but not ensuring the analyzer was
+			// connected to the gainNode, which is needed for volume control.
+			
+			// First disconnect any existing connections to ensure clean routing
+			try {
+				this.analyser.disconnect();
+			} catch (e) {
+				// Ignore disconnect errors
+			}
+			
+			// Reconnect the full audio path:
+			// 1. Connect source to analyzer
 			this.source.connect(this.analyser);
+			
+			// 2. Connect analyzer to gain node
+			this.analyser.connect(this.gainNode);
+			
+			// 3. Ensure gain node is connected to destination
+			if (!this.gainNode.numberOfOutputs) {
+				this.gainNode.connect(this.audioContext.destination);
+			}
+			
+			// 4. Apply the current volume setting again to ensure it takes effect
+			console.log('Reapplying current gain value:', this.gainNode.gain.value);
 			
 			// Start playback from the saved position
 			const offset = this.pauseTime || 0;
 			this.source.start(0, offset);
 			this.startTime = this.audioContext.currentTime - offset;
 			this.isPlaying = true;
+			console.log('File playback resumed at', offset, 'seconds');
 		}
 	}
 }

@@ -1,6 +1,7 @@
-import { FileState } from "./FileState.js";
-import { MicrophoneState } from "./MicrophoneState.js";
-import { NetworkStreamState } from "./NetworkStreamState.js";
+// Remove the circular imports at the top
+// import { FileState } from "./FileState.js";
+// import { MicrophoneState } from "./MicrophoneState.js";
+// import { NetworkStreamState } from "./NetworkStreamState.js";
 
 /**
  * Base audio state that handles common functionality and state transitions.
@@ -11,61 +12,100 @@ export class InitializedState {
     this.audioContext = audioContext;
     this.analyser = analyser;
     this.source = null;
+    
+    // Create a gain node by default for all audio states
+    this.gainNode = this.audioContext.createGain();
+    // Default to full volume
+    this.gainNode.gain.value = 1.0;
+    
+    // Connect analyzer to gain node by default
+    // Child classes should use this.gainNode in their setup
+    try {
+      this.analyser.connect(this.gainNode);
+      this.gainNode.connect(this.audioContext.destination);
+    } catch (e) {
+      console.error('Error setting up default gain node:', e);
+    }
   }
 
   /**
-   * Transitions to microphone input state
-   * @returns {Promise<MicrophoneState>} A new state for microphone input
+   * Sets the volume for this audio state
+   * @param {number} volume - Volume level between 0 and 1
+   */
+  setVolume(volume) {
+    if (!this.gainNode) {
+      this.gainNode = this.audioContext.createGain();
+      
+      try {
+        // Reconnect if needed
+        this.analyser.connect(this.gainNode);
+        this.gainNode.connect(this.audioContext.destination);
+      } catch (e) {
+        console.error('Error setting up gain node in setVolume:', e);
+      }
+    }
+    
+    // Use square root scaling for more natural volume control
+    // This gives more audible range at low volume settings, while still allowing for fine control
+    const scaledVolume = Math.sqrt(volume);
+    
+    // Set the gain value - ensure 0 is actually 0, otherwise use scaled value
+    this.gainNode.gain.value = volume === 0 ? 0 : scaledVolume;
+    
+    console.log('Base state volume set to:', volume, 'Scaled volume:', scaledVolume);
+  }
+
+  /**
+   * Initializes microphone input
+   * @returns {Promise<MicrophoneState>} Promise that resolves to new state
    */
   async initMicrophone() {
     try {
-      // Clean up current source if it exists
-      this.stop();
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const source = this.audioContext.createMediaStreamSource(stream);
+      source.connect(this.analyser);
       
-      const stream = await navigator.mediaDevices.getUserMedia({
-        audio: true,
-        video: false,
-      });
-      return new MicrophoneState(this.audioContext, this.analyser, stream);
-    } catch(err) {
-      console.log("Error accessing microphone", err);
-      throw err;
+      // Use dynamic import to avoid circular dependency
+      const { MicrophoneState } = await import('./MicrophoneState.js');
+      return new MicrophoneState(this.audioContext, this.analyser, source, stream);
+    } catch (error) {
+      console.error("Error accessing microphone:", error);
+      return this;
     }
   }
 
   /**
-   * Transitions to file input state
-   * @param {File} file - The audio file to process
-   * @returns {Promise<FileState>} A new state for file input
+   * Initializes audio from a file
+   * @param {File} file - The audio file to play
+   * @returns {Promise<FileState>} Promise that resolves to new state
    */
   async initFile(file) {
     try {
-      // Clean up current source if it exists
-      this.stop();
-      
       const arrayBuffer = await file.arrayBuffer();
       const audioBuffer = await this.audioContext.decodeAudioData(arrayBuffer);
+      
+      // Use dynamic import to avoid circular dependency
+      const { FileState } = await import('./FileState.js');
       return new FileState(this.audioContext, this.analyser, audioBuffer);
-    } catch (err) {
-      console.log("Error processing audio file", err);
-      throw err;
+    } catch (error) {
+      console.error("Error loading audio file:", error);
+      return this;
     }
   }
 
   /**
-   * Transitions to network stream state
-   * @param {string} streamUrl - URL of the audio stream to play
-   * @returns {NetworkStreamState} A new state for network streaming
+   * Initializes audio from a network stream
+   * @param {string} streamUrl - URL of the stream to play
+   * @returns {Promise<NetworkStreamState>} Promise that resolves to new state
    */
-  initNetworkStream(streamUrl) {
+  async initNetworkStream(streamUrl) {
     try {
-      // Clean up current source if it exists
-      this.stop();
-      
+      // Use dynamic import to avoid circular dependency
+      const { NetworkStreamState } = await import('./NetworkStreamState.js');
       return new NetworkStreamState(this.audioContext, this.analyser, streamUrl);
-    } catch (err) {
-      console.log("Error initializing network stream", err);
-      throw err;
+    } catch (error) {
+      console.error("Error initializing network stream:", error);
+      return this;
     }
   }
 

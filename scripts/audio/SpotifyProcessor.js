@@ -1,5 +1,5 @@
 import { AudioProcessor } from './AudioProcessor.js';
-import { SpotifyAPIHandler } from '../spotify/SpotifyAPIHandler.js';
+import { SpotifyAPIHandler } from '../SpotifyAPIHandler.js';
 
 /**
  * Audio processor with Spotify integration

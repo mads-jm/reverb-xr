@@ -31,8 +31,9 @@ export class NetworkStreamState extends InitializedState {
       
       // Connect the audio element to the audio context
       this.source = this.audioContext.createMediaElementSource(this.audioElement);
+      
+      // source -> analyser -> gainNode -> destination
       this.source.connect(this.analyser);
-      this.analyser.connect(this.audioContext.destination);
       
       console.log('Network stream initialized');
     } catch (err) {
