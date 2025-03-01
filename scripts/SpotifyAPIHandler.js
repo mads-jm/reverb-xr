@@ -1,19 +1,16 @@
-class SpotifyProcessor {
-  constructor(audioProcessor) {
-    this.audioProcessor = audioProcessor;
-    this.player = null;
-    this.deviceId = null;
-    this.isAuthorized = false;
-    
-    // Get client ID from the generated config
+/**
+ * Handles all Spotify API interactions
+ * Separates API concerns from audio processing
+ */
+export class SpotifyAPIHandler {
+  constructor() {
     this.clientId = window.APP_CONFIG?.SPOTIFY_CLIENT_ID || '';
-    
-    // Set redirect URI based on current domain
     this.redirectUri = window.location.origin + '/callback.html';
-    this.analyserNode = null;
-    this.audioCtx = null;
+    this.accessToken = null;
+    this.isAuthorized = false;
     this.currentTrack = null;
     this.playbackInterval = null;
+    this.playbackCallback = null;
     
     // Validate configuration
     if (!this.clientId) {
@@ -21,16 +18,20 @@ class SpotifyProcessor {
     } else {
       console.log('Spotify Client ID loaded successfully');
     }
+    
+    // Check if we're returning from an auth flow
+    this.checkAuth();
   }
-
-  // Authorization method
+  
+  /**
+   * Start the Spotify authorization flow
+   */
   authorize() {
     // Generate a random state value for security
     const state = this.generateRandomString(16);
     localStorage.setItem('spotify_auth_state', state);
 
     // Define the scopes needed for your application
-    // Note: we're using user-read-playback-state instead of streaming
     const scope = 'user-read-playback-state user-read-currently-playing user-modify-playback-state';
 
     // Redirect to Spotify authorization page
@@ -42,7 +43,10 @@ class SpotifyProcessor {
       '&state=' + encodeURIComponent(state);
   }
 
-  // Check if we have a valid token
+  /**
+   * Check if we have a valid auth token
+   * @returns {boolean} Whether we're authorized
+   */
   checkAuth() {
     const params = this.getHashParams();
     const storedState = localStorage.getItem('spotify_auth_state');
@@ -54,16 +58,23 @@ class SpotifyProcessor {
       // Clear the hash parameters from the URL
       window.history.replaceState({}, document.title, window.location.pathname);
       
-      // Start monitoring current playback
-      this.startPlaybackMonitoring();
-      
       return true;
     } else {
       return false;
     }
   }
+  
+  /**
+   * Register a callback to receive track updates
+   * @param {Function} callback Function to call with track updates
+   */
+  onPlaybackUpdate(callback) {
+    this.playbackCallback = callback;
+  }
 
-  // Start monitoring the user's current Spotify playback
+  /**
+   * Begin monitoring Spotify playback
+   */
   startPlaybackMonitoring() {
     // Check immediately
     this.getCurrentPlayback();
@@ -74,7 +85,9 @@ class SpotifyProcessor {
     }, 3000);
   }
 
-  // Stop monitoring
+  /**
+   * Stop monitoring playback state
+   */
   stopPlaybackMonitoring() {
     if (this.playbackInterval) {
       clearInterval(this.playbackInterval);
@@ -82,8 +95,35 @@ class SpotifyProcessor {
     }
   }
 
-  // Get the user's current playback state
+  /**
+   * Check if Spotify has an active device
+   * @returns {Promise<boolean>} Whether a device is active
+   */
+  async hasActiveDevice() {
+    if (!this.isAuthorized) return false;
+    
+    try {
+      const response = await fetch('https://api.spotify.com/v1/me/player', {
+        headers: {
+          'Authorization': `Bearer ${this.accessToken}`
+        }
+      });
+      
+      return response.status !== 204;
+    } catch (error) {
+      console.error('Error checking for active device:', error);
+      return false;
+    }
+  }
+
+  /**
+   * Get the current playback state from Spotify
+   */
   async getCurrentPlayback() {
+    if (!this.isAuthorized) {
+      return this.notifyPlaybackUpdate(null, 'Not authorized');
+    }
+    
     try {
       const response = await fetch('https://api.spotify.com/v1/me/player', {
         headers: {
@@ -93,8 +133,7 @@ class SpotifyProcessor {
       
       if (response.status === 204) {
         // No active device
-        this.updateNowPlaying(null, 'No active Spotify playback');
-        return;
+        return this.notifyPlaybackUpdate(null, 'No active Spotify playback');
       }
       
       if (!response.ok) {
@@ -104,8 +143,7 @@ class SpotifyProcessor {
       const data = await response.json();
       
       if (!data.item) {
-        this.updateNowPlaying(null, 'Nothing playing');
-        return;
+        return this.notifyPlaybackUpdate(null, 'Nothing playing');
       }
       
       // Update the current track info
@@ -114,60 +152,40 @@ class SpotifyProcessor {
         artist: data.item.artists.map(a => a.name).join(', '),
         album: data.item.album.name,
         albumArt: data.item.album.images[0]?.url,
-        isPlaying: data.is_playing
+        isPlaying: data.is_playing,
+        uri: data.item.uri
       };
       
-      // Update the UI
-      this.updateNowPlaying(
+      // Notify any listeners
+      this.notifyPlaybackUpdate(
         this.currentTrack,
         this.currentTrack.isPlaying ? 'Now Playing' : 'Paused'
       );
       
+      return this.currentTrack;
     } catch (error) {
       console.error('Error fetching current playback:', error);
-      this.updateNowPlaying(null, 'Error fetching playback');
+      return this.notifyPlaybackUpdate(null, 'Error fetching playback');
     }
   }
-
-  // Update the UI with current playback info
-  updateNowPlaying(track, status) {
-    const trackNameElement = document.getElementById('spotify-track-name');
-    const trackArtistElement = document.getElementById('spotify-track-artist');
-    const trackAlbumArtElement = document.getElementById('spotify-album-art');
-    const trackStatusElement = document.getElementById('spotify-status');
-    const nowPlayingElement = document.getElementById('now-playing');
-    
-    if (trackNameElement) {
-      trackNameElement.textContent = track ? track.name : 'No track';
+  
+  /**
+   * Notify callback about playback updates
+   * @param {Object|null} track Track information
+   * @param {string} status Status message
+   */
+  notifyPlaybackUpdate(track, status) {
+    if (this.playbackCallback) {
+      this.playbackCallback(track, status);
     }
-    
-    if (trackArtistElement) {
-      trackArtistElement.textContent = track ? track.artist : '';
-    }
-    
-    if (trackAlbumArtElement) {
-      if (track && track.albumArt) {
-        trackAlbumArtElement.src = track.albumArt;
-        trackAlbumArtElement.style.display = 'block';
-      } else {
-        trackAlbumArtElement.style.display = 'none';
-      }
-    }
-    
-    if (trackStatusElement) {
-      trackStatusElement.textContent = status;
-    }
-    
-    // Also update the main "Now Playing" display if system audio is not active
-    const systemAudioOption = document.getElementById('system-audio-option');
-    if (nowPlayingElement && track && (!systemAudioOption || !systemAudioOption.checked)) {
-      nowPlayingElement.textContent = `Spotify: ${track.name} - ${track.artist}`;
-    }
+    return track;
   }
 
-  // Play/Pause the current track
+  /**
+   * Toggle play/pause state
+   */
   async togglePlayback() {
-    if (!this.isAuthorized) return;
+    if (!this.isAuthorized) return false;
     
     try {
       // Get current state first
@@ -179,7 +197,7 @@ class SpotifyProcessor {
       
       if (response.status === 204) {
         alert('No active Spotify device found. Start playing in your Spotify app first.');
-        return;
+        return false;
       }
       
       if (!response.ok) {
@@ -198,16 +216,66 @@ class SpotifyProcessor {
       });
       
       // Update immediately
-      this.getCurrentPlayback();
+      setTimeout(() => this.getCurrentPlayback(), 500);
       
+      return !isPlaying; // Return the new state
     } catch (error) {
       console.error('Error toggling playback:', error);
+      return false;
+    }
+  }
+  
+  /**
+   * Resume playback
+   */
+  async play() {
+    if (!this.isAuthorized) return false;
+    
+    try {
+      await fetch('https://api.spotify.com/v1/me/player/play', {
+        method: 'PUT',
+        headers: {
+          'Authorization': `Bearer ${this.accessToken}`
+        }
+      });
+      
+      // Update immediately
+      setTimeout(() => this.getCurrentPlayback(), 500);
+      return true;
+    } catch (error) {
+      console.error('Error resuming Spotify playback:', error);
+      return false;
+    }
+  }
+  
+  /**
+   * Pause playback
+   */
+  async pause() {
+    if (!this.isAuthorized) return false;
+    
+    try {
+      await fetch('https://api.spotify.com/v1/me/player/pause', {
+        method: 'PUT',
+        headers: {
+          'Authorization': `Bearer ${this.accessToken}`
+        }
+      });
+      
+      // Update immediately
+      setTimeout(() => this.getCurrentPlayback(), 500);
+      return true;
+    } catch (error) {
+      console.error('Error pausing Spotify playback:', error);
+      return false;
     }
   }
 
-  // Skip to next track
+  /**
+   * Skip to next track
+   */
   async nextTrack() {
-    if (!this.isAuthorized) return;
+    if (!this.isAuthorized) return false;
     
     try {
       await fetch('https://api.spotify.com/v1/me/player/next', {
@@ -219,15 +287,18 @@ class SpotifyProcessor {
       
       // Wait a moment for Spotify to update
       setTimeout(() => this.getCurrentPlayback(), 500);
-      
+      return true;
     } catch (error) {
       console.error('Error skipping to next track:', error);
+      return false;
     }
   }
 
-  // Skip to previous track
+  /**
+   * Skip to previous track
+   */
   async previousTrack() {
-    if (!this.isAuthorized) return;
+    if (!this.isAuthorized) return false;
     
     try {
       await fetch('https://api.spotify.com/v1/me/player/previous', {
@@ -239,9 +310,63 @@ class SpotifyProcessor {
       
       // Wait a moment for Spotify to update
       setTimeout(() => this.getCurrentPlayback(), 500);
-      
+      return true;
     } catch (error) {
       console.error('Error skipping to previous track:', error);
+      return false;
+    }
+  }
+  
+  /**
+   * Search for tracks
+   * @param {string} query Search term
+   * @returns {Promise<Object>} Search results
+   */
+  async searchTracks(query) {
+    if (!this.isAuthorized) return { tracks: { items: [] } };
+    
+    try {
+      const response = await fetch(`https://api.spotify.com/v1/search?q=${encodeURIComponent(query)}&type=track&limit=10`, {
+        headers: {
+          'Authorization': `Bearer ${this.accessToken}`
+        }
+      });
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error ${response.status}`);
+      }
+      
+      return await response.json();
+    } catch (error) {
+      console.error('Error searching tracks:', error);
+      return { tracks: { items: [] } };
+    }
+  }
+  
+  /**
+   * Play a specific track by URI
+   * @param {string} uri Track URI
+   */
+  async playTrack(uri) {
+    if (!this.isAuthorized) return false;
+    
+    try {
+      await fetch('https://api.spotify.com/v1/me/player/play', {
+        method: 'PUT',
+        headers: {
+          'Authorization': `Bearer ${this.accessToken}`
+        },
+        body: JSON.stringify({
+          uris: [uri]
+        })
+      });
+      
+      // Update immediately
+      setTimeout(() => this.getCurrentPlayback(), 500);
+      return true;
+    } catch (error) {
+      console.error('Error playing track:', error);
+      return false;
     }
   }
 
@@ -265,9 +390,25 @@ class SpotifyProcessor {
     }
     return text;
   }
-
-  // Clean up when done
+  
+  /**
+   * Clean up resources
+   */
   cleanup() {
     this.stopPlaybackMonitoring();
+  }
+  
+  /**
+   * Simple hash function to convert a string to a numeric seed
+   * @param {string} str Input string
+   * @returns {number} Hash value
+   */
+  hashString(str) {
+    let hash = 0;
+    for (let i = 0; i < str.length; i++) {
+      hash = ((hash << 5) - hash) + str.charCodeAt(i);
+      hash |= 0; // Convert to 32bit integer
+    }
+    return hash;
   }
 } 
