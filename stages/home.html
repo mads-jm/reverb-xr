@@ -32,10 +32,30 @@
         
         // Load scripts after path resolver is ready
         document.addEventListener('DOMContentLoaded', async () => {
-            await loadScript('scripts/camera.js');
-            await loadScript('scripts/visualizers/visualizer.js');
-            await loadScript('scripts/visualizers/wave3-script.js');
-            console.log('Non-module scripts loaded');
+            // Load in sequence to respect dependencies
+            try {
+                await loadScript('scripts/camera.js');
+                console.log('Camera script loaded');
+                
+                await loadScript('scripts/visualizers/visualizer.js');
+                console.log('Visualizer base script loaded');
+                
+                await loadScript('scripts/visualizers/wave3-script.js');
+                console.log('Wave3 script loaded');
+                
+                // Now that the wave3 script is loaded, we can register the component
+                if (window.registerWave3Visualizer) {
+                    const registered = window.registerWave3Visualizer();
+                    console.log('Wave3 visualizer component registration ' + (registered ? 'successful' : 'failed'));
+                } else {
+                    console.error('registerWave3Visualizer function not found!');
+                }
+                
+                // Initialize visualizers once all scripts are loaded
+                initializeVisualizers();
+            } catch (error) {
+                console.error('Error loading scripts:', error);
+            }
         });
     </script>
 
@@ -160,21 +180,39 @@
         function initializeVisualizers() {
             console.log('Initializing visualizers');
             
-            // Ensure the wave3 component is properly initialized
-            const wave3Entity = document.getElementById('wave3-visualizer');
-            if (wave3Entity) {
-                // Store the component data
-                const componentData = wave3Entity.getAttribute('wave3-visualizer');
-                
-                // Remove the component
-                wave3Entity.removeAttribute('wave3-visualizer');
-                
-                // Add it back after a short delay
-                setTimeout(() => {
-                    wave3Entity.setAttribute('wave3-visualizer', componentData);
-                    console.log('Wave3 visualizer re-initialized');
-                }, 500);
+            // Try to ensure the wave3 component is properly registered before initializing
+            if (!AFRAME.components['wave3-visualizer'] && window.registerWave3Visualizer) {
+                window.registerWave3Visualizer();
             }
+            
+            // Initialize with a small delay to ensure everything is ready
+            setTimeout(() => {
+                // Ensure the wave3 component is properly initialized
+                const wave3Entity = document.getElementById('wave3-visualizer');
+                if (wave3Entity) {
+                    if (AFRAME.components['wave3-visualizer']) {
+                        try {
+                            // Store the component data 
+                            const componentData = wave3Entity.getAttribute('wave3-visualizer');
+                            
+                            // Remove the component
+                            wave3Entity.removeAttribute('wave3-visualizer');
+                            
+                            // Add it back after a short delay
+                            setTimeout(() => {
+                                wave3Entity.setAttribute('wave3-visualizer', componentData);
+                                console.log('Wave3 visualizer re-initialized');
+                            }, 300);
+                        } catch (error) {
+                            console.error('Error re-initializing wave3 visualizer:', error);
+                        }
+                    } else {
+                        console.error('Wave3 visualizer component not registered!');
+                    }
+                } else {
+                    console.warn('Wave3 visualizer entity not found in the DOM');
+                }
+            }, 500);
         }
     </script>
     <script>
