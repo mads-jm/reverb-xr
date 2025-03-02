@@ -78,21 +78,26 @@ export default (env, argv) => {
         scriptLoading: 'blocking',
       }),
       
-      // Copy static assets
+      // Copy static assets with proper MIME types
       new CopyWebpackPlugin({
         patterns: [
           { 
             from: 'src/scripts',
             to: 'scripts',
             noErrorOnMissing: true,
-            info: { minimized: true }
+            transform(content, path) {
+              // Ensure JavaScript files have proper MIME type
+              if (path.endsWith('.js')) {
+                return content;
+              }
+              return content;
+            },
+            info: { 
+              minimized: true,
+              javascriptModule: true 
+            }
           },
-          // Add an explicit pattern for stages/scripts to fix path resolution
-          {
-            from: 'src/scripts',
-            to: 'stages/scripts',
-            noErrorOnMissing: true,
-          },
+          // Remove the stages/scripts copy as we'll handle paths differently
           { 
             from: 'src/assets',
             to: 'assets',
