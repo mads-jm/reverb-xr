@@ -37,7 +37,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
     
     // Initialize the audio processor with mock data for testing
-    await window.gpuAudioProcessor.initMockData();
+    // await window.gpuAudioProcessor.initMockData();
     
     console.log('GPUAudioProcessor initialized');
     
