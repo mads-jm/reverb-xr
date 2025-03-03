@@ -557,12 +557,12 @@ document.addEventListener('DOMContentLoaded', () => {
     try {
       console.log('Initializing Spotify processor...');
       
-      // Check if APP_CONFIG is available for Spotify
-      if (!window.APP_CONFIG || !window.APP_CONFIG.SPOTIFY_CLIENT_ID) {
-        console.error('Spotify Client ID not configured in APP_CONFIG');
-        alert('Spotify integration is not configured. Please set up your Spotify Client ID in the configuration.');
-        return false;
-      }
+      // Debug: Log available environment variables related to Spotify
+      console.log('Environment variables check:');
+      console.log('- window.NEXT_PUBLIC_SPOTIFY_CLIENT_ID:', window.NEXT_PUBLIC_SPOTIFY_CLIENT_ID ? 'Found' : 'Not found');
+      console.log('- window.SPOTIFY_CLIENT_ID:', window.SPOTIFY_CLIENT_ID ? 'Found' : 'Not found');
+      console.log('- window.ENV_SPOTIFY_CLIENT_ID:', window.ENV_SPOTIFY_CLIENT_ID ? 'Found' : 'Not found');
+      console.log('- window.APP_CONFIG?.SPOTIFY_CLIENT_ID:', window.APP_CONFIG?.SPOTIFY_CLIENT_ID ? 'Found' : 'Not found');
       
       // Get the singleton instance
       if (!spotifyProcessor) {
@@ -570,6 +570,14 @@ document.addEventListener('DOMContentLoaded', () => {
         try {
           spotifyProcessor = SpotifyProcessor.getInstance();
           console.log('SpotifyProcessor instance created:', spotifyProcessor);
+          
+          // Debug: Check if the API handler was created
+          if (spotifyProcessor.spotifyAPI) {
+            console.log('SpotifyAPIHandler created automatically');
+            console.log('Client ID available:', !!spotifyProcessor.spotifyAPI.clientId);
+          } else {
+            console.warn('SpotifyAPIHandler not created during SpotifyProcessor initialization');
+          }
         } catch (err) {
           console.error('Error creating SpotifyProcessor instance:', err);
           return false;
@@ -585,6 +593,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const SpotifyAPIHandler = module.SpotifyAPIHandler;
             spotifyProcessor.spotifyAPI = new SpotifyAPIHandler();
             console.log('SpotifyAPIHandler manually created');
+            console.log('Client ID available:', !!spotifyProcessor.spotifyAPI.clientId);
             // Now continue the initialization
             continueSpotifyInitialization();
           }).catch(err => {
@@ -623,6 +632,19 @@ document.addEventListener('DOMContentLoaded', () => {
       if (!spotifyProcessor.spotifyAPI) {
         console.error('Spotify API handler still not initialized after attempts');
         spotifyLogin.style.display = 'block';
+        spotifyPlayerContainer.style.display = 'none';
+        return false;
+      }
+      
+      // Check if we have a valid client ID
+      if (!spotifyProcessor.spotifyAPI.clientId) {
+        console.error('No Spotify Client ID found. Please set NEXT_PUBLIC_SPOTIFY_CLIENT_ID in your Vercel environment variables.');
+        
+        // Show a helpful message for the user
+        if (spotifyLogin) {
+          spotifyLogin.innerHTML = 'Spotify Client ID not configured.<br>Set up NEXT_PUBLIC_SPOTIFY_CLIENT_ID in Vercel.';
+          spotifyLogin.style.display = 'block';
+        }
         spotifyPlayerContainer.style.display = 'none';
         return false;
       }
