@@ -67,6 +67,7 @@ export default (env, argv) => {
         filename: 'index.html',
         chunks: ['main'],
         inject: true,
+        favicon: 'favicon.ico'
       }),
       
       // A-Frame visualizer HTML - Use a specific option to handle existing scripts
@@ -97,7 +98,6 @@ export default (env, argv) => {
               javascriptModule: true 
             }
           },
-          // Remove the stages/scripts copy as we'll handle paths differently
           { 
             from: 'src/assets',
             to: 'assets',
@@ -107,6 +107,11 @@ export default (env, argv) => {
           {
             from: 'vercel.json',
             to: 'vercel.json',
+            noErrorOnMissing: true
+          },
+          {
+            from: 'favicon.ico',
+            to: 'favicon.ico',
             noErrorOnMissing: true
           }
         ]
@@ -125,6 +130,10 @@ export default (env, argv) => {
         directory: path.join(__dirname, 'dist'),
         publicPath: '/',
         watch: true,
+        serveIndex: true
+      },
+      devMiddleware: {
+        writeToDisk: true
       },
       compress: true,
       port: 8080,
