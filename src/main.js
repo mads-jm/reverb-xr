@@ -15,6 +15,13 @@ import { loadSpotifySDK } from './scripts/external/spotify-sdk-loader.js';
  * Handles UI interactions, audio source selection, and visualization data processing
  */
 document.addEventListener('DOMContentLoaded', () => {
+  // Verify the SpotifyProcessor was imported correctly
+  if (typeof SpotifyProcessor === 'undefined') {
+    console.error('Failed to import SpotifyProcessor! Check the import path and class definition.');
+  } else {
+    console.log('SpotifyProcessor imported successfully');
+  }
+  
   // Make path resolver globally available
   window.resolvePath = resolvePath;
   
@@ -497,8 +504,15 @@ document.addEventListener('DOMContentLoaded', () => {
    * Load Spotify SDK and initialize components
    */
   function loadSpotifyComponents() {
+    // Ensure we have a reference to the SpotifyProcessor class before trying to use it
+    if (typeof SpotifyProcessor === 'undefined') {
+      console.error('SpotifyProcessor class is not available. Make sure it\'s imported correctly.');
+      return;
+    }
+    
     // Only load the SDK once
     if (!spotifySDKLoaded) {
+      console.log('Loading Spotify SDK...');
       // Use the SDK loader to properly handle webpack integration
       loadSpotifySDK()
         .then(() => {
@@ -511,7 +525,10 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     } else if (!spotifyProcessor) {
       // SDK already loaded, just initialize the processor
+      console.log('SDK already loaded, initializing processor...');
       initializeSpotifyProcessor();
+    } else {
+      console.log('Spotify processor already initialized');
     }
   }
 
@@ -520,8 +537,13 @@ document.addEventListener('DOMContentLoaded', () => {
    */
   function initializeSpotifyProcessor() {
     try {
+      console.log('Initializing Spotify processor...');
+      
       // Get the singleton instance
-      spotifyProcessor = SpotifyProcessor.getInstance();
+      if (!spotifyProcessor) {
+        spotifyProcessor = SpotifyProcessor.getInstance();
+        console.log('SpotifyProcessor instance created:', spotifyProcessor);
+      }
       
       // Get references to DOM elements
       const spotifyLogin = document.getElementById('spotify-login');
@@ -533,14 +555,26 @@ document.addEventListener('DOMContentLoaded', () => {
         return;
       }
       
+      // Verify the API handler was created
+      if (!spotifyProcessor.spotifyAPI) {
+        console.error('Spotify API handler was not initialized');
+        spotifyLogin.style.display = 'block';
+        spotifyPlayerContainer.style.display = 'none';
+        return;
+      }
+      
+      console.log('Checking Spotify authorization status...');
+      
       // Check if we have a valid token
-      if (spotifyProcessor.spotifyAPI && spotifyProcessor.spotifyAPI.isAuthorized) {
+      if (spotifyProcessor.spotifyAPI.isAuthorized) {
+        console.log('Spotify is authorized, showing player');
         spotifyLogin.style.display = 'none';
         spotifyPlayerContainer.style.display = 'block';
         
         // Connect to Spotify (initializes audio context)
         spotifyProcessor.connectToSpotify();
       } else {
+        console.log('Spotify is not authorized, showing login button');
         spotifyLogin.style.display = 'block';
         spotifyPlayerContainer.style.display = 'none';
       }
@@ -613,10 +647,17 @@ document.addEventListener('DOMContentLoaded', () => {
   function spotifyLoginHandler() {
     console.log('Spotify login button clicked');
     try {
-      if (spotifyProcessor && spotifyProcessor.spotifyAPI) {
-        spotifyProcessor.authorize(); // Use the SpotifyProcessor's authorize method
+      if (!spotifyProcessor) {
+        console.log('Initializing Spotify processor before login...');
+        initializeSpotifyProcessor();
+      }
+      
+      if (spotifyProcessor) {
+        console.log('Calling authorize on Spotify processor...');
+        // Use the processor's authorize method which properly delegates to the API handler
+        spotifyProcessor.authorize();
       } else {
-        console.error('Spotify processor or API handler not initialized');
+        console.error('Spotify processor could not be initialized');
       }
     } catch (error) {
       console.error('Error during Spotify authorization:', error);
