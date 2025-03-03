@@ -557,12 +557,58 @@ document.addEventListener('DOMContentLoaded', () => {
     try {
       console.log('Initializing Spotify processor...');
       
-      // Get the singleton instance
-      if (!spotifyProcessor) {
-        spotifyProcessor = SpotifyProcessor.getInstance();
-        console.log('SpotifyProcessor instance created:', spotifyProcessor);
+      // Check if APP_CONFIG is available for Spotify
+      if (!window.APP_CONFIG || !window.APP_CONFIG.SPOTIFY_CLIENT_ID) {
+        console.error('Spotify Client ID not configured in APP_CONFIG');
+        alert('Spotify integration is not configured. Please set up your Spotify Client ID in the configuration.');
+        return false;
       }
       
+      // Get the singleton instance
+      if (!spotifyProcessor) {
+        console.log('Creating new SpotifyProcessor instance...');
+        try {
+          spotifyProcessor = SpotifyProcessor.getInstance();
+          console.log('SpotifyProcessor instance created:', spotifyProcessor);
+        } catch (err) {
+          console.error('Error creating SpotifyProcessor instance:', err);
+          return false;
+        }
+      }
+      
+      // Manually ensure the API handler exists if it wasn't created
+      if (!spotifyProcessor.spotifyAPI) {
+        console.warn('spotifyAPI not found on processor, creating manually...');
+        try {
+          // Import the handler
+          import('./scripts/SpotifyAPIHandler.js').then(module => {
+            const SpotifyAPIHandler = module.SpotifyAPIHandler;
+            spotifyProcessor.spotifyAPI = new SpotifyAPIHandler();
+            console.log('SpotifyAPIHandler manually created');
+            // Now continue the initialization
+            continueSpotifyInitialization();
+          }).catch(err => {
+            console.error('Failed to import SpotifyAPIHandler:', err);
+            return false;
+          });
+        } catch (err) {
+          console.error('Error creating SpotifyAPIHandler manually:', err);
+          return false;
+        }
+      } else {
+        // API handler exists, continue with initialization
+        return continueSpotifyInitialization();
+      }
+      
+      // Return true as we're doing async initialization
+      return true;
+    } catch (error) {
+      console.error('Error initializing Spotify processor:', error);
+      return false;
+    }
+    
+    // Helper function to continue initialization after ensuring API handler exists
+    function continueSpotifyInitialization() {
       // Get references to DOM elements
       const spotifyLogin = document.getElementById('spotify-login');
       const spotifyPlayerContainer = document.getElementById('spotify-player-container');
@@ -570,15 +616,15 @@ document.addEventListener('DOMContentLoaded', () => {
       // Check if elements exist before trying to access them
       if (!spotifyLogin || !spotifyPlayerContainer) {
         console.error('Spotify UI elements not found in the DOM');
-        return;
+        return false;
       }
       
-      // Verify the API handler was created
+      // Verify the API handler is now available
       if (!spotifyProcessor.spotifyAPI) {
-        console.error('Spotify API handler was not initialized');
+        console.error('Spotify API handler still not initialized after attempts');
         spotifyLogin.style.display = 'block';
         spotifyPlayerContainer.style.display = 'none';
-        return;
+        return false;
       }
       
       console.log('Checking Spotify authorization status...');
@@ -607,10 +653,7 @@ document.addEventListener('DOMContentLoaded', () => {
                                '<strong>For visualization:</strong> Select "System Audio" option and click Start.';
       }
       
-      return true; // Signal successful initialization
-    } catch (error) {
-      console.error('Error initializing Spotify processor:', error);
-      return false;
+      return true;
     }
   }
 
@@ -846,6 +889,17 @@ document.addEventListener('DOMContentLoaded', () => {
     // Stop the current source first
     if (audioProcessor.isActive) {
       audioProcessor.stop();
+    }
+    
+    // Special cleanup for Spotify
+    if (currentAudioType === 'spotify' && spotifyProcessor) {
+      try {
+        // Disconnect the Spotify processor if needed
+        spotifyProcessor.cleanup();
+        console.log('Spotify processor cleaned up');
+      } catch (err) {
+        console.error('Error cleaning up Spotify processor:', err);
+      }
     }
     
     // Reset audio state
