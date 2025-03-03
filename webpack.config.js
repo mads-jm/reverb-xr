@@ -25,8 +25,7 @@ export default (env, argv) => {
     mode: argv.mode || 'development',
     entry: {
       main: './src/main.js',
-      home: './src/stages/home.js',
-      config: './src/config.js'
+      home: './src/stages/home.js'
     },
     output: {
       filename: '[name].bundle.js',
@@ -105,11 +104,6 @@ export default (env, argv) => {
             noErrorOnMissing: true
           },
           {
-            from: 'src/config.js',
-            to: 'config.js',
-            noErrorOnMissing: true
-          },
-          {
             from: 'src/favicon.ico',
             to: 'favicon.ico',
             noErrorOnMissing: true
@@ -123,9 +117,14 @@ export default (env, argv) => {
           ...env,
           NODE_ENV: process.env.NODE_ENV || argv.mode || 'development'
         }),
-        // Explicitly expose SPOTIFY_CLIENT_ID to the client-side code
-        // This makes it available as a global variable without requiring process.env
-        'SPOTIFY_CLIENT_ID': JSON.stringify(process.env.SPOTIFY_CLIENT_ID || '')
+        // Explicitly expose SPOTIFY_CLIENT_ID to the client-side code as a global variable
+        'SPOTIFY_CLIENT_ID': JSON.stringify(process.env.SPOTIFY_CLIENT_ID || ''),
+        // Add a debug flag to help with troubleshooting
+        '__ENV_DEBUG__': JSON.stringify({
+          NODE_ENV: process.env.NODE_ENV || argv.mode || 'development',
+          HAS_SPOTIFY_ID: !!process.env.SPOTIFY_CLIENT_ID,
+          BUILD_TIME: new Date().toISOString()
+        })
       })
     ],
     devServer: {

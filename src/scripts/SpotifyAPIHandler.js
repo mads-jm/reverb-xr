@@ -4,8 +4,8 @@
  */
 export class SpotifyAPIHandler {
   constructor() {
-    // Get client ID from our central APP_CONFIG
-    this.clientId = window.APP_CONFIG?.SPOTIFY_CLIENT_ID || '';
+    // Get client ID from various sources
+    this.clientId = this.getClientId();
                     
     this.redirectUri = window.location.origin + '/callback.html';
     this.accessToken = null;
@@ -17,13 +17,40 @@ export class SpotifyAPIHandler {
     // Validate configuration
     if (!this.clientId) {
       console.error('Spotify Client ID not configured. Spotify integration will not work.');
-      console.log('Please add SPOTIFY_CLIENT_ID to your Vercel environment variables.');
+      console.log('Please set SPOTIFY_CLIENT_ID in your Vercel environment variables.');
     } else {
       console.log('Spotify Client ID loaded successfully:', this.clientId.substring(0, 5) + '...');
     }
     
     // Check if we're returning from an auth flow
     this.checkAuth();
+  }
+  
+  /**
+   * Get the Spotify client ID from available sources
+   * @returns {string} The client ID if found, empty string otherwise
+   */
+  getClientId() {
+    // First check APP_CONFIG
+    if (window.APP_CONFIG && window.APP_CONFIG.SPOTIFY_CLIENT_ID) {
+      console.log('Found Spotify Client ID in APP_CONFIG');
+      return window.APP_CONFIG.SPOTIFY_CLIENT_ID;
+    }
+    
+    // Then check global variable from webpack injection
+    if (typeof SPOTIFY_CLIENT_ID !== 'undefined' && SPOTIFY_CLIENT_ID) {
+      console.log('Found Spotify Client ID from webpack injection');
+      return SPOTIFY_CLIENT_ID;
+    }
+    
+    // Then check process.env (though this rarely works client-side)
+    if (typeof process !== 'undefined' && process.env && process.env.SPOTIFY_CLIENT_ID) {
+      console.log('Found Spotify Client ID in process.env');
+      return process.env.SPOTIFY_CLIENT_ID;
+    }
+    
+    console.warn('No Spotify Client ID found from any source');
+    return '';
   }
   
   /**

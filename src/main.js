@@ -3,6 +3,7 @@ import './styles/main.css';
 
 // Import utility modules
 import { resolvePath } from './scripts/utils/pathResolver.js';
+import { initializeEnvironmentVariables, checkEnvironmentVariables } from './scripts/utils/environment-check.js';
 
 // Import audio processors
 import { GPUAudioProcessor } from './scripts/audio/GPUAudioProcessor.js';
@@ -15,6 +16,9 @@ import { loadSpotifySDK } from './scripts/external/spotify-sdk-loader.js';
  * Handles UI interactions, audio source selection, and visualization data processing
  */
 document.addEventListener('DOMContentLoaded', () => {
+  // Initialize environment variables first
+  initializeEnvironmentVariables();
+  
   // Verify the SpotifyProcessor was imported correctly
   if (typeof SpotifyProcessor === 'undefined') {
     console.error('Failed to import SpotifyProcessor! Check the import path and class definition.');
@@ -557,10 +561,17 @@ document.addEventListener('DOMContentLoaded', () => {
     try {
       console.log('Initializing Spotify processor...');
       
-      // Debug check for environment variables
-      if (typeof window.checkEnvironmentVariables === 'function') {
-        console.log('Running environment variables check...');
-        window.checkEnvironmentVariables();
+      // Check environment variables
+      const envStatus = checkEnvironmentVariables();
+      console.log('Environment status:', envStatus);
+      
+      // Check if APP_CONFIG is available and has a Spotify client ID
+      if (!window.APP_CONFIG || !window.APP_CONFIG.SPOTIFY_CLIENT_ID) {
+        console.warn('No Spotify Client ID found in APP_CONFIG');
+        // Re-initialize environment variables as a fallback
+        initializeEnvironmentVariables();
+      } else {
+        console.log('Found Spotify Client ID in APP_CONFIG:', window.APP_CONFIG.SPOTIFY_CLIENT_ID.substring(0, 5) + '...');
       }
       
       // Get the singleton instance
