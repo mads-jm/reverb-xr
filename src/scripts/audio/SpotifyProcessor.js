@@ -8,15 +8,7 @@ import { SpotifyAPIHandler } from '../SpotifyAPIHandler.js';
  */
 export class SpotifyProcessor extends AudioProcessor {
   constructor() {
-    // If AudioProcessor singleton already exists, return it
-    if (AudioProcessor.instance) {
-      // Add spotify properties to existing instance
-      const instance = AudioProcessor.instance;
-      this.enhanceWithSpotify(instance);
-      return instance;
-    }
-    
-    // Otherwise create new instance with Spotify capabilities
+    // Create a new instance instead of reusing the AudioProcessor singleton
     super(); // Initialize AudioProcessor
     this.enhanceWithSpotify(this);
     
@@ -51,7 +43,7 @@ export class SpotifyProcessor extends AudioProcessor {
   }
   
   /**
-   * Get the singleton instance
+   * Get the singleton instance of SpotifyProcessor
    * @returns {SpotifyProcessor} The singleton instance
    */
   static getInstance() {

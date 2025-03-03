@@ -3,7 +3,8 @@ import { InitializedState } from './InitializedState.js';
 export class AudioProcessor {
 	constructor(options = {}) {
 		// limit to one instance for whole scope
-		if (AudioProcessor.instance) {
+		// Only return the singleton instance if this is an AudioProcessor, not a subclass
+		if (AudioProcessor.instance && this.constructor === AudioProcessor) {
 			return AudioProcessor.instance;
 		}
 		this.audioContext = new (window.AudioContext ||
@@ -19,7 +20,11 @@ export class AudioProcessor {
 		this.source = null;
 		this.startTime = null;
 		this.debugMode = options.debugMode || false;
-		AudioProcessor.instance = this;
+		
+		// Only set the singleton instance if this is an AudioProcessor, not a subclass
+		if (this.constructor === AudioProcessor) {
+			AudioProcessor.instance = this;
+		}
 	}
 
 	static getInstance() {
