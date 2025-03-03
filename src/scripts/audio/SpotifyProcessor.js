@@ -1,3 +1,4 @@
+// Import required modules
 import { AudioProcessor } from './AudioProcessor.js';
 import { SpotifyAPIHandler } from '../SpotifyAPIHandler.js';
 
@@ -28,32 +29,14 @@ export class SpotifyProcessor extends AudioProcessor {
    * @param {AudioProcessor} instance The instance to enhance
    */
   enhanceWithSpotify(instance) {
-    // Import SpotifyAPIHandler
+    // Create SpotifyAPIHandler instance directly
     try {
-      // Dynamic import for ESM compatibility
-      import('../SpotifyAPIHandler.js').then(module => {
-        instance.spotifyAPI = new module.SpotifyAPIHandler();
-        console.log('SpotifyAPIHandler initialized successfully via dynamic import');
-        
-        // Set up event handler for track changes
-        instance.spotifyAPI.onPlaybackUpdate((track, status) => {
-          instance.updateNowPlaying(track, status);
-        });
-      }).catch(err => {
-        console.error('Failed to dynamically import SpotifyAPIHandler:', err);
-        
-        // Fallback to direct import in case it's already available
-        if (typeof SpotifyAPIHandler !== 'undefined') {
-          instance.spotifyAPI = new SpotifyAPIHandler();
-          console.log('SpotifyAPIHandler initialized via global reference');
-          
-          // Set up event handler for track changes
-          instance.spotifyAPI.onPlaybackUpdate((track, status) => {
-            instance.updateNowPlaying(track, status);
-          });
-        } else {
-          console.error('SpotifyAPIHandler not available, Spotify integration will not work');
-        }
+      instance.spotifyAPI = new SpotifyAPIHandler();
+      console.log('SpotifyAPIHandler initialized successfully');
+      
+      // Set up event handler for track changes
+      instance.spotifyAPI.onPlaybackUpdate((track, status) => {
+        instance.updateNowPlaying(track, status);
       });
     } catch (error) {
       console.error('Error initializing SpotifyAPIHandler:', error);
@@ -73,42 +56,52 @@ export class SpotifyProcessor extends AudioProcessor {
    */
   static getInstance() {
     if (!SpotifyProcessor.instance) {
+      console.log('Creating new SpotifyProcessor instance in getInstance()');
       SpotifyProcessor.instance = new SpotifyProcessor();
+      
+      // Verify that SpotifyAPIHandler was created
+      if (!SpotifyProcessor.instance.spotifyAPI) {
+        console.warn('SpotifyAPIHandler not created in getInstance() - creating now');
+        try {
+          SpotifyProcessor.instance.spotifyAPI = new SpotifyAPIHandler();
+          console.log('SpotifyAPIHandler created in getInstance()');
+        } catch (error) {
+          console.error('Failed to create SpotifyAPIHandler in getInstance():', error);
+        }
+      }
     }
     return SpotifyProcessor.instance;
   }
 
   /**
    * Start the Spotify authorization flow
-   * This method needs a special implementation to handle async initialization
    */
   authorize() {
     // Check if spotifyAPI is available
     if (!this.spotifyAPI) {
-      console.error('SpotifyAPI not initialized yet');
+      console.error('SpotifyAPI not initialized');
       
-      // Try to initialize it now
+      // Create it directly
       try {
-        // Try to dynamically import the SpotifyAPIHandler
-        import('../SpotifyAPIHandler.js').then(module => {
-          this.spotifyAPI = new module.SpotifyAPIHandler();
-          console.log('SpotifyAPIHandler initialized on demand');
-          
-          // Now we can authorize
-          this.spotifyAPI.authorize();
-        }).catch(error => {
-          console.error('Failed to import SpotifyAPIHandler for authorization:', error);
-          alert('Spotify integration is not available. Please try reloading the page.');
-        });
+        this.spotifyAPI = new SpotifyAPIHandler();
+        console.log('SpotifyAPIHandler initialized on demand');
+        
+        // Now authorize
+        this.spotifyAPI.authorize();
       } catch (error) {
-        console.error('Error during authorization:', error);
-        alert('Failed to initialize Spotify integration.');
+        console.error('Failed to create SpotifyAPIHandler:', error);
+        alert('Failed to initialize Spotify integration. Please reload the page.');
       }
       return;
     }
     
     // If we have the API handler, use it
-    this.spotifyAPI.authorize();
+    try {
+      this.spotifyAPI.authorize();
+    } catch (error) {
+      console.error('Error during authorization:', error);
+      alert('Error authorizing with Spotify: ' + error.message);
+    }
   }
 
   /**

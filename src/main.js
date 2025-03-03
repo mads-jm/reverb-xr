@@ -556,6 +556,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   /**
    * Initialize the Spotify processor and UI elements
+   * @returns {boolean} Whether initialization was successful
    */
   function initializeSpotifyProcessor() {
     try {
@@ -579,47 +580,20 @@ document.addEventListener('DOMContentLoaded', () => {
         console.log('Creating new SpotifyProcessor instance...');
         try {
           spotifyProcessor = SpotifyProcessor.getInstance();
-          console.log('SpotifyProcessor instance created:', spotifyProcessor);
+          console.log('SpotifyProcessor instance created');
           
-          // Debug: Check if the API handler is created with a retry mechanism
-          const checkForAPI = (retries = 0, maxRetries = 5) => {
-            if (spotifyProcessor.spotifyAPI) {
-              console.log('SpotifyAPIHandler created successfully');
-              console.log('Client ID available:', !!spotifyProcessor.spotifyAPI.clientId);
-              
-              // If we have the API handler, continue initialization
-              continueSpotifyInitialization();
-              return true;
-            } else if (retries < maxRetries) {
-              console.log(`Waiting for SpotifyAPIHandler to initialize (attempt ${retries + 1}/${maxRetries})...`);
-              // Wait a bit and try again
-              setTimeout(() => checkForAPI(retries + 1, maxRetries), 500);
-              return false;
-            } else {
-              console.warn('SpotifyAPIHandler not created after multiple attempts');
-              
-              // Manual fallback: Try to create the API handler directly
-              console.log('spotifyAPI not found on processor, creating manually...');
-              
-              // Try to import SpotifyAPIHandler
-              import('./scripts/SpotifyAPIHandler.js').then(module => {
-                const APIHandler = module.SpotifyAPIHandler;
-                spotifyProcessor.spotifyAPI = new APIHandler();
-                console.log('Manually created SpotifyAPIHandler');
-                
-                // Now continue initialization
-                continueSpotifyInitialization();
-              }).catch(error => {
-                console.error('Failed to manually create SpotifyAPIHandler:', error);
-                return false;
-              });
-              
-              return false;
-            }
-          };
-          
-          // Start checking for the API handler
-          return checkForAPI();
+          // Check if the API handler was initialized
+          if (spotifyProcessor.spotifyAPI) {
+            console.log('SpotifyAPIHandler created successfully');
+            console.log('Client ID available:', !!spotifyProcessor.spotifyAPI.clientId);
+            
+            // Continue with initialization
+            continueSpotifyInitialization();
+            return true;
+          } else {
+            console.warn('SpotifyAPIHandler not created during initialization');
+            return false;
+          }
         } catch (error) {
           console.error('Failed to create SpotifyProcessor instance:', error);
           return false;
@@ -634,18 +608,7 @@ document.addEventListener('DOMContentLoaded', () => {
           return true;
         } else {
           console.warn('Existing SpotifyProcessor has no API handler');
-          // Try to create the API handler
-          import('./scripts/SpotifyAPIHandler.js').then(module => {
-            const APIHandler = module.SpotifyAPIHandler;
-            spotifyProcessor.spotifyAPI = new APIHandler();
-            console.log('Created SpotifyAPIHandler for existing processor');
-            
-            // Now continue initialization
-            continueSpotifyInitialization();
-          }).catch(error => {
-            console.error('Failed to create SpotifyAPIHandler for existing processor:', error);
-            return false;
-          });
+          return false;
         }
       }
     } catch (error) {
@@ -782,36 +745,28 @@ document.addEventListener('DOMContentLoaded', () => {
           alert('Failed to initialize Spotify. Please try again.');
           return;
         }
+        
+        // Allow time for initialization
+        setTimeout(() => {
+          if (spotifyProcessor && spotifyProcessor.spotifyAPI) {
+            spotifyProcessor.authorize();
+          } else {
+            console.error('SpotifyProcessor not properly initialized after delay');
+            alert('Spotify integration is not ready. Please try again in a moment.');
+          }
+        }, 1000);
+        return;
       }
       
       // Check if the API handler is available
       if (!spotifyProcessor.spotifyAPI) {
         console.error('Spotify API handler is not available');
-        
-        // Try to initialize it directly
-        console.log('Attempting to initialize SpotifyAPIHandler on demand...');
-        
-        // Import the SpotifyAPIHandler module
-        import('./scripts/SpotifyAPIHandler.js').then(module => {
-          const APIHandler = module.SpotifyAPIHandler;
-          spotifyProcessor.spotifyAPI = new APIHandler();
-          console.log('SpotifyAPIHandler initialized on demand');
-          
-          // After successful initialization, try to authorize
-          setTimeout(() => {
-            console.log('Calling authorize on newly created SpotifyAPIHandler...');
-            spotifyProcessor.spotifyAPI.authorize();
-          }, 500);
-        }).catch(error => {
-          console.error('Failed to import SpotifyAPIHandler during login:', error);
-          alert('Spotify integration is not available. Please reload the page.');
-        });
-        
+        alert('Spotify integration is not properly initialized. Please reload the page.');
         return;
       }
       
       console.log('Calling authorize on Spotify processor...');
-      // Use the processor's authorize method which properly delegates to the API handler
+      // Call the authorize method
       spotifyProcessor.authorize();
     } catch (error) {
       console.error('Error during Spotify authorization:', error);
