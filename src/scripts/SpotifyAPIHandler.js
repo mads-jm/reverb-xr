@@ -4,13 +4,8 @@
  */
 export class SpotifyAPIHandler {
   constructor() {
-    // Try to get the client ID from various possible sources for client-side code
-    // For Vercel, environment variables are typically injected as global variables
-    this.clientId = window.ENV_SPOTIFY_CLIENT_ID || 
-                    window.NEXT_PUBLIC_SPOTIFY_CLIENT_ID || 
-                    window.SPOTIFY_CLIENT_ID || 
-                    window.APP_CONFIG?.SPOTIFY_CLIENT_ID || 
-                    '';
+    // Get client ID from our central APP_CONFIG
+    this.clientId = window.APP_CONFIG?.SPOTIFY_CLIENT_ID || '';
                     
     this.redirectUri = window.location.origin + '/callback.html';
     this.accessToken = null;
@@ -22,7 +17,7 @@ export class SpotifyAPIHandler {
     // Validate configuration
     if (!this.clientId) {
       console.error('Spotify Client ID not configured. Spotify integration will not work.');
-      console.log('Please configure SPOTIFY_CLIENT_ID in your Vercel environment variables with prefix NEXT_PUBLIC_');
+      console.log('Please add SPOTIFY_CLIENT_ID to your Vercel environment variables.');
     } else {
       console.log('Spotify Client ID loaded successfully:', this.clientId.substring(0, 5) + '...');
     }

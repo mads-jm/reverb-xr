@@ -25,7 +25,8 @@ export default (env, argv) => {
     mode: argv.mode || 'development',
     entry: {
       main: './src/main.js',
-      home: './src/stages/home.js'
+      home: './src/stages/home.js',
+      config: './src/config.js'
     },
     output: {
       filename: '[name].bundle.js',
@@ -103,14 +104,13 @@ export default (env, argv) => {
             to: 'assets',
             noErrorOnMissing: true
           },
-          // Copy vercel.json to the output directory for deployment
           {
-            from: 'vercel.json',
-            to: 'vercel.json',
+            from: 'src/config.js',
+            to: 'config.js',
             noErrorOnMissing: true
           },
           {
-            from: 'favicon.ico',
+            from: 'src/favicon.ico',
             to: 'favicon.ico',
             noErrorOnMissing: true
           }
