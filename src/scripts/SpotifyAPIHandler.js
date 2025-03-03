@@ -74,10 +74,31 @@ export class SpotifyAPIHandler {
   }
 
   /**
-   * Check if we have a valid auth token
-   * @returns {boolean} Whether we're authorized
+   * Check if user is authenticated with Spotify
+   * @returns {boolean} True if authenticated, false otherwise
    */
   checkAuth() {
+    // First check for token in localStorage (set by callback.html)
+    const storedToken = localStorage.getItem('spotify_access_token');
+    const tokenExpires = localStorage.getItem('spotify_token_expires');
+    
+    if (storedToken) {
+      // Check if token is expired
+      if (tokenExpires && parseInt(tokenExpires) > Date.now()) {
+        this.accessToken = storedToken;
+        this.isAuthorized = true;
+        console.log('Using Spotify token from localStorage');
+        return true;
+      } else {
+        // Token expired
+        console.log('Spotify token expired, clearing');
+        localStorage.removeItem('spotify_access_token');
+        localStorage.removeItem('spotify_token_type');
+        localStorage.removeItem('spotify_token_expires');
+      }
+    }
+    
+    // Fallback to checking URL hash params (legacy method)
     const params = this.getHashParams();
     const storedState = localStorage.getItem('spotify_auth_state');
     
@@ -89,9 +110,9 @@ export class SpotifyAPIHandler {
       window.history.replaceState({}, document.title, window.location.pathname);
       
       return true;
-    } else {
-      return false;
     }
+    
+    return false;
   }
   
   /**

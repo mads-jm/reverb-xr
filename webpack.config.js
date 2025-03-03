@@ -79,6 +79,14 @@ export default (env, argv) => {
         scriptLoading: 'blocking',
       }),
       
+      // Spotify callback HTML
+      new HtmlWebpackPlugin({
+        template: './src/callback.html',
+        filename: 'callback.html',
+        chunks: [],
+        inject: false,
+      }),
+      
       // Copy static assets with proper MIME types
       new CopyWebpackPlugin({
         patterns: [

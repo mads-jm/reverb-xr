@@ -3,17 +3,99 @@
 <head>
   <title>Spotify Authentication</title>
   <script>
-    console.log('Callback page loaded with hash:', window.location.hash);
-    
-    // Redirect back to the main page with the token in the URL hash
+    /**
+     * Handles the Spotify authentication callback
+     * Processes the hash fragment containing the access token and redirects to the main application
+     */
     window.onload = function() {
-      const redirectUrl = window.location.origin + '/#' + window.location.hash.substring(1);
+      console.log('Callback page loaded with hash:', window.location.hash);
+      
+      // Check if we received an error from Spotify
+      if (window.location.hash.includes('error=')) {
+        console.error('Spotify authentication error:', window.location.hash);
+        // Save error in localStorage for main app to display
+        localStorage.setItem('spotify_auth_error', window.location.hash.substring(1));
+        window.location.href = window.location.origin;
+        return;
+      }
+      
+      // Extract token information
+      if (window.location.hash.includes('access_token=')) {
+        try {
+          // Get token parameters from hash fragment
+          const params = {};
+          window.location.hash.substring(1).split('&').forEach(pair => {
+            const [key, value] = pair.split('=');
+            params[key] = value;
+          });
+          
+          // Store token in localStorage
+          if (params.access_token) {
+            localStorage.setItem('spotify_access_token', params.access_token);
+            localStorage.setItem('spotify_token_type', params.token_type || 'Bearer');
+            
+            // Calculate expiration time
+            if (params.expires_in) {
+              const expirationTime = Date.now() + (parseInt(params.expires_in) * 1000);
+              localStorage.setItem('spotify_token_expires', expirationTime.toString());
+            }
+            
+            console.log('Spotify authentication successful, token saved');
+          }
+        } catch (err) {
+          console.error('Error processing authentication data:', err);
+          localStorage.setItem('spotify_auth_error', 'Failed to process authentication response');
+        }
+      }
+      
+      // Redirect back to the main application
+      const redirectUrl = window.location.origin;
       console.log('Redirecting to:', redirectUrl);
       window.location.href = redirectUrl;
     };
   </script>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #121212;
+      color: #ffffff;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+    }
+    .container {
+      text-align: center;
+      padding: 20px;
+      background-color: rgba(0, 0, 0, 0.3);
+      border-radius: 8px;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+    }
+    h2 {
+      color: #1DB954; /* Spotify green */
+    }
+    .loader {
+      border: 5px solid #333;
+      border-radius: 50%;
+      border-top: 5px solid #1DB954;
+      width: 50px;
+      height: 50px;
+      animation: spin 1s linear infinite;
+      margin: 20px auto;
+    }
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+  </style>
 </head>
 <body>
-  <p>Authenticating with Spotify...</p>
+  <div class="container">
+    <h2>Spotify Authentication</h2>
+    <div class="loader"></div>
+    <p>Authenticating with Spotify...</p>
+    <p><small>You will be redirected automatically.</small></p>
+  </div>
 </body>
 </html> 
