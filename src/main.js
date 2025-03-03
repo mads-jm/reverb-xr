@@ -559,10 +559,18 @@ document.addEventListener('DOMContentLoaded', () => {
       
       // Debug: Log available environment variables related to Spotify
       console.log('Environment variables check:');
-      console.log('- window.NEXT_PUBLIC_SPOTIFY_CLIENT_ID:', window.NEXT_PUBLIC_SPOTIFY_CLIENT_ID ? 'Found' : 'Not found');
       console.log('- window.SPOTIFY_CLIENT_ID:', window.SPOTIFY_CLIENT_ID ? 'Found' : 'Not found');
+      console.log('- window.NEXT_PUBLIC_SPOTIFY_CLIENT_ID:', window.NEXT_PUBLIC_SPOTIFY_CLIENT_ID ? 'Found' : 'Not found');
       console.log('- window.ENV_SPOTIFY_CLIENT_ID:', window.ENV_SPOTIFY_CLIENT_ID ? 'Found' : 'Not found');
       console.log('- window.APP_CONFIG?.SPOTIFY_CLIENT_ID:', window.APP_CONFIG?.SPOTIFY_CLIENT_ID ? 'Found' : 'Not found');
+
+      // If no client ID is available, show a warning
+      if (!window.SPOTIFY_CLIENT_ID && 
+          !window.NEXT_PUBLIC_SPOTIFY_CLIENT_ID && 
+          !window.ENV_SPOTIFY_CLIENT_ID && 
+          !window.APP_CONFIG?.SPOTIFY_CLIENT_ID) {
+        console.warn('No Spotify Client ID found in any expected location');
+      }
       
       // Get the singleton instance
       if (!spotifyProcessor) {
@@ -638,11 +646,11 @@ document.addEventListener('DOMContentLoaded', () => {
       
       // Check if we have a valid client ID
       if (!spotifyProcessor.spotifyAPI.clientId) {
-        console.error('No Spotify Client ID found. Please set NEXT_PUBLIC_SPOTIFY_CLIENT_ID in your Vercel environment variables.');
+        console.error('No Spotify Client ID found. Please set SPOTIFY_CLIENT_ID in your Vercel environment variables.');
         
         // Show a helpful message for the user
         if (spotifyLogin) {
-          spotifyLogin.innerHTML = 'Spotify Client ID not configured.<br>Set up NEXT_PUBLIC_SPOTIFY_CLIENT_ID in Vercel.';
+          spotifyLogin.innerHTML = 'Spotify Client ID not configured.<br>Set up SPOTIFY_CLIENT_ID in Vercel.';
           spotifyLogin.style.display = 'block';
         }
         spotifyPlayerContainer.style.display = 'none';
