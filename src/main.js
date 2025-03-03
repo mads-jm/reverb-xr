@@ -519,8 +519,7 @@ document.addEventListener('DOMContentLoaded', () => {
    * Initialize the Spotify processor and UI elements
    */
   function initializeSpotifyProcessor() {
-    // Only create the processor if it doesn't exist
-    if (!spotifyProcessor) {
+    try {
       // Get the singleton instance
       spotifyProcessor = SpotifyProcessor.getInstance();
       
@@ -555,6 +554,8 @@ document.addEventListener('DOMContentLoaded', () => {
         spotifyNote.innerHTML = 'Start playing in your Spotify app, then control here!<br>' +
                                '<strong>For visualization:</strong> Select "System Audio" option and click Start.';
       }
+    } catch (error) {
+      console.error('Error initializing Spotify processor:', error);
     }
   }
 
@@ -611,10 +612,14 @@ document.addEventListener('DOMContentLoaded', () => {
    */
   function spotifyLoginHandler() {
     console.log('Spotify login button clicked');
-    if (spotifyProcessor) {
-      spotifyProcessor.authorize();
-    } else {
-      console.error('Spotify processor not initialized');
+    try {
+      if (spotifyProcessor && spotifyProcessor.spotifyAPI) {
+        spotifyProcessor.authorize(); // Use the SpotifyProcessor's authorize method
+      } else {
+        console.error('Spotify processor or API handler not initialized');
+      }
+    } catch (error) {
+      console.error('Error during Spotify authorization:', error);
     }
   }
 
