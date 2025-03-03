@@ -411,22 +411,7 @@ document.addEventListener('DOMContentLoaded', () => {
    * Update UI for Spotify mode
    */
   function updateUIForSpotifyMode() {
-    // Only load Spotify components when needed
-    loadSpotifyComponents();
-    showSpotifyControls();
-    
-    // Show system audio option when Spotify is selected but hide the radio button
-    systemAudioContainer.style.display = 'flex';
-    systemAudioOption.style.display = 'none'; // Hide the radio button
-    systemAudioOption.disabled = true; // Disable it to prevent interactions
-    startSystemAudioButton.disabled = false; // Enable the start button
-    
-    // Make the label text clearer since there's no radio button
-    const systemAudioLabel = document.querySelector('label[for="system-audio-option"]');
-    if (systemAudioLabel) {
-      systemAudioLabel.textContent = "Capture System Audio:";
-    }
-    
+    // First disable other controls
     startMicButton.disabled = true;
     fileInput.disabled = true;
     openUrlModalButton.disabled = true;
@@ -443,6 +428,36 @@ document.addEventListener('DOMContentLoaded', () => {
     
     // Spotify has its own controls
     removePlayPauseControl();
+    
+    // Show system audio option when Spotify is selected but hide the radio button
+    systemAudioContainer.style.display = 'flex';
+    systemAudioOption.style.display = 'none'; // Hide the radio button
+    systemAudioOption.disabled = true; // Disable it to prevent interactions
+    startSystemAudioButton.disabled = false; // Enable the start button
+    
+    // Make the label text clearer since there's no radio button
+    const systemAudioLabel = document.querySelector('label[for="system-audio-option"]');
+    if (systemAudioLabel) {
+      systemAudioLabel.textContent = "Capture System Audio:";
+    }
+    
+    // Now load Spotify components and show controls
+    console.log('Loading Spotify components...');
+    loadSpotifyComponents();
+  }
+  
+  /**
+   * Show Spotify controls in the UI
+   */
+  function showSpotifyControls() {
+    console.log('Showing Spotify controls');
+    
+    // Show Spotify controls
+    if (spotifyControls) {
+      spotifyControls.style.display = 'block';
+    } else {
+      console.error('Spotify controls element not found');
+    }
   }
   
   /**
@@ -519,6 +534,7 @@ document.addEventListener('DOMContentLoaded', () => {
           console.log('Spotify Web Playback SDK loaded successfully');
           spotifySDKLoaded = true;
           initializeSpotifyProcessor();
+          showSpotifyControls(); // Show controls after initialization
         })
         .catch(error => {
           console.error('Failed to load Spotify SDK:', error);
@@ -527,8 +543,10 @@ document.addEventListener('DOMContentLoaded', () => {
       // SDK already loaded, just initialize the processor
       console.log('SDK already loaded, initializing processor...');
       initializeSpotifyProcessor();
+      showSpotifyControls(); // Show controls after initialization
     } else {
       console.log('Spotify processor already initialized');
+      showSpotifyControls(); // Ensure controls are shown
     }
   }
 
@@ -588,8 +606,11 @@ document.addEventListener('DOMContentLoaded', () => {
         spotifyNote.innerHTML = 'Start playing in your Spotify app, then control here!<br>' +
                                '<strong>For visualization:</strong> Select "System Audio" option and click Start.';
       }
+      
+      return true; // Signal successful initialization
     } catch (error) {
       console.error('Error initializing Spotify processor:', error);
+      return false;
     }
   }
 
@@ -647,33 +668,31 @@ document.addEventListener('DOMContentLoaded', () => {
   function spotifyLoginHandler() {
     console.log('Spotify login button clicked');
     try {
+      // Make sure Spotify processor is initialized first
       if (!spotifyProcessor) {
-        console.log('Initializing Spotify processor before login...');
-        initializeSpotifyProcessor();
+        console.log('Spotify processor not initialized. Initializing now...');
+        // Try to initialize it
+        if (!initializeSpotifyProcessor()) {
+          console.error('Failed to initialize Spotify processor before login');
+          alert('Failed to initialize Spotify. Please try again.');
+          return;
+        }
       }
       
-      if (spotifyProcessor) {
-        console.log('Calling authorize on Spotify processor...');
-        // Use the processor's authorize method which properly delegates to the API handler
-        spotifyProcessor.authorize();
-      } else {
-        console.error('Spotify processor could not be initialized');
+      // Check if the API handler is available
+      if (!spotifyProcessor.spotifyAPI) {
+        console.error('Spotify API handler is not available');
+        alert('Spotify integration is not properly initialized. Please reload the page and try again.');
+        return;
       }
+      
+      console.log('Calling authorize on Spotify processor...');
+      // Use the processor's authorize method which properly delegates to the API handler
+      spotifyProcessor.authorize();
     } catch (error) {
       console.error('Error during Spotify authorization:', error);
+      alert('Error during Spotify authorization: ' + error.message);
     }
-  }
-
-  /**
-   * Show Spotify control UI
-   */
-  function showSpotifyControls() {
-    // Hide other controls
-    startMicButton.disabled = true;
-    fileInput.disabled = true;
-    
-    // Show Spotify controls
-    spotifyControls.style.display = 'block';
   }
 
   /**
