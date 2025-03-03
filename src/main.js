@@ -535,7 +535,7 @@ document.addEventListener('DOMContentLoaded', () => {
       }
       
       // Check if we have a valid token
-      if (spotifyProcessor.checkAuth()) {
+      if (spotifyProcessor.spotifyAPI && spotifyProcessor.spotifyAPI.isAuthorized) {
         spotifyLogin.style.display = 'none';
         spotifyPlayerContainer.style.display = 'block';
         
