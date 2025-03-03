@@ -581,112 +581,142 @@ document.addEventListener('DOMContentLoaded', () => {
           spotifyProcessor = SpotifyProcessor.getInstance();
           console.log('SpotifyProcessor instance created:', spotifyProcessor);
           
-          // Debug: Check if the API handler was created
-          if (spotifyProcessor.spotifyAPI) {
-            console.log('SpotifyAPIHandler created automatically');
-            console.log('Client ID available:', !!spotifyProcessor.spotifyAPI.clientId);
-          } else {
-            console.warn('SpotifyAPIHandler not created during SpotifyProcessor initialization');
-          }
-        } catch (err) {
-          console.error('Error creating SpotifyProcessor instance:', err);
-          return false;
-        }
-      }
-      
-      // Manually ensure the API handler exists if it wasn't created
-      if (!spotifyProcessor.spotifyAPI) {
-        console.warn('spotifyAPI not found on processor, creating manually...');
-        try {
-          // Import the handler
-          import('./scripts/SpotifyAPIHandler.js').then(module => {
-            const SpotifyAPIHandler = module.SpotifyAPIHandler;
-            spotifyProcessor.spotifyAPI = new SpotifyAPIHandler();
-            console.log('SpotifyAPIHandler manually created');
-            console.log('Client ID available:', !!spotifyProcessor.spotifyAPI.clientId);
-            // Now continue the initialization
-            continueSpotifyInitialization();
-          }).catch(err => {
-            console.error('Failed to import SpotifyAPIHandler:', err);
-            return false;
-          });
-        } catch (err) {
-          console.error('Error creating SpotifyAPIHandler manually:', err);
+          // Debug: Check if the API handler is created with a retry mechanism
+          const checkForAPI = (retries = 0, maxRetries = 5) => {
+            if (spotifyProcessor.spotifyAPI) {
+              console.log('SpotifyAPIHandler created successfully');
+              console.log('Client ID available:', !!spotifyProcessor.spotifyAPI.clientId);
+              
+              // If we have the API handler, continue initialization
+              continueSpotifyInitialization();
+              return true;
+            } else if (retries < maxRetries) {
+              console.log(`Waiting for SpotifyAPIHandler to initialize (attempt ${retries + 1}/${maxRetries})...`);
+              // Wait a bit and try again
+              setTimeout(() => checkForAPI(retries + 1, maxRetries), 500);
+              return false;
+            } else {
+              console.warn('SpotifyAPIHandler not created after multiple attempts');
+              
+              // Manual fallback: Try to create the API handler directly
+              console.log('spotifyAPI not found on processor, creating manually...');
+              
+              // Try to import SpotifyAPIHandler
+              import('./scripts/SpotifyAPIHandler.js').then(module => {
+                const APIHandler = module.SpotifyAPIHandler;
+                spotifyProcessor.spotifyAPI = new APIHandler();
+                console.log('Manually created SpotifyAPIHandler');
+                
+                // Now continue initialization
+                continueSpotifyInitialization();
+              }).catch(error => {
+                console.error('Failed to manually create SpotifyAPIHandler:', error);
+                return false;
+              });
+              
+              return false;
+            }
+          };
+          
+          // Start checking for the API handler
+          return checkForAPI();
+        } catch (error) {
+          console.error('Failed to create SpotifyProcessor instance:', error);
           return false;
         }
       } else {
-        // API handler exists, continue with initialization
-        return continueSpotifyInitialization();
+        console.log('Using existing SpotifyProcessor instance');
+        
+        // If we already have a processor, check if it has an API handler
+        if (spotifyProcessor.spotifyAPI) {
+          console.log('SpotifyAPIHandler already exists');
+          continueSpotifyInitialization();
+          return true;
+        } else {
+          console.warn('Existing SpotifyProcessor has no API handler');
+          // Try to create the API handler
+          import('./scripts/SpotifyAPIHandler.js').then(module => {
+            const APIHandler = module.SpotifyAPIHandler;
+            spotifyProcessor.spotifyAPI = new APIHandler();
+            console.log('Created SpotifyAPIHandler for existing processor');
+            
+            // Now continue initialization
+            continueSpotifyInitialization();
+          }).catch(error => {
+            console.error('Failed to create SpotifyAPIHandler for existing processor:', error);
+            return false;
+          });
+        }
       }
-      
-      // Return true as we're doing async initialization
-      return true;
     } catch (error) {
       console.error('Error initializing Spotify processor:', error);
       return false;
     }
+  }
+
+  /**
+   * Continue Spotify initialization after ensuring API handler exists
+   * @returns {boolean} Whether initialization was successful
+   */
+  function continueSpotifyInitialization() {
+    // Get references to DOM elements
+    const spotifyLogin = document.getElementById('spotify-login');
+    const spotifyPlayerContainer = document.getElementById('spotify-player-container');
     
-    // Helper function to continue initialization after ensuring API handler exists
-    function continueSpotifyInitialization() {
-      // Get references to DOM elements
-      const spotifyLogin = document.getElementById('spotify-login');
-      const spotifyPlayerContainer = document.getElementById('spotify-player-container');
-      
-      // Check if elements exist before trying to access them
-      if (!spotifyLogin || !spotifyPlayerContainer) {
-        console.error('Spotify UI elements not found in the DOM');
-        return false;
-      }
-      
-      // Verify the API handler is now available
-      if (!spotifyProcessor.spotifyAPI) {
-        console.error('Spotify API handler still not initialized after attempts');
-        spotifyLogin.style.display = 'block';
-        spotifyPlayerContainer.style.display = 'none';
-        return false;
-      }
-      
-      // Check if we have a valid client ID
-      if (!spotifyProcessor.spotifyAPI.clientId) {
-        console.error('No Spotify Client ID found. Please set SPOTIFY_CLIENT_ID in your Vercel environment variables.');
-        
-        // Show a helpful message for the user
-        if (spotifyLogin) {
-          spotifyLogin.innerHTML = 'Spotify Client ID not configured.<br>Set up SPOTIFY_CLIENT_ID in Vercel.';
-          spotifyLogin.style.display = 'block';
-        }
-        spotifyPlayerContainer.style.display = 'none';
-        return false;
-      }
-      
-      console.log('Checking Spotify authorization status...');
-      
-      // Check if we have a valid token
-      if (spotifyProcessor.spotifyAPI.isAuthorized) {
-        console.log('Spotify is authorized, showing player');
-        spotifyLogin.style.display = 'none';
-        spotifyPlayerContainer.style.display = 'block';
-        
-        // Connect to Spotify (initializes audio context)
-        spotifyProcessor.connectToSpotify();
-      } else {
-        console.log('Spotify is not authorized, showing login button');
-        spotifyLogin.style.display = 'block';
-        spotifyPlayerContainer.style.display = 'none';
-      }
-      
-      // Set up event listeners
-      setupSpotifyEventListeners();
-      
-      // Update the note about audio visualization
-      const spotifyNote = document.querySelector('.spotify-note p');
-      if (spotifyNote) {
-        spotifyNote.innerHTML = 'Start playing in your Spotify app, then control here!<br>' +
-                               '<strong>For visualization:</strong> Select "System Audio" option and click Start.';
-      }
-      
-      return true;
+    // Check if elements exist before trying to access them
+    if (!spotifyLogin || !spotifyPlayerContainer) {
+      console.error('Spotify UI elements not found in the DOM');
+      return false;
     }
+    
+    // Verify the API handler is now available
+    if (!spotifyProcessor.spotifyAPI) {
+      console.error('Spotify API handler still not initialized after attempts');
+      spotifyLogin.style.display = 'block';
+      spotifyPlayerContainer.style.display = 'none';
+      return false;
+    }
+    
+    // Check if we have a valid client ID
+    if (!spotifyProcessor.spotifyAPI.clientId) {
+      console.error('No Spotify Client ID found. Please set SPOTIFY_CLIENT_ID in your Vercel environment variables.');
+      
+      // Show a helpful message for the user
+      if (spotifyLogin) {
+        spotifyLogin.innerHTML = 'Spotify Client ID not configured.<br>Set up SPOTIFY_CLIENT_ID in Vercel.';
+        spotifyLogin.style.display = 'block';
+      }
+      spotifyPlayerContainer.style.display = 'none';
+      return false;
+    }
+    
+    console.log('Checking Spotify authorization status...');
+    
+    // Check if we have a valid token
+    if (spotifyProcessor.spotifyAPI.isAuthorized) {
+      console.log('Spotify is authorized, showing player');
+      spotifyLogin.style.display = 'none';
+      spotifyPlayerContainer.style.display = 'block';
+      
+      // Connect to Spotify (initializes audio context)
+      spotifyProcessor.connectToSpotify();
+    } else {
+      console.log('Spotify is not authorized, showing login button');
+      spotifyLogin.style.display = 'block';
+      spotifyPlayerContainer.style.display = 'none';
+    }
+    
+    // Set up event listeners
+    setupSpotifyEventListeners();
+    
+    // Update the note about audio visualization
+    const spotifyNote = document.querySelector('.spotify-note p');
+    if (spotifyNote) {
+      spotifyNote.innerHTML = 'Start playing in your Spotify app, then control here!<br>' +
+                             '<strong>For visualization:</strong> Select "System Audio" option and click Start.';
+    }
+    
+    return true;
   }
 
   /**
@@ -757,7 +787,26 @@ document.addEventListener('DOMContentLoaded', () => {
       // Check if the API handler is available
       if (!spotifyProcessor.spotifyAPI) {
         console.error('Spotify API handler is not available');
-        alert('Spotify integration is not properly initialized. Please reload the page and try again.');
+        
+        // Try to initialize it directly
+        console.log('Attempting to initialize SpotifyAPIHandler on demand...');
+        
+        // Import the SpotifyAPIHandler module
+        import('./scripts/SpotifyAPIHandler.js').then(module => {
+          const APIHandler = module.SpotifyAPIHandler;
+          spotifyProcessor.spotifyAPI = new APIHandler();
+          console.log('SpotifyAPIHandler initialized on demand');
+          
+          // After successful initialization, try to authorize
+          setTimeout(() => {
+            console.log('Calling authorize on newly created SpotifyAPIHandler...');
+            spotifyProcessor.spotifyAPI.authorize();
+          }, 500);
+        }).catch(error => {
+          console.error('Failed to import SpotifyAPIHandler during login:', error);
+          alert('Spotify integration is not available. Please reload the page.');
+        });
+        
         return;
       }
       

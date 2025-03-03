@@ -25,16 +25,43 @@ export class SpotifyProcessor extends AudioProcessor {
   
   /**
    * Add Spotify capabilities to an AudioProcessor instance
-   * @param {AudioProcessor} instance Instance to enhance
+   * @param {AudioProcessor} instance The instance to enhance
    */
   enhanceWithSpotify(instance) {
-    // Create the Spotify API handler
-    instance.spotifyAPI = new SpotifyAPIHandler();
+    // Import SpotifyAPIHandler
+    try {
+      // Dynamic import for ESM compatibility
+      import('../SpotifyAPIHandler.js').then(module => {
+        instance.spotifyAPI = new module.SpotifyAPIHandler();
+        console.log('SpotifyAPIHandler initialized successfully via dynamic import');
+        
+        // Set up event handler for track changes
+        instance.spotifyAPI.onPlaybackUpdate((track, status) => {
+          instance.updateNowPlaying(track, status);
+        });
+      }).catch(err => {
+        console.error('Failed to dynamically import SpotifyAPIHandler:', err);
+        
+        // Fallback to direct import in case it's already available
+        if (typeof SpotifyAPIHandler !== 'undefined') {
+          instance.spotifyAPI = new SpotifyAPIHandler();
+          console.log('SpotifyAPIHandler initialized via global reference');
+          
+          // Set up event handler for track changes
+          instance.spotifyAPI.onPlaybackUpdate((track, status) => {
+            instance.updateNowPlaying(track, status);
+          });
+        } else {
+          console.error('SpotifyAPIHandler not available, Spotify integration will not work');
+        }
+      });
+    } catch (error) {
+      console.error('Error initializing SpotifyAPIHandler:', error);
+    }
     
-    // Set up event listener for playback updates
-    instance.spotifyAPI.onPlaybackUpdate((track, status) => {
-      instance.updateNowPlaying(track, status);
-    });
+    // Register event handlers
+    instance.onTrackChange = null;
+    instance.isPlaying = false;
     
     // Flag to track Spotify integration
     instance.hasSpotifyCapabilities = true;
@@ -53,8 +80,34 @@ export class SpotifyProcessor extends AudioProcessor {
 
   /**
    * Start the Spotify authorization flow
+   * This method needs a special implementation to handle async initialization
    */
   authorize() {
+    // Check if spotifyAPI is available
+    if (!this.spotifyAPI) {
+      console.error('SpotifyAPI not initialized yet');
+      
+      // Try to initialize it now
+      try {
+        // Try to dynamically import the SpotifyAPIHandler
+        import('../SpotifyAPIHandler.js').then(module => {
+          this.spotifyAPI = new module.SpotifyAPIHandler();
+          console.log('SpotifyAPIHandler initialized on demand');
+          
+          // Now we can authorize
+          this.spotifyAPI.authorize();
+        }).catch(error => {
+          console.error('Failed to import SpotifyAPIHandler for authorization:', error);
+          alert('Spotify integration is not available. Please try reloading the page.');
+        });
+      } catch (error) {
+        console.error('Error during authorization:', error);
+        alert('Failed to initialize Spotify integration.');
+      }
+      return;
+    }
+    
+    // If we have the API handler, use it
     this.spotifyAPI.authorize();
   }
 
