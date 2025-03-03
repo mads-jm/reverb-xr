@@ -557,19 +557,10 @@ document.addEventListener('DOMContentLoaded', () => {
     try {
       console.log('Initializing Spotify processor...');
       
-      // Debug: Log available environment variables related to Spotify
-      console.log('Environment variables check:');
-      console.log('- window.SPOTIFY_CLIENT_ID:', window.SPOTIFY_CLIENT_ID ? 'Found' : 'Not found');
-      console.log('- window.NEXT_PUBLIC_SPOTIFY_CLIENT_ID:', window.NEXT_PUBLIC_SPOTIFY_CLIENT_ID ? 'Found' : 'Not found');
-      console.log('- window.ENV_SPOTIFY_CLIENT_ID:', window.ENV_SPOTIFY_CLIENT_ID ? 'Found' : 'Not found');
-      console.log('- window.APP_CONFIG?.SPOTIFY_CLIENT_ID:', window.APP_CONFIG?.SPOTIFY_CLIENT_ID ? 'Found' : 'Not found');
-
-      // If no client ID is available, show a warning
-      if (!window.SPOTIFY_CLIENT_ID && 
-          !window.NEXT_PUBLIC_SPOTIFY_CLIENT_ID && 
-          !window.ENV_SPOTIFY_CLIENT_ID && 
-          !window.APP_CONFIG?.SPOTIFY_CLIENT_ID) {
-        console.warn('No Spotify Client ID found in any expected location');
+      // Debug check for environment variables
+      if (typeof window.checkEnvironmentVariables === 'function') {
+        console.log('Running environment variables check...');
+        window.checkEnvironmentVariables();
       }
       
       // Get the singleton instance

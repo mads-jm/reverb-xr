@@ -20,22 +20,9 @@
 	</style>
   <!-- Three.js is now imported via webpack -->
   <script src="https://cdn.jsdelivr.net/npm/three@0.137.0/build/three.min.js"></script>
-  <!-- Spotify SDK is now handled by webpack -->
   
-  <!-- Script to handle Vercel environment variables -->
-  <script>
-    // This will be populated by Vercel at build time 
-    // with the environment variable SPOTIFY_CLIENT_ID
-    window.SPOTIFY_CLIENT_ID = '{{SPOTIFY_CLIENT_ID}}';
-    
-    // If the placeholder wasn't replaced (local development), set a default
-    if (window.SPOTIFY_CLIENT_ID === '{{SPOTIFY_CLIENT_ID}}') {
-      window.SPOTIFY_CLIENT_ID = '';
-      console.warn('SPOTIFY_CLIENT_ID not found in environment. Running in development mode.');
-    } else {
-      console.log('SPOTIFY_CLIENT_ID loaded from Vercel environment variables');
-    }
-  </script>
+  <!-- Load configuration -->
+  <script src="config.js"></script>
 </head>
 <body>
   <!-- The iframe src will be set dynamically using the path resolver -->

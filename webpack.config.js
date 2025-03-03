@@ -122,7 +122,10 @@ export default (env, argv) => {
         'process.env': JSON.stringify({
           ...env,
           NODE_ENV: process.env.NODE_ENV || argv.mode || 'development'
-        })
+        }),
+        // Explicitly expose SPOTIFY_CLIENT_ID to the client-side code
+        // This makes it available as a global variable without requiring process.env
+        'SPOTIFY_CLIENT_ID': JSON.stringify(process.env.SPOTIFY_CLIENT_ID || '')
       })
     ],
     devServer: {
