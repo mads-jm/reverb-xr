@@ -9,7 +9,6 @@ import { GPUAudioProcessor } from './scripts/audio/GPUAudioProcessor.js';
 import { AudioProcessor } from './scripts/audio/AudioProcessor.js';
 import { SpotifyProcessor } from './scripts/audio/SpotifyProcessor.js';
 import { loadSpotifySDK } from './scripts/external/spotify-sdk-loader.js';
-import { checkEnvironmentVariables } from './scripts/utils/environment-check.js';
 
 /**
  * Main application controller for audio visualization
